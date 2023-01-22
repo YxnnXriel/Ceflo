@@ -1,0 +1,21 @@
+
+var i = None
+
+println(i)
+
+
+i = 0
+
+println(i)
+
+
+
+/*
+    Vals
+        1 arg -> begin
+        2 arg -> end
+        3 arg -> walk
+*/
+
+for i in Vals( 0 , 10 , 2):
+    println(i)
