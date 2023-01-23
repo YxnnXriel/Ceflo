@@ -52,7 +52,7 @@ Contact me by email yannariel13@gmail.com for help, ask questions or contribute 
 
 > variable declaration
 ```typescript
-    var my_variable1; // variable declaration without assignement
+    var my_variable1; // variable declaration without assignement, default value is None
     var my_variable2 = @int(21); // whith typé(declaration with method implement for caste)
     var my_variable3 = 21; // variable declaration with automatic typing
     /*
@@ -92,6 +92,11 @@ Contact me by email yannariel13@gmail.com for help, ask questions or contribute 
     for i = 0; i < 10 ; i+=1:{
         println("ViL prog");
     } 
+
+    // new
+
+    for i in Vals(0 , 10 , 2):
+        println(i);
 
 ```
 
@@ -180,6 +185,7 @@ Contact me by email yannariel13@gmail.com for help, ask questions or contribute 
     }
 
 
+    //var p1 = new Personne("John","Doe") work also ! 
     var p1::Personne = new Personne("John","Doe");
 
     println(p1); // Nom : John Prenom : Doe
