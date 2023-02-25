@@ -21,7 +21,42 @@ Contact me by email yannariel13@gmail.com for help, ask questions or contribute 
 
 # Examples
 
->( new ) execute functions written in C
+> (NEEW ) specify the type of return or the type of parameter desired in the functions
+
+```go
+
+    func ReturnPlusOne(value::int): int {
+        return value + 1;
+    }
+    // it works with complex types
+
+    type Player:{
+        var Nom;
+
+        ::Player(nom::str){
+            Nom = nom
+        }
+
+        func __print__():{
+            println("Player Name : ", Nom);
+        }
+
+    }
+
+    func New_Player():{
+        return new Player("Yxnn"+ReturnPlusOne(0))
+    }
+
+
+    func main(<args>): int{
+        var player1 = New_Player()
+        println(player1)
+        return 0;
+    }
+
+```
+
+> execute functions written in C
 
  execute functions written in C with the dynamic libraries .so (linux)
 

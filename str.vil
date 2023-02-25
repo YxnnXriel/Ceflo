@@ -1,0 +1,54 @@
+type string:{
+
+    var Chaine::str ,  Size::int;
+    
+    ::string(new_chaine){
+        
+        if new_chaine == @str:{
+            Chaine = new_chaine;
+            Size = new_chaine.lenght();
+        }else:{
+            Chaine = 0
+            Size = 0
+        }
+    }
+
+    func __cmp__():{
+        return size;
+    }
+
+    func __print__():{
+       return print(Chaine);
+    }
+
+    func get():{
+        if Chaine == @str:{
+            return Chaine;
+        }else:{
+            return 0;
+        }
+    }
+
+    func as_int(gtte::int , ):{
+        return @int(Chaine);
+    }
+    
+    func as_str():{
+        return @str(Chaine);
+    }
+
+    func search(value):{
+        return __bulletin_attr_search__(Chaine,value);
+    }
+
+    func set(value):{
+        if new_chaine == @str:{
+            Chaine = value;
+            Size = value.lenght();
+        }else:{
+            Chaine = 0
+            Size = 0
+        }
+    }
+}
+
