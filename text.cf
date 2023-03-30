@@ -1,0 +1,10 @@
+
+
+var a = 67;
+var b = 56;
+
+func add(a,b){
+    println(a + b);
+}
+
+add(a,b);

@@ -1,0 +1,401 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "include/parser.h"
+#include "include/error.h"
+#include "include/common.h"
+
+
+
+static parser_t *GetCurrentParser(){
+    static parser_t parser;
+    return &parser;
+}
+
+
+void newParser(parser_t *parser,lexer_t *lexer){
+    parser->lexer = lexer;
+    parser->current = lexer_get_next_token(parser->lexer);
+    parser->prev = AS_TOKEN(TOKEN_EOF,"EOF") ;
+
+    // parser->prev = AS_TOKEN(TOKEN_EOF,"EOF");
+    // parser->prev = parser->current ;
+
+}
+
+int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
+
+    parser_t *parser = GetCurrentParser();
+
+    va_list args;
+    va_start(args,fmt);
+
+    if(type != parser->current.type){
+        Print_parser_error(
+            parser->lexer->line,
+            parser->lexer->colone,
+            "./Ceflo",
+            // parser->lexer->fileName->str,
+            errorType,
+            fmt,
+            args
+        );
+        va_end(args);
+        exit(1);
+    }
+
+    freeToken(&parser->prev);
+    parser->prev = parser->current;
+    parser->current = lexer_get_next_token(parser->lexer);
+    return 1;
+}
+
+
+ast_t *parser_parse(lexer_t *lexer){
+
+    parser_t *parser = GetCurrentParser();
+    newParser(parser,lexer);
+
+    __init_first_ast();
+    ast_t *node =  parser_parse_statments(parser,NULL);
+
+    return node;
+}
+
+ast_t *parser_parse_statments(parser_t *parser , scope_t * scope){
+
+    return parser_parse_compound(parser,scope);
+
+}
+
+ast_t *parser_parse_compound(parser_t *parser , scope_t * scope){
+
+
+    ast_t * compound = newAst(AST_COMPOUND);
+
+    compound->scope  = scope;
+    #define COMPOUND compound->list_compound
+
+    COMPOUND = __init__list__(sizeof(struct AST_STRUCT*));
+	
+
+    ast_t *child = parser_parse_statment(parser,scope);
+
+    List_Append(COMPOUND,child);
+
+    while (parser->current.type == TOKEN_SEMI || child->type != AST_NOOP){
+        
+        if(parser->current.type == TOKEN_SEMI){
+            parser_eat(TOKEN_SEMI,SYNTAX_ERROR,"%s manque a l'appel",TOKEN_TO_STRING[parser->current.type]);
+        }
+        child = parser_parse_statment(parser,scope);
+        List_Append(COMPOUND,child);
+
+    }
+    
+    return compound;
+
+    #undef COMPOUND
+}
+
+ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
+
+    #define type parser->current.type
+
+    // printf("ICI \n");
+    // printf("%s  %s   %s \n",__func__,TOKEN_TO_STRING[type],parser->current.value);
+
+    switch (type)
+    {
+        case TOKEN_VAR : return parser_parse_variable_definition(parser,scope);
+        case TOKEN_FUNC : return parser_parse_function_definition(parser,scope);
+        case TOKEN_ID : return parser_parse_variable(parser,scope);
+        case TOKEN_INTEGER:
+        case TOKEN_FLOAT:
+        case TOKEN_CHAR:
+        case TOKEN_STRING:
+        case TOKEN_TRUE:
+        case TOKEN_FALSE:
+            return parser_parse_expr(parser,scope);
+        default:
+            return newAst(AST_NOOP);
+    }
+
+    return newAst(AST_NOOP);
+
+    #undef type
+}
+
+ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
+
+    // var k::int = l;
+
+    ast_t *variable = newAst(AST_VARIABLE_DEFINITION);
+    parser_eat(TOKEN_VAR,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+
+    allowChar(&variable->variable_definition_name,parser->current.value);
+    parser_eat(TOKEN_ID,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+    
+    if(parser->current.type == TOKEN_EQUAL){
+        parser_eat(TOKEN_EQUAL,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+        variable->variable_definition_value = parser_parse_expr(parser,scope);
+    }else{
+        variable->variable_definition_value = newAst(AST_NONE);
+    }
+
+    variable->scope = scope;
+
+
+    return variable;
+}
+
+ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
+
+    ast_t * variable = newAst(AST_VARIABLE);
+    allowChar(&variable->variable_name,parser->current.value);
+    parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+    // printf("[%s]\n",parser->prev.value);
+    
+    if(parser->current.type == TOKEN_LPARENT){
+        return parser_parse_function_call(parser,scope);
+    }
+
+
+    variable->scope = scope;
+    
+    return variable;
+
+}
+
+
+static type_ceflo GetType(char *name){
+    
+    if(strcmp(name,"none") == 0)
+        return NONE;
+    if(strcmp(name,"float")==0)
+        return NUMBER;
+    if(strcmp(name,"int")==0)
+        return NUMBER;
+    if(strcmp(name,"char")==0)
+        return CHAR;
+    if(strcmp(name,"str")==0)
+        return STRING;
+    if(strcmp(name,"bool")==0)
+        return BOOL;
+    
+    return OBJECT;
+}
+
+ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
+
+    ast_t *function = newAst(AST_FUNCTION_DEFINITION);
+    newList_Ast(&function->function_defintion_args); 
+
+    parser_eat(TOKEN_FUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
+    allowChar(&function->function_definition_name,parser->current.value);
+    parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+
+    parser_eat(TOKEN_LPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+    if(parser->current.type != TOKEN_RPARENT){
+        ast_t *arg = parser_parse_variable(parser,scope);
+        List_Ast_Append(&function->function_defintion_args,arg);
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TOKEN_COMA,SYNTAX_ERROR," %s demander \n",parser->current.value);
+            arg = parser_parse_variable(parser,scope);
+            List_Ast_Append(&function->function_defintion_args,arg);
+        }
+        
+    }
+    parser_eat(TOKEN_RPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+
+    if(parser->current.type == TOKEN_ID){
+        function->function_definition_return_type = GetType(parser->current.value);
+        parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+    }
+
+    parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+
+    if(parser->current.type != TOKEN_RBRACKET){
+
+        function->function_definition_body = parser_parse_statments(parser,NULL);
+        function->function_definition_body->scope = NULL;
+
+    }
+
+    function->scope = scope;
+
+    parser_eat(TOKEN_RBRACKET,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+
+    return function;
+
+}
+
+ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
+    ast_t *function = newAst(AST_FUNCTION_CALL);
+    allowChar(&function->function_call_name,parser->prev.value);
+
+    parser_eat(TOKEN_LPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+    newList_Ast(&function->function_call_args);
+    if(parser->current.type != TOKEN_RPARENT){
+        ast_t * arg = parser_parse_expr(parser,scope);
+        List_Ast_Append(&function->function_call_args,arg);
+
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TOKEN_COMA,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+            arg = parser_parse_expr(parser,scope);
+            List_Ast_Append(&function->function_call_args,arg);
+        }
+    }
+
+    parser_eat(TOKEN_RPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+
+    function->scope = scope;
+    return function;
+}
+
+ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
+
+    ast_t *number = newAst(
+        AST_NUMBER
+    );
+
+    newValue(&number->value,NUMBER);
+
+    number->value.as.numberValue = strtod(parser->current.value,NULL);
+    parser_eat(parser->current.type,TYPE_ERROR," %s inconue \n",parser->current.value);
+
+    number->scope = scope;
+
+    return number;
+}
+ast_t *parser_parse_char(parser_t *parser , scope_t * scope){
+    ast_t * ast_char = newAst(AST_CHAR);
+
+    if(strlen(parser->current.value) != 1){
+        parser_eat(TOKEN_EOF,CHAR_ERROR," %s.lenght >= 1 \n",parser->current.value);
+    }
+
+    newValue(&ast_char->value,CHAR);
+    ast_char->value.as.charValue = parser->current.value[0];
+    parser_eat(TOKEN_CHAR,CHAR_ERROR," %s inconnue \n",parser->current.value);
+    
+    ast_char->scope = scope;
+
+    return ast_char;
+}
+ast_t *parser_parse_bool(parser_t *parser , scope_t * scope){
+
+    ast_t *boolean = newAst(AST_BOOL);
+
+    newValue(&boolean->value,BOOL);
+    boolean->value.as.booleanValue = parser->current.type == TOKEN_TRUE ? 1:0;
+    parser_eat(parser->current.type,BOOL_ERROR," %s inconnue \n",parser->current.value);
+
+    boolean->scope = scope;
+
+    return boolean;
+
+}
+ast_t *parser_parse_string(parser_t *parser , scope_t * scope){
+
+    ast_t *string = newAst(AST_STRING);
+
+    newValue(&string->value,STRING);
+    string->value.as.stringValue = new_String(parser->current.value);
+    parser_eat(TOKEN_STRING,STRING_ERROR," %s inconnue \n",parser->current.value);
+
+    string->scope = scope;
+
+    return string;
+}
+
+ast_t *parser_parse_expr(parser_t *parser , scope_t *scope){
+
+    ast_t * value = parser_parse_expression(parser,scope);
+
+    
+    while (
+            parser->current.type == TOKEN_OR ||
+            parser->current.type == TOKEN_AND 
+    ){
+        ast_t *binop = newAst(AST_BINOP);
+        binop->left = value;
+        binop->scope = scope;
+        binop->op = AS_TOKEN(parser->current.type,parser->current.value);
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        binop->right = parser_parse_expression(parser,scope);
+        value = binop; 
+    }
+    
+    return value;
+
+}
+
+ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
+    ast_t * value = parser_parse_term(parser,scope);
+    while (
+            parser->current.type == TOKEN_PLUS ||
+            parser->current.type == TOKEN_MINUS 
+    ){
+        ast_t *binop = newAst(AST_BINOP);
+        binop->left = value;
+        binop->scope = scope;
+        binop->op = AS_TOKEN(parser->current.type,parser->current.value);
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        binop->right = parser_parse_term(parser,scope);
+        value = binop; 
+    }
+    
+    return value;
+
+}
+
+ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
+    ast_t * value = parser_parse_factor(parser,scope);
+
+    while (
+            parser->current.type == TOKEN_MULT ||
+            parser->current.type == TOKEN_DIV 
+    ){
+        ast_t *binop = newAst(AST_BINOP);
+        binop->left = value;
+        binop->scope = scope;
+        binop->op = AS_TOKEN(parser->current.type,parser->current.value);
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        binop->right = parser_parse_factor(parser,scope);
+        value = binop; 
+    }
+    
+    return value;
+}
+
+ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
+
+    if(parser->current.type == TOKEN_LPARENT){
+
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        ast_t * group = parser_parse_expr(parser,scope);
+        parser_eat(TOKEN_RPARENT,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        return group;
+    }
+
+    if(parser->current.type == TOKEN_ID){
+        return parser_parse_variable(parser,scope);
+    }
+
+    switch (parser->current.type){
+        case TOKEN_INTEGER:
+        case TOKEN_FLOAT:
+            return parser_parse_number(parser,scope);break;
+        case TOKEN_CHAR:
+            return parser_parse_char(parser,scope);break;
+        case TOKEN_STRING:
+            return parser_parse_string(parser,scope);break;
+        case TOKEN_TRUE:
+        case TOKEN_FALSE:
+            return parser_parse_bool(parser,scope);break;
+    }
+
+    return newAst(AST_NONE);
+}

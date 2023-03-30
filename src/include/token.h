@@ -1,0 +1,132 @@
+#ifndef __TOKEN_H__
+#define __TOKEN_H__
+
+
+typedef enum{
+        TOKEN_ID, // value
+        TOKEN_FOR, // for
+        TOKEN_WHILE, // while
+        TOKEN_IF, // if
+        TOKEN_ELSE, // else
+        TOKEN_VAR, // var
+        TOKEN_FUNC, // func
+        TOKEN_LFUNC , // lfunc
+        TOKEN_MAIN , // main
+        TOKEN_RETURN, // return
+        TOKEN_INCLUDE, // include
+        TOKEN_STRUCT, // struct
+        TOKEN_TRUE, // True
+        TOKEN_FALSE, // False
+        TOKEN_OR, // or
+        TOKEN_AND, // and
+        TOKEN_PASS , // pass
+        TOKEN_CONTINUE, // continue
+        TOKEN_BREAK, // break
+        TOKEN_NONE, // None
+        TOKEN_CHAR , // 'char value'
+        TOKEN_STRING, // "string value"
+        TOKEN_INTEGER, // 123
+        TOKEN_FLOAT, // 123.0
+        TOKEN_MODULO,// %
+        TOKEN_DIF,// %
+        TOKEN_ARROW, // ->
+        TOKEN_COLON , // :
+        TOKEN_DOUBLE_COLON , // ::
+        TOKEN_SEMI, // ;
+        TOKEN_COMA, // , 
+        TOKEN_LPARENT,  // (
+        TOKEN_RPARENT,  // )
+        TOKEN_LBRACKET, // {
+        TOKEN_RBRACKET, // }
+        TOKEN_LBRACE, // [
+        TOKEN_RBRACE, // ]
+        TOKEN_EQUAL,
+        TOKEN_EQUAL_EQUAL,
+        TOKEN_PLUS, // + 
+        TOKEN_PLUS_EQUAL, // + 
+        TOKEN_MINUS, // -
+        TOKEN_MINUS_EQUAL, // -
+        TOKEN_DIV, // /
+        TOKEN_DIV_EQUAL, // /
+        TOKEN_MULT, // *
+        TOKEN_MULT_EQUAL, // *
+        TOKEN_SUP, // >
+        TOKEN_SUP_EQUAL , // >=
+        TOKEN_INF , // <
+        TOKEN_INF_EQUAL , // <=
+        TOKEN_EOF 
+}TokenEnum;
+
+
+typedef struct{
+    TokenEnum type;
+    char * value;
+}token_t;
+
+// #define BOOL_VAL(value) ((Value){VAL_BOOl,{.boolean = value}})
+
+#define AS_TOKEN(ty,val) ((token_t){.type = ty,.value = val })
+
+
+static const char *TOKEN_TO_STRING[]={
+    "Identifiant",
+    "for",
+    "while",
+    "if",
+    "else",
+    "var",
+    "fun",
+    "lfun",
+    "main",
+    "return",
+    "include",
+    "struct",
+    "true",
+    "false",
+    "or",
+    "and",
+    "pass",
+    "continue",
+    "break",
+    "None",
+    "char_value",
+    "string_value",
+    "integer_value",
+    "float_value",
+    "->",
+    ":",
+    "::",
+    ";",
+    ",",
+    "(",
+    ")",
+    "{",
+    "}",
+    "[",
+    "]",
+    "=",
+    "==",
+    "+",
+    "+=",
+    "-",
+    "-=",
+    "/",
+    "/=",
+    "*",
+    "*=",
+    ">",
+    ">=",
+    "<",
+    "<=",
+    "EOF"
+};
+
+
+token_t * newToken(TokenEnum type , const char *value);
+token_t token_cpy(token_t tok);
+int freeToken(token_t *token);
+
+
+
+
+#endif
