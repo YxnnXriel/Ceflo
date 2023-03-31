@@ -8,6 +8,40 @@
 
 
 
+typedef struct GARBAGE_FUNCTION_STRUCT{
+    scope_t *sScope;
+    ast_t *sAst;
+    struct GARBAGE_FUNCTION_STRUCT *next;
+}Gb_t;
+
+static Gb_t *gg;
+
+
+void newGb(){
+    gg = NULL;
+}
+
+static void GbPush(scope_t *scope , ast_t * node){
+    Gb_t * g = calloc(1,sizeof(*g));
+    g->sAst = node;
+    g->sScope = scope;
+    g->next = gg;
+    gg = g;
+}
+
+static void GbFree(){
+
+    while (gg != NULL){
+        Gb_t * del = gg;
+        gg = gg->next;
+        freeScope(del->sScope);
+        clearAstNode(del->sAst);
+        free(del);
+    }
+    
+}
+
+
 static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
     
@@ -30,6 +64,7 @@ static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t 
         }
     }
     printf("\n");
+
     return node; 
 }
 
@@ -37,6 +72,9 @@ void newVisitor(visitor_t * visitor){
     visitor->global_scope = newScope();
 }
 
+static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
+    visitor->global_scope = scope;
+}
 ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 
 
@@ -56,6 +94,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_NUMBER:
         case AST_STRING:
         case AST_NONE:
+        case AST_RETURN:
             return visitor_visit_data(visitor,node);break;
         case AST_COMPOUND: return visitor_visit_compound(visitor,node);break;
         case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);break;
@@ -76,10 +115,43 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 }
 
 ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
+    
+    // printf("\tCompound Size : %d\n",node->list_compound->Size);
+
     for (int i = 0; i < node->list_compound->Size; i++){
         ast_t *child = List_Get(node->list_compound,i);
-        visitor_visit(visitor,child);
+        ast_t *noeud =  visitor_visit(visitor,child);
+
+
+        if(noeud ){
+            if(noeud ->type == AST_RETURN){
+                if(noeud ->return_expr != NULL){
+                    
+                    // printf("----\n");
+                    ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
+                    ast_t *value =  ast_copy(return_value,node->scope);  
+                    // printf("<%g> \n",value->value.as.numberValue);
+                    
+                    value->is_return_value = true; 
+                    GbFree();
+                    return value;
+                }
+            }
+
+            else if(noeud->is_return_value == true &&
+                (noeud->countScope > node->countScope && visitor->global_scope->countScope != 0 ) &&
+                node->type_compound == R_FUNCTION_CALL_TYPE
+            ){
+                return noeud ;
+            }else{
+                noeud->is_return_value =  false;
+            }
+
+        }
     }
+    
+    GbFree();
+
     return node;
 }
 
@@ -108,6 +180,17 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
         node->variable_name
     );
 
+    if(value != NULL)
+        return value;
+
+    if(value == NULL){
+        if(visitor->global_scope->scope_parent != NULL){
+            visitor_t visi;
+            newVisitorWithScope(&visi,visitor->global_scope->scope_parent);
+            return visitor_visit_variable(&visi,node);
+        }
+    }
+
     if(value ==  NULL){
         Print_visitor_error(
             0,
@@ -118,7 +201,6 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
         );
     }
 
-    return value;
 }
 
 ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
@@ -127,6 +209,9 @@ ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
         node->function_definition_name,
         node
     );
+
+    // printf("[%s] == %d \n",node->function_definition_name,node->countScope);
+
 
     return node;
 }
@@ -144,7 +229,15 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         visitor->global_scope,
         node->function_call_name
     );
+    
 
+    if(functionDef == NULL){
+        if(visitor->global_scope->scope_parent != NULL){
+            visitor_t visi;
+            newVisitorWithScope(&visi,visitor->global_scope->scope_parent);
+            return visitor_visit_function_call(&visi,node);
+        }
+    }    
 
     if(functionDef == NULL){
         Print_visitor_error(
@@ -156,14 +249,17 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         );
     }
 
-    
+    // printf("%d \n", node->countScope);
     ast_t *first = GetFirstAst();
     // printf("first save : %p\n",first);
     ResetFirstAst();
     // printf("reset first ast : %p\n",GetFirstAst());
     
     scope_t * newscope = newScope();
+
     ast_t *newFunction = ast_cpy_function_definition(functionDef,newscope);
+
+    // printf("%s\n",newFunction->function_definition_name);
 
     for (int i = 0; i < (int) node->function_call_args.size; i++){
         char * variable_name = List_Ast_Get(&functionDef->function_defintion_args,i)->variable_name;
@@ -180,19 +276,44 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     visitor_t visit;
     visit.global_scope = newscope;
+    visit.global_scope->countScope = newFunction->function_definition_body->countScope; 
+    
+    if(visitor->global_scope->countScope == 0){
+        // on etait dans le main
+        // on peut copier les fonction qui sont a 0
+        visit.global_scope->scope_parent = NULL;
 
+        scope_cpy_with_scope(
+            visit.global_scope,
+            visitor->global_scope
+        );
 
-    visitor_visit(&visit,newFunction->function_definition_body);   
-    freeScope(newscope);
+        // printf("---------------\n");
+
+    }else{
+        // on est dans une fonction donc on copie toutes les valeurs (fonction , variable) inferieur
+        // je parcours toutes les variables et fonction , des que tombe sur 0 j'arrete
+        visit.global_scope->scope_parent = visitor->global_scope;
+    }
+
+    // printf("%d \n", newFunction->function_definition_body->countScope);
+
+    // printf("VISIT : function  %s \n",newFunction->function_definition_name);
+
+    ast_t *returnValue =  visitor_visit(&visit,newFunction->function_definition_body);   
+    // freeScope(newscope);
 
     // printf("end first ast : %p\n",GetFirstAst());
-    clearAst(GetFirstAst());
+    // clearAst(GetFirstAst());
         // printf("ICI ICI \n");
+    GbPush(newscope,GetFirstAst());
+
     ModifFirstAst(first);   
     // printf("modif first ast : %p\n",GetFirstAst());
 
+
     // printf("___________________\n");
-    return node;
+    return returnValue;
 }
 
 ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t *op , ast_t *right){

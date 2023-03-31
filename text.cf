@@ -1,10 +1,16 @@
 
 
-var a = 67;
-var b = 56;
-
-func add(a,b){
-    println(a + b);
+func k(){
+    func hello(){
+        func jj(){
+            var k = 67;
+            return k;
+        }
+        println(jj())
+        return 3;
+    }
+    hello();
+    return 2;
 }
 
-add(a,b);
+println(k());

@@ -19,12 +19,20 @@
         AST(AST_OBJ)   \
         AST(AST_COMPOUND)  \
         AST(AST_BINOP)  \
+        AST(AST_RETURN)  \
         AST(AST_UNOP)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
     #define GENERATE_AST_ENUM_STRING(AST)  #AST,
 
+
+
+typedef enum{
+    R_FUNCTION_CALL_TYPE,
+    R_IF_TYPE,
+    R_WHILE_TYPE,
+}Return_Type;
 
 
 typedef enum{
@@ -104,15 +112,21 @@ typedef struct AST_STRUCT{
 
     // AST_COMPOUND
     list_t *list_compound;
-    
+    Return_Type type_compound;
     // scope
     struct SCOPE_STRUCT *scope;
+    int countScope;
+
     
 
     // binop
     struct AST_STRUCT *left;
     struct AST_STRUCT *right;
     token_t op;
+    bool is_return_value;
+    // return
+    struct AST_STRUCT *return_expr;
+
 
 }ast_t;
 
@@ -135,7 +149,7 @@ ast_t * List_Ast_Get(list_ast_t *list , int index);
 ast_t * GetFirstAst();
 void ModifFirstAst(ast_t * new);
 void ResetFirstAst();
-
+void clearAstNode(ast_t * val);
 void freeAst(ast_t *node);
 void clearAst();
 void freeSingleAst(ast_t * node);
@@ -150,6 +164,8 @@ ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope );
 ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
 ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope);
+ast_t *ast_cpy_return(ast_t *ast , struct SCOPE_STRUCT * scope);
+
 
 
 #endif

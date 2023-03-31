@@ -31,6 +31,8 @@ int main(int argc, char const *argv[]){
 
 		visitor_t visitor;
 		newVisitor(&visitor);
+		newGb();
+		
 		visitor.global_scope->countScope = 0;
 
 		visitor_visit(&visitor,node);

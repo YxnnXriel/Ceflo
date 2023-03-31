@@ -8,6 +8,8 @@ scope_t* newScope(){
     scope_t *scope = calloc(1,sizeof(*scope));
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
+    scope->function_names = new_ListString();
+    scope->scope_parent = NULL;
     scope->countScope = -1;
     return scope;
 
@@ -64,12 +66,41 @@ void scope_append_function_definition(scope_t *scope , const char *key , ast_t *
         );
         exit(1);
     }else{
-        Hash_Append(&scope->function_definition,value->function_definition_name,value);
+        ListString_Append(scope->function_names,value->function_definition_name);
+        Hash_Append(&scope->function_definition,value->function_definition_name,value);   
     }
 
 }
 
+int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
+
+    for (int i = 0; i < ref->function_definition.Size ; i++){
+        
+        ast_t * func = scope_get_function_definition(
+            ref,
+            ListString_Get(ref->function_names,i)
+        );
+    
+
+        // ast_t * func = (ast_t*) Hash_Get_by_index(
+        //     &ref->function_definition,
+        //     i
+        // );
+
+            
+        // printf("%s \n",ListString_Get(ref->function_names,i));
+        scope_append_function_definition(
+            end,
+            func->function_definition_name,
+            func
+        );
+    }
+
+
+    return 1;
+
+}
 
 void freeScope(scope_t * scope){
     if(scope != NULL){
@@ -78,7 +109,9 @@ void freeScope(scope_t * scope){
         if(scope->variable_definition.Size != 0){
             Hash_Del(&scope->variable_definition);
         }
-        
+        if(scope->function_names){
+            ListString_Clear(scope->function_names);
+        }       
         free(scope);
     }
 }

@@ -43,13 +43,18 @@ ast_t *newAst(uint8_t type){
     new->function_call_name = NULL;
     // new->function_call_args = NULL;
     new->list_compound = NULL;
+    new->type_compound = R_FUNCTION_CALL_TYPE;
 
     new->scope = NULL;
-
+    new->countScope = -1;
     // binop
 
     new->left = NULL;
     new->right = NULL;
+    new->is_return_value = false;
+    // return
+
+    new->return_expr = NULL;
 
     new->next = var;
     var = new;
@@ -139,6 +144,23 @@ void clearAst(){
 
 }
 
+void clearAstNode(ast_t * val){
+    ast_t *node = val;
+
+    // printf("BEGIN \n");
+    while (node != NULL){
+        // printf("%s\n",AST_TO_STRING[node->type]);
+        ast_t * sup = node;
+        node = node->next;
+        freeAst(sup);
+        free(sup);
+    }
+    // printf("END \n");
+    
+
+}
+
+
 
 static ast_t *ast_r_scope(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast->scope = scope;
@@ -147,7 +169,7 @@ static ast_t *ast_r_scope(ast_t *ast , struct SCOPE_STRUCT * scope){
 }
 
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
-    if(!ast)
+    if(ast == NULL)
         return NULL;
     
     switch (ast->type){
@@ -162,8 +184,9 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_VARIABLE: return ast_r_scope(ast_cpy_variable(ast),scope);break;
         case AST_FUNCTION_CALL: return ast_r_scope(ast_cpy_function_call(ast,scope),scope);break;
         case AST_FUNCTION_DEFINITION: return ast_r_scope(ast_cpy_function_definition(ast,scope),scope);break;
-        case AST_BINOP:
-            return ast_r_scope(ast_cpy_binop(ast,scope),scope);break;
+        case AST_BINOP: return ast_r_scope(ast_cpy_binop(ast,scope),scope);break;
+        case AST_RETURN: return ast_r_scope(ast_cpy_return(ast,scope),scope);break;
+        
         case AST_NOOP:
             return NULL;
     }
@@ -172,7 +195,7 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
 
 ast_t *ast_cpy_Value(ast_t * ast){
     ast_t * a = newAst(ast->type);
-
+    a->countScope = ast->countScope;
     if(a->type == AST_STRING){
         newValue(&a->value,STRING);
         a->value.as.stringValue = new_String(ast->value.as.stringValue->str);
@@ -185,6 +208,7 @@ ast_t *ast_cpy_Value(ast_t * ast){
 
 ast_t * ast_cpy_variable(ast_t * ast){
     ast_t * variable = newAst(AST_VARIABLE);
+    variable->countScope = ast->countScope;
     allowChar(&variable->variable_name,ast->variable_name);
     return variable;
 }
@@ -192,6 +216,7 @@ ast_t * ast_cpy_variable(ast_t * ast){
 ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope){
 
     ast_t *a = newAst(ast->type);
+    a->countScope = ast->countScope;
 
     a->left = ast_copy(ast->left,scope);
     a->op = ast->op;
@@ -200,9 +225,19 @@ ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope){
     return a;
 }
 
+ast_t *ast_cpy_return(ast_t *ast , struct SCOPE_STRUCT * scope){
+    ast_t* a = newAst(ast->type);
+    a->countScope = ast->countScope;
+    a->return_expr = ast_copy(ast->return_expr,scope);
+
+    return a;
+}
+
 ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast_t * compound = newAst(AST_COMPOUND);
+    compound->countScope = ast->countScope;
     compound->list_compound = __init__list__(sizeof(ast_t*));
+    compound->type_compound = ast->type_compound;
 
     for (int i = 0; i < ast->list_compound->Size; i++){
         ast_t *child = List_Get(ast->list_compound,i);
@@ -218,6 +253,9 @@ ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope){
 
 ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
     ast_t * function = newAst(AST_FUNCTION_CALL);
+
+    function->countScope = ast->countScope;
+
     allowChar(&function->function_call_name,ast->function_call_name);
 
     newList_Ast(&function->function_call_args);
@@ -237,6 +275,7 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
     allowChar(&newFunction->function_definition_name,function->function_definition_name);
     newFunction->function_definition_return_type = function->function_definition_return_type;
     newFunction->scope = scope;
+    newFunction->countScope = function->countScope;
 
     newList_Ast(&newFunction->function_defintion_args);
     for (int i = 0; i < (int)function->function_defintion_args.size; i++){
@@ -245,6 +284,8 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
         List_Ast_Append(&newFunction->function_defintion_args,arg);
     }
     newFunction->function_definition_body = ast_copy(function->function_definition_body,scope);
+
+    
 
     return newFunction;
 }
@@ -268,7 +309,7 @@ ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
     ast_t * variable = newAst(AST_VARIABLE_DEFINITION);
     allowChar(&variable->variable_definition_name,name);
     variable->variable_definition_value = value;
-
+    
     return variable;
 }
 
@@ -276,5 +317,6 @@ ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
 ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     ast_t *variable = ast_cpy_variable_definition_lit(ast->variable_definition_name,NULL);
     variable->variable_definition_value = ast_copy(ast->variable_definition_value,scope);
+    variable->countScope = ast->countScope;
     return variable;
 }

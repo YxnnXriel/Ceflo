@@ -23,5 +23,6 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
 ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node);
 
 
+void newGb();
 
 #endif
