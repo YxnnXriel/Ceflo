@@ -24,6 +24,6 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef);
 void scope_append_function_definition(scope_t *scope , const char *key , ast_t *value);
 
-int scope_cpy_with_scope(scope_t *end , scope_t *ref);
 
+int scope_cpy_with_scope(scope_t *end , scope_t *ref);
 #endif

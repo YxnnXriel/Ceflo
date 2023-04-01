@@ -1,16 +1,21 @@
 
-
-func k(){
-    func hello(){
-        func jj(){
-            var k = 67;
-            return k;
-        }
-        println(jj())
-        return 3;
+func Hello(){
+    if true{
+        if true{
+            if true{
+                if true{
+                   if true{
+                        if false{
+                            return "Non"
+                        }else{
+                            return "Oui"
+                        }
+                    }
+                }
+            }
+        }        
     }
-    hello();
-    return 2;
 }
 
-println(k());
+
+println(Hello());

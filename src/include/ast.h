@@ -21,6 +21,7 @@
         AST(AST_BINOP)  \
         AST(AST_RETURN)  \
         AST(AST_UNOP)  \
+        AST(AST_IF)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
@@ -123,10 +124,16 @@ typedef struct AST_STRUCT{
     struct AST_STRUCT *left;
     struct AST_STRUCT *right;
     token_t op;
-    bool is_return_value;
+
     // return
     struct AST_STRUCT *return_expr;
+    bool is_return_value;
 
+    // if
+    struct AST_STRUCT *if_expr;
+    struct AST_STRUCT *if_body;
+    struct AST_STRUCT *if_other;
+    struct AST_STRUCT *else_body;
 
 }ast_t;
 
@@ -165,6 +172,8 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
 ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
 ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_return(ast_t *ast , struct SCOPE_STRUCT * scope);
+ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope);
+
 
 
 

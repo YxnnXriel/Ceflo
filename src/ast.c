@@ -53,8 +53,13 @@ ast_t *newAst(uint8_t type){
     new->right = NULL;
     new->is_return_value = false;
     // return
-
     new->return_expr = NULL;
+
+    // if
+    new->if_body = NULL;
+    new->if_expr = NULL;
+    new->else_body = NULL;
+    new->if_other = NULL;
 
     new->next = var;
     var = new;
@@ -186,12 +191,25 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_FUNCTION_DEFINITION: return ast_r_scope(ast_cpy_function_definition(ast,scope),scope);break;
         case AST_BINOP: return ast_r_scope(ast_cpy_binop(ast,scope),scope);break;
         case AST_RETURN: return ast_r_scope(ast_cpy_return(ast,scope),scope);break;
-        
+        case AST_IF: return ast_r_scope(ast_cpy_if(ast,scope),scope);break;
         case AST_NOOP:
             return NULL;
     }
 }
 
+
+ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
+
+    ast_t * a = newAst(ast->type);
+    
+    a->countScope = ast->countScope;
+    a->if_expr = ast_copy(ast->if_expr,scope);
+    a->if_body = ast_copy(ast->if_body,scope);
+    a->else_body = ast_copy(ast->else_body,scope);
+    a->if_other = ast_copy(ast->if_other,scope);
+
+    return a;
+}   
 
 ast_t *ast_cpy_Value(ast_t * ast){
     ast_t * a = newAst(ast->type);

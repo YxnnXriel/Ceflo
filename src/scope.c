@@ -19,7 +19,7 @@ ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef){
     if(scope->variable_definition.Size == 0)
         return NULL;
 
-    ast_t * value = Hash_Get(&scope->variable_definition,vardef);
+    ast_t * value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
 
     return value;
 }
@@ -93,7 +93,7 @@ int scope_cpy_with_scope(scope_t *end , scope_t *ref){
         scope_append_function_definition(
             end,
             func->function_definition_name,
-            func
+            ast_copy(func,end)
         );
     }
 

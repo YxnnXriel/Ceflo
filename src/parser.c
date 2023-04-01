@@ -104,7 +104,7 @@ ast_t *parser_parse_compound(parser_t *parser , scope_t * scope){
 
     compound->scope  = scope;
     compound->countScope = GetScope();
-    compound->type_compound = Rt;
+    compound->type_compound = R_FUNCTION_CALL_TYPE;
 
     #define COMPOUND compound->list_compound
 
@@ -143,6 +143,7 @@ ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
         case TOKEN_FUNC : return parser_parse_function_definition(parser,scope);
         case TOKEN_ID : return parser_parse_variable(parser,scope);
         case TOKEN_RETURN : return parser_parse_return(parser,scope);
+        case TOKEN_IF : return parser_parse_if(parser,scope);
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
         case TOKEN_CHAR:
@@ -379,7 +380,10 @@ ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
     value->countScope = GetScope();
     while (
             parser->current.type == TOKEN_PLUS ||
-            parser->current.type == TOKEN_MINUS 
+            parser->current.type == TOKEN_MINUS ||
+            parser->current.type == TOKEN_EQUAL_EQUAL ||
+            parser->current.type == TOKEN_EQUAL_EQUAL ||
+            parser->current.type == TOKEN_DIF 
     ){
         ast_t *binop = newAst(AST_BINOP);
         binop->countScope = GetScope();
@@ -390,6 +394,24 @@ ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
         binop->right = parser_parse_term(parser,scope);
         value = binop; 
     }
+
+    while (
+            parser->current.type == TOKEN_SUP ||
+            parser->current.type == TOKEN_SUP_EQUAL ||
+            parser->current.type == TOKEN_INF ||
+            parser->current.type == TOKEN_INF_EQUAL
+    ){
+        ast_t *binop = newAst(AST_BINOP);
+        binop->countScope = GetScope();
+        binop->left = value;
+        binop->scope = scope;
+        binop->op = AS_TOKEN(parser->current.type,parser->current.value);
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        binop->right = parser_parse_expression(parser,scope);
+        value = binop; 
+    }
+    
+    
     
     return value;
 
@@ -401,7 +423,8 @@ ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
 
     while (
             parser->current.type == TOKEN_MULT ||
-            parser->current.type == TOKEN_DIV 
+            parser->current.type == TOKEN_DIV ||
+            parser->current.type == TOKEN_MODULO 
     ){
         ast_t *binop = newAst(AST_BINOP);
         binop->countScope = GetScope();
@@ -412,7 +435,8 @@ ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
         binop->right = parser_parse_factor(parser,scope);
         value = binop; 
     }
-    
+
+
     return value;
 }
 
@@ -450,10 +474,14 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
 
 ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
 
+    if(GetScope() == 0){
+        parser_eat(TOKEN_SEMI,RETURN_ERROR,"return dans le main impossible \n");
+    }
+
     ast_t *ast_return = newAst(AST_RETURN);
     ast_return->countScope = GetScope();
     ast_return->scope = scope;
-    parser_eat(TOKEN_RETURN,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    parser_eat(TOKEN_RETURN,RETURN_ERROR,"%s inconnue \n",parser->current.value);
 
     if(parser->current.type != TOKEN_SEMI){
         ast_return->return_expr = parser_parse_expr(parser,scope);
@@ -461,4 +489,42 @@ ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
     }
 
     return ast_return;
+}
+
+ast_t *parser_parse_if(parser_t *parser , scope_t *scope){
+    ast_t *ast_if = newAst(AST_IF);
+    ast_if->scope = scope;
+    ast_if->countScope = GetScope();
+
+    parser_eat(TOKEN_IF,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    ast_if->if_expr = parser_parse_expr(parser,scope);
+
+    parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    if(parser->current.type != TOKEN_RBRACKET){
+        ast_if->if_body = parser_parse_statments(parser,scope);
+        ast_if->if_body->type_compound = R_IF_TYPE;
+    }
+    parser_eat(TOKEN_RBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    if(parser->current.type == TOKEN_ELSE){
+        parser_eat(TOKEN_ELSE,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        
+        if(parser->current.type == TOKEN_IF){
+            ast_if->if_other = parser_parse_if(parser,scope);
+            ast_if->if_other->scope = scope;
+        }else{  
+            parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+            if(parser->current.type != TOKEN_RBRACKET){
+                ast_if->else_body = parser_parse_statments(parser,scope);
+                ast_if->else_body->type_compound = R_IF_TYPE;
+            }
+            parser_eat(TOKEN_RBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        }
+    }
+
+
+    return ast_if;
+
+
 }

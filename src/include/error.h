@@ -17,6 +17,7 @@
         ERR(FUNCTION_CALL_ERROR)    \
         ERR(EXPRESSION_ERROR)    \
         ERR(TYPE_ERROR)    \
+        ERR(RETURN_ERROR)   \
         ERR(SYNTAX_ERROR)
         
 
