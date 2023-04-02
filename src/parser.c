@@ -144,6 +144,8 @@ ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
         case TOKEN_ID : return parser_parse_variable(parser,scope);
         case TOKEN_RETURN : return parser_parse_return(parser,scope);
         case TOKEN_IF : return parser_parse_if(parser,scope);
+        case TOKEN_WHILE : return parser_parse_while(parser,scope);
+        case TOKEN_BREAK : return parser_parse_break(parser,scope);
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
         case TOKEN_CHAR:
@@ -527,4 +529,30 @@ ast_t *parser_parse_if(parser_t *parser , scope_t *scope){
     return ast_if;
 
 
+}
+
+
+ast_t *parser_parse_while(parser_t *parser , scope_t *scope){
+
+    ast_t * ast_while = newAst(AST_WHILE);
+    parser_eat(TOKEN_WHILE,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    ast_while->countScope = GetScope();
+    ast_while->while_expr = parser_parse_expr(parser,scope);
+
+    parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    if(parser->current.type != TOKEN_RBRACKET){
+        ast_while->while_body = parser_parse_statments(parser,scope);
+        ast_while->while_body->type_compound = R_WHILE_TYPE;
+    }
+    parser_eat(TOKEN_RBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+
+    return ast_while;
+}
+
+ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
+    ast_t * ast_break = newAst(AST_BREAK);
+    parser_eat(TOKEN_BREAK,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    ast_break->countScope = GetScope();
+    return ast_break;
 }

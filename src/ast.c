@@ -61,6 +61,10 @@ ast_t *newAst(uint8_t type){
     new->else_body = NULL;
     new->if_other = NULL;
 
+    // while
+    new->while_expr = NULL;
+    new->while_body = NULL;
+
     new->next = var;
     var = new;
 
@@ -192,11 +196,33 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_BINOP: return ast_r_scope(ast_cpy_binop(ast,scope),scope);break;
         case AST_RETURN: return ast_r_scope(ast_cpy_return(ast,scope),scope);break;
         case AST_IF: return ast_r_scope(ast_cpy_if(ast,scope),scope);break;
+        case AST_WHILE: return ast_r_scope(ast_cpy_while(ast,scope),scope);break;
+        case AST_BREAK: return ast_r_scope(ast_cpy_break(ast,scope),scope);break;
         case AST_NOOP:
             return NULL;
     }
 }
 
+
+
+ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope){
+
+    ast_t *a = newAst(ast->type);
+    a->countScope = ast->countScope;
+    return a;
+
+}
+
+ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope){
+
+    ast_t * a = newAst(ast->type);
+    a->countScope = ast->countScope;
+    a->while_expr = ast_copy(ast->while_expr,scope);
+    a->while_body = ast_copy(ast->while_body,scope);
+
+    return a;
+
+}
 
 ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
 

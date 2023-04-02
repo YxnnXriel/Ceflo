@@ -22,6 +22,8 @@
         AST(AST_RETURN)  \
         AST(AST_UNOP)  \
         AST(AST_IF)  \
+        AST(AST_WHILE)  \
+        AST(AST_BREAK)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
@@ -135,6 +137,11 @@ typedef struct AST_STRUCT{
     struct AST_STRUCT *if_other;
     struct AST_STRUCT *else_body;
 
+    // while
+    struct AST_STRUCT *while_expr;
+    struct AST_STRUCT *while_body;
+
+
 }ast_t;
 
 
@@ -173,6 +180,10 @@ ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
 ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_return(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope);
+ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope);
+ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope);
+
+
 
 
 

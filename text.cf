@@ -1,21 +1,15 @@
 
+
 func Hello(){
-    if true{
-        if true{
-            if true{
-                if true{
-                   if true{
-                        if false{
-                            return "Non"
-                        }else{
-                            return "Oui"
-                        }
-                    }
-                }
-            }
-        }        
+    while true{
+        println("Hi Mom !")
+        println("Hi Mom !")
+        break
     }
+
+    return 1;
 }
 
 
 println(Hello());
+

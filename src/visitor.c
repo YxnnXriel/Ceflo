@@ -95,6 +95,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_STRING:
         case AST_NONE:
         case AST_RETURN:
+        case AST_BREAK:
             return visitor_visit_data(visitor,node);break;
         case AST_COMPOUND: return visitor_visit_compound(visitor,node);break;
         case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);break;
@@ -103,7 +104,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor,node);break;
         case AST_BINOP: return visitor_visit_binop(visitor,node);break;
         case AST_IF: return visitor_visit_if(visitor,node);break;
-
+        case AST_WHILE: return visitor_visit_while(visitor,node);break;
         case AST_NOOP:
             return node;
         default:
@@ -125,6 +126,8 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
 
 
         if(noeud ){
+            if(noeud->type == AST_BREAK)
+                return noeud;
             if(noeud ->type == AST_RETURN){
                 if(noeud ->return_expr != NULL){
                     
@@ -702,5 +705,17 @@ ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
         }
     }
 
+    return node;
+}
+
+ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
+    
+    while (visitor_visit_evaluate_expr(node->while_expr)){
+        ast_t *res =  visitor_visit(visitor,node->while_body);
+        if(res->type == AST_BREAK){
+            break;
+        }
+    }
+    
     return node;
 }
