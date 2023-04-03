@@ -65,6 +65,9 @@ ast_t *newAst(uint8_t type){
     new->while_expr = NULL;
     new->while_body = NULL;
 
+    new->assignement_left = NULL;
+    new->assignement_value = NULL;
+    new->assignement_variable_name = NULL;
     new->next = var;
     var = new;
 
@@ -108,6 +111,7 @@ void newValue(Value_t * value , uint8_t type){
 }
 
 void freeAst(ast_t *node){
+
     if(node->variable_definition_name != NULL){
         free(node->variable_definition_name);
     }
@@ -120,7 +124,8 @@ void freeAst(ast_t *node){
     
     if(node->function_call_name != NULL)
         free(node->function_call_name);
-    if(node->value.type == STRING){
+
+    if(node->type == AST_STRING){
         String_free(node->value.as.stringValue);
     }
 
@@ -198,12 +203,20 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_IF: return ast_r_scope(ast_cpy_if(ast,scope),scope);break;
         case AST_WHILE: return ast_r_scope(ast_cpy_while(ast,scope),scope);break;
         case AST_BREAK: return ast_r_scope(ast_cpy_break(ast,scope),scope);break;
+        case AST_ASSIGNEMENT: return ast_r_scope(ast_cpy_variable_assignement(ast,scope),scope);break;
         case AST_NOOP:
             return NULL;
     }
 }
 
+ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
 
+    ast_t * a = newAst(ast->type);
+    a->assignement_left = ast_copy(ast->assignement_left,scope);
+    a->assignement_value = ast_copy(ast->assignement_value,scope);
+    a->op = ast->op;
+    return a;
+}
 
 ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope){
 
@@ -327,6 +340,8 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
         arg = ast_copy(arg,scope);
         List_Ast_Append(&newFunction->function_defintion_args,arg);
     }
+    
+
     newFunction->function_definition_body = ast_copy(function->function_definition_body,scope);
 
     

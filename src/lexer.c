@@ -231,6 +231,15 @@ token_t lexer_get_next_token(lexer_t *lexer){
                 return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_COLON,":"));
             break;
 
+            case '!':
+                if(lexer_peek(lexer,'=')){
+                    lexer_advance(lexer);
+                    return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_DIF,"!="));
+                }
+                return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_NOT,"!"));
+            break;
+
+
             case '=':
                 if(lexer_peek(lexer,'=')){
                     lexer_advance(lexer);

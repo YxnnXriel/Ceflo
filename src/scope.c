@@ -20,6 +20,10 @@ ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef){
         return NULL;
 
     ast_t * value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
+    if(value != NULL){
+        value->scope = scope;
+        value->assignement_variable_name = vardef;
+    }
 
     return value;
 }
@@ -30,6 +34,7 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 
     if(stk_val != NULL){
         // update
+
         Hash_Modif(&scope->variable_definition,key,value);
     }else{
         Hash_Append(&scope->variable_definition,key,value);

@@ -32,3 +32,7 @@
     }
 
     // visit.global_scope->scope_parent = visitor->global_scope;
+
+
+// je get la value avec sa porte et son nom , je la met dans une structure , quand j'aurais finis de faire les calcules 
+il suffit de modifier sa valeur dans la porter enregistrer

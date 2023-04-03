@@ -184,6 +184,17 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
     return variable;
 }
 
+
+static char * GetOp(TokenEnum type){
+    switch (type){
+        case TOKEN_PLUS_EQUAL: return "+=";
+        case TOKEN_MINUS_EQUAL: return "-=";
+        case TOKEN_MULT_EQUAL: return "*=";
+        case TOKEN_DIV_EQUAL: return "/=";
+    }
+    return "=";
+}
+
 ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
     ast_t * variable = newAst(AST_VARIABLE);
@@ -194,6 +205,33 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
     
     if(parser->current.type == TOKEN_LPARENT){
         return parser_parse_function_call(parser,scope);
+    }
+
+
+    if(parser->current.type == TOKEN_EQUAL){
+        parser_eat(TOKEN_EQUAL,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        ast_t * assign = newAst(AST_ASSIGNEMENT);
+        assign->assignement_left = variable;
+        assign->assignement_value = parser_parse_expr(parser,scope);
+        assign->countScope = GetScope();
+        assign->scope = scope;
+        return assign;     
+    }
+
+    if(
+        parser->current.type == TOKEN_PLUS_EQUAL ||
+        parser->current.type == TOKEN_MINUS_EQUAL ||
+        parser->current.type == TOKEN_DIV_EQUAL ||
+        parser->current.type == TOKEN_MULT_EQUAL
+    ){
+        ast_t * modifier = newAst(AST_ASSIGNEMENT);
+        modifier->countScope = GetScope();
+        modifier->scope = scope;
+        modifier->assignement_left = variable;
+        modifier->op = AS_TOKEN(parser->current.type -1 ,GetOp(parser->current.type - 1));
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        modifier->assignement_value = parser_parse_expr(parser,scope);
+        return modifier;
     }
 
 

@@ -1,15 +1,26 @@
 
-
-func Hello(){
-    while true{
-        println("Hi Mom !")
-        println("Hi Mom !")
-        break
+func j(n){
+    
+    while n != 10{
+        if n == 4{
+            if true{
+                if true{
+                    if true{
+                        if true{
+                            if true{
+                                return n;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        n += 1;
     }
 
-    return 1;
-}
+    return n;
+} 
 
 
-println(Hello());
 
+println("result : ", j(1))

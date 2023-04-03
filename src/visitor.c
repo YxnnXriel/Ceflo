@@ -59,7 +59,7 @@ static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t 
             case AST_STRING : printf("%s",child->value.as.stringValue->str);break;
             case AST_BOOL : printf("%s",child->value.as.booleanValue == 1 ? "true" : "false");break;
             default:
-                printf("%p\n",child);
+                printf("%p\n",(void *)child);
             break;
         }
     }
@@ -105,6 +105,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_BINOP: return visitor_visit_binop(visitor,node);break;
         case AST_IF: return visitor_visit_if(visitor,node);break;
         case AST_WHILE: return visitor_visit_while(visitor,node);break;
+        case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);break;
         case AST_NOOP:
             return node;
         default:
@@ -131,10 +132,10 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
             if(noeud ->type == AST_RETURN){
                 if(noeud ->return_expr != NULL){
                     
-                    // printf("----\n");
+                    // printf("-----------------------------\n");
                     ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
                     ast_t *value =  ast_copy(return_value,node->scope);  
-                    // printf("<%g> \n",value->value.as.numberValue);
+                    // printf("<%g> (%d) \n",value->value.as.numberValue,value->countScope);
                     // printf("%s\n",node->type_compound == R_FUNCTION_CALL_TYPE ? "FUNCTION_CALL":"IF");
                     
                         // printf("YEAP %d\n",noeud->countScope);
@@ -149,13 +150,21 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
             //     node->type_compound != R_FUNCTION_CALL_TYPE
             // ){
             // printf("%s\n",node->type_compound == R_FUNCTION_CALL_TYPE ? "FUNCTION_CALL":"IF");
-            
+
+            // if(noeud->is_return_value){
+            //     printf("noeud->countScope - 1 = %d , ",noeud->countScope - 1);
+            //     printf("visitor->global_scope->countScope = %d \n",visitor->global_scope->countScope);
+            // }
+
             if((noeud->is_return_value == true) 
                 &&
                 noeud->countScope - 1 != visitor->global_scope->countScope
-            ){
-                if(visitor->global_scope->countScope != 0){
 
+            ){
+                if(visitor->global_scope->countScope == 0){
+                    noeud->is_return_value =  false;
+
+                }else{
                     return noeud ;
                 }
             }else{
@@ -190,6 +199,7 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 }
 
 ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
+
     ast_t * value = scope_get_variable_definition(
         visitor->global_scope,
         node->variable_name
@@ -215,6 +225,7 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
             "var %s n'est pas définit \n",
             node->variable_name
         );
+        exit(1);
     }
 
 }
@@ -289,7 +300,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     
     scope_t * newscope = newScope();
 
-    ast_t *newFunction = ast_cpy_function_definition(functionDef,newscope);
+    ast_t *newFunction = ast_copy(functionDef,newscope);
 
     // printf("scope : %p\n",visitor->global_scope);
     // printf("newscope : %p\n",newscope);
@@ -325,7 +336,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     // printf("VISIT : function  %s \n",newFunction->function_definition_name);
 
     ast_t *returnValue =  visitor_visit(&visit,newFunction->function_definition_body);   
-
+    
 
     // freeScope(newscope);
 
@@ -347,11 +358,13 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
     #define BINOP(l,o,r)    l(left->value) o r(right->value)
 
     ast_t * value = NULL;
+    
   
  switch (left->type){
 
         case AST_CHAR:
             value = newAst(AST_CHAR);
+            value->countScope = visitor->global_scope->countScope;
             switch (right->type){
                     case AST_NUMBER:
                         switch (op->type){
@@ -424,6 +437,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
 
         case AST_NUMBER:
             value = newAst(AST_NUMBER);
+            value->countScope = visitor->global_scope->countScope;
             switch (right->type){
                     case AST_CHAR:
                         value->type = AST_NUMBER;
@@ -485,7 +499,8 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                     case AST_STRING:
                         value->type = AST_STRING;
                         switch (op->type){
-                            case TOKEN_PLUS : value->value.as.stringValue = String_cat("%d%s",left->value.as.numberValue,right->value.as.stringValue->str);break;
+                            case TOKEN_PLUS :
+                            value->value.as.stringValue = String_cat("%g%s",left->value.as.numberValue,right->value.as.stringValue->str);break;
                         }
                         return value;
                         break;
@@ -494,6 +509,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
 
         case AST_BOOL:
             value = newAst(AST_BOOL);
+            value->countScope = visitor->global_scope->countScope;
             switch (right->type){
 
 
@@ -587,10 +603,11 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
 
         case AST_STRING:
             value = newAst(AST_STRING);
+            value->countScope = visitor->global_scope->countScope;
             switch (right->type){
                     case AST_NUMBER:
                         switch (op->type){
-                            case TOKEN_PLUS :value->value.as.stringValue = String_cat("%s%d",left->value.as.stringValue->str,right->value.as.numberValue);break;
+                            case TOKEN_PLUS :value->value.as.stringValue = String_cat("%s%g",left->value.as.stringValue->str,right->value.as.numberValue);break;
                             case TOKEN_MULT :{
                                 listString_t * list = new_ListString();
                                 for (int i = 0; i < right->value.as.numberValue; i++){
@@ -644,7 +661,8 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
             break;
 
             case AST_NONE:
-                value = newAst(AST_BOOL);;
+                value = newAst(AST_BOOL);
+                value->countScope = visitor->global_scope->countScope;
                 switch (op->type){
                     case TOKEN_AND : value->value.as.booleanValue = left->type && right->type;break;
                     case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->type == right->type;break;
@@ -691,6 +709,8 @@ static int visitor_visit_evaluate_expr(ast_t *value){
 
 ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
 
+    // printf("if - %d \n",visitor->global_scope->countScope);
+
     if(!node->if_expr)
         return visitor_visit(visitor,node->if_body);
 
@@ -709,13 +729,43 @@ ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
 }
 
 ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
+    // printf("while - %d \n",visitor->global_scope->countScope);
     
-    while (visitor_visit_evaluate_expr(node->while_expr)){
+    while (visitor_visit_evaluate_expr(visitor_visit(visitor,node->while_expr))){
         ast_t *res =  visitor_visit(visitor,node->while_body);
+        if(res->is_return_value)
+            return res;
         if(res->type == AST_BREAK){
             break;
         }
+
     }
     
     return node;
+}
+
+ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
+
+    ast_t * variable = visitor_visit(visitor,node->assignement_left);
+    scope_t *scope = variable->scope;
+    ast_t * value = visitor_visit(visitor,node->assignement_value);
+    // printf("[%s] [%g] \n",variable->variable_name,variable->value.as.numberValue);
+
+    if(node->op.type != TOKEN_ID){
+        ast_t * binop = newAst(AST_BINOP);
+        binop->left = variable;
+        binop->right = value;
+        binop->op = node->op;
+        value =  visitor_visit(visitor,binop);
+        // printf("%p\n",(void*)binop->next);
+    }
+
+    scope_append_variable_definition(
+        scope,
+        variable->assignement_variable_name,
+        value
+    );
+    
+
+    return value;
 }

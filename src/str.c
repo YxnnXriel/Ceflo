@@ -204,7 +204,8 @@ String String_cat(char *format , ...){
     
     vsprintf(Buffer,format,args);
     va_end(args);
-    return new_String(Buffer);
+    string_t *chaine = new_String(Buffer);
+    return chaine;
 }
 
 static string_t * readFile(const char *path){
@@ -264,6 +265,7 @@ String String_Reverse(String chaine){
     String_Set(ch,chaine->str);
 	return ch;
 }
+
 
 
 /* ------------------LIST STRING---------------------- */
