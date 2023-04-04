@@ -1,26 +1,2 @@
 
-func j(n){
-    
-    while n != 10{
-        if n == 4{
-            if true{
-                if true{
-                    if true{
-                        if true{
-                            if true{
-                                return n;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        n += 1;
-    }
-
-    return n;
-} 
-
-
-
-println("result : ", j(1))
+println("Hi Mom");

@@ -17,6 +17,7 @@
         AST(AST_NUMBER)    \
         AST(AST_STRING)    \
         AST(AST_OBJ)   \
+        AST(AST_LIST)   \
         AST(AST_COMPOUND)  \
         AST(AST_BINOP)  \
         AST(AST_RETURN)  \
