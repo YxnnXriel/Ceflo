@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <assert.h>
 #include "include/parser.h"
 #include "include/error.h"
 #include "include/common.h"
@@ -506,6 +506,8 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
         case TOKEN_TRUE:
         case TOKEN_FALSE:
             return parser_parse_bool(parser,scope);break;
+        case TOKEN_LBRACE:
+            return parser_parse_list(parser,scope);
     }
 
     return newAst(AST_NONE);
@@ -593,4 +595,10 @@ ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
     parser_eat(TOKEN_BREAK,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
     ast_break->countScope = GetScope();
     return ast_break;
+}
+
+ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
+    assert(false && printf("%s pas implementer \n",__func__));    
+
+    return NULL;
 }

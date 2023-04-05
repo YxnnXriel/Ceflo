@@ -46,6 +46,7 @@ typedef enum{
     CHAR,
     NUMBER,
     STRING,
+    LIST,
     OBJECT,
 }type_ceflo;
 
@@ -72,6 +73,7 @@ typedef struct AST_TYPE_VALUE{
         double numberValue;
         char charValue;
         string_t *stringValue;
+        list_t *listValue;
         Obj_t *ObjectValue; // la j'alloue un object
     }as;
 }Value_t;
@@ -80,6 +82,8 @@ typedef struct AST_TYPE_VALUE{
 #define AS_NUMBER(value) ((value).as.numberValue)
 #define AS_CHAR(value) ((value).as.charValue)
 #define AS_STRING(value) ((value).as.stringValue->str)
+#define AS_LIST(value) ((value).as.listValue)
+
 
 
 
@@ -148,8 +152,6 @@ typedef struct AST_STRUCT{
     struct AST_STRUCT *assignement_left;
     struct AST_STRUCT *assignement_value;
     const char *assignement_variable_name;
-
-
 
 
 }ast_t;
