@@ -32,7 +32,6 @@ ast_t *newAst(uint8_t type){
     new->variable_definition_value = NULL;
     new->variable_definition_static_type = NONE;
 
-
     new->variable_name = NULL;
 
     new->function_definition_name = NULL;
@@ -65,9 +64,14 @@ ast_t *newAst(uint8_t type){
     new->while_expr = NULL;
     new->while_body = NULL;
 
+
+    // STRING
+    new->is_string_modif = false;
+    new->ref_string = NULL;
     new->assignement_left = NULL;
     new->assignement_value = NULL;
     new->assignement_variable_name = NULL;
+    new->list_ptr = NULL;
     new->next = var;
     var = new;
 
@@ -110,6 +114,24 @@ void newValue(Value_t * value , uint8_t type){
     value->type = type;
 }
 
+void modifValue(ast_t * value , ast_t * new){
+    
+    if(new->type == AST_STRING){
+
+        value->value.type = STRING;
+        if(value->type == AST_STRING){
+            String_Set(value->value.as.stringValue,new->value.as.stringValue->str);
+        }else{
+            value->value.as.stringValue = new_String(new->value.as.stringValue->str);
+            value->type = AST_STRING; 
+        }
+
+    }else{
+        value->value = new->value;
+        value->type = new->type;
+    }
+}
+
 void freeAst(ast_t *node){
 
     if(node->variable_definition_name != NULL){
@@ -126,7 +148,14 @@ void freeAst(ast_t *node){
         free(node->function_call_name);
 
     if(node->type == AST_STRING){
-        String_free(node->value.as.stringValue);
+        // if(node->value.as.stringValue != NULL){
+            String_free(node->value.as.stringValue);
+        // }
+    }
+
+    if(node->type == AST_LIST){
+        free(node->value.as.listValue->Item);
+        free(node->value.as.listValue);
     }
 
     if(node->list_compound != NULL){
@@ -203,10 +232,24 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_IF: return ast_r_scope(ast_cpy_if(ast,scope),scope);break;
         case AST_WHILE: return ast_r_scope(ast_cpy_while(ast,scope),scope);break;
         case AST_BREAK: return ast_r_scope(ast_cpy_break(ast,scope),scope);break;
+        case AST_LIST_ACCESS: return ast_r_scope(ast_cpy_list_access(ast,scope),scope);break;
+        case AST_LIST_ASSIGNEMENT:
         case AST_ASSIGNEMENT: return ast_r_scope(ast_cpy_variable_assignement(ast,scope),scope);break;
         case AST_NOOP:
             return NULL;
     }
+}
+
+
+ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope){
+
+    ast_t * a = newAst(AST_LIST_ACCESS);
+
+    a->left = ast_copy(ast->left, scope);
+    a->list_ptr = ast_copy(ast->list_ptr, scope);
+    a->countScope = ast->countScope;
+    
+    return a;
 }
 
 ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
@@ -215,6 +258,7 @@ ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->assignement_left = ast_copy(ast->assignement_left,scope);
     a->assignement_value = ast_copy(ast->assignement_value,scope);
     a->op = ast->op;
+    a->countScope = ast->countScope;
     return a;
 }
 
@@ -252,8 +296,10 @@ ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
 
 ast_t *ast_cpy_Value(ast_t * ast){
     ast_t * a = newAst(ast->type);
+    
     a->countScope = ast->countScope;
-    if(a->type == AST_STRING){
+
+    if(ast->type == AST_STRING){
         newValue(&a->value,STRING);
         a->value.as.stringValue = new_String(ast->value.as.stringValue->str);
     }else{

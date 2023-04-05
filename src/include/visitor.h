@@ -27,6 +27,11 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node);
 
 
 
+ast_t * visitor_visit_list_init(visitor_t * visitor,ast_t *node);
+
+ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node);
+ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node);
+
 void newGb();
 
 #endif

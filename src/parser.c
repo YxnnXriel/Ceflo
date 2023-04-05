@@ -207,6 +207,40 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         return parser_parse_function_call(parser,scope);
     }
 
+    if(parser->current.type == TOKEN_LBRACE){
+
+        while (parser->current.type == TOKEN_LBRACE){
+        
+            ast_t * list_acces = newAst(AST_LIST_ACCESS);
+            list_acces->left = variable;
+            list_acces->scope = scope;
+            list_acces->countScope = GetScope();
+            parser_eat(TOKEN_LBRACE,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+            list_acces->list_ptr = parser_parse_expr(parser,scope);
+            parser_eat(TOKEN_RBRACE,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+            variable = list_acces;
+        }
+        
+        if(parser->current.type == TOKEN_EQUAL ||
+            parser->current.type == TOKEN_PLUS_EQUAL ||
+            parser->current.type == TOKEN_MINUS_EQUAL ||
+            parser->current.type == TOKEN_DIV_EQUAL ||
+            parser->current.type == TOKEN_MULT_EQUAL
+        ){
+            ast_t * list_assign = newAst(AST_LIST_ASSIGNEMENT);
+            list_assign->scope = scope;
+            list_assign->countScope = GetScope();
+            list_assign->op = parser->current.type == TOKEN_EQUAL ? parser->current :
+                AS_TOKEN(parser->current.type -1 ,GetOp(parser->current.type - 1));
+            parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+            list_assign->assignement_left = variable;
+            list_assign->assignement_value = parser_parse_expr(parser,scope);
+
+            return list_assign;
+        }
+
+    }
+
 
     if(parser->current.type == TOKEN_EQUAL){
         parser_eat(TOKEN_EQUAL,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
@@ -598,7 +632,35 @@ ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
 }
 
 ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
-    assert(false && printf("%s pas implementer \n",__func__));    
+    // assert(false && printf("%s pas implementer \n",__func__));    
+    
+    ast_t * list = newAst(AST_LIST);
+    newValue(&list->value,LIST);
 
-    return NULL;
+    list->value.as.listValue = __init__list__(sizeof(ast_t*));
+
+    parser_eat(TOKEN_LBRACE,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    if(parser->current.type != TOKEN_RBRACE){
+
+        List_Append(list->value.as.listValue,
+            parser_parse_expr(parser,scope)
+        );
+
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TOKEN_COMA,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        
+            List_Append(list->value.as.listValue,
+                parser_parse_expr(parser,scope)
+            );
+        }
+        
+
+    }
+    
+    parser_eat(TOKEN_RBRACE,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    
+
+    return list;
 }

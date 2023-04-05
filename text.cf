@@ -1,2 +1,13 @@
 
-println("Hi Mom");
+
+func hello(chaine) none {
+    chaine[0] = 'T'
+    return "Ok";
+}
+
+
+var l = "tu est grand"
+
+hello(l);
+
+println(l)

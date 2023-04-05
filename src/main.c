@@ -8,6 +8,10 @@
 #include "include/visitor.h"
 
 
+/**
+ * TODO: apporter les securités sur les fonctions , les variables , le casting
+ */
+
 int main(int argc, char const *argv[]){
 
 		lexer_t lexer;
@@ -42,9 +46,6 @@ int main(int argc, char const *argv[]){
 		freeScope(visitor.global_scope);
 		
 		lexerFree(&lexer);
-
-
-
 
 
 

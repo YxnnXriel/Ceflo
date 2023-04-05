@@ -18,6 +18,8 @@
         AST(AST_STRING)    \
         AST(AST_OBJ)   \
         AST(AST_LIST)   \
+        AST(AST_LIST_ACCESS)   \
+        AST(AST_LIST_ASSIGNEMENT)   \
         AST(AST_COMPOUND)  \
         AST(AST_BINOP)  \
         AST(AST_RETURN)  \
@@ -153,6 +155,14 @@ typedef struct AST_STRUCT{
     struct AST_STRUCT *assignement_value;
     const char *assignement_variable_name;
 
+    //List_ACCES
+    struct AST_STRUCT *list_ptr; // [0]
+
+
+
+    // STRING
+    bool is_string_modif;
+    struct AST_STRUCT *ref_string; // [0]
 
 }ast_t;
 
@@ -167,6 +177,8 @@ ast_t *newAst(uint8_t type);
 void newList_Ast(list_ast_t *list);
 void newObject(Obj_t * object);
 void newValue(Value_t * value , uint8_t type);
+void modifValue(ast_t * value , ast_t * new);
+
 
 int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
@@ -195,7 +207,7 @@ ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope);
-
+ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope);
 
 
 

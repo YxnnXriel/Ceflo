@@ -41,6 +41,33 @@ static void GbFree(){
     
 }
 
+static void bulletin_print_list(visitor_t * visitor , ast_t * node ){
+
+    printf("[ ");
+    for (int i = 0; i < node->value.as.listValue->Size; i++){
+        ast_t * child = List_Get(node->value.as.listValue,i);
+
+        child = visitor_visit(visitor,child);
+
+        switch (child->type){
+            case AST_NONE : printf("none");break;
+            case AST_CHAR : printf("'%c'",child->value.as.charValue);break;
+            case AST_NUMBER : printf("%g",child->value.as.numberValue);break;
+            case AST_STRING : printf("\"%s\"",child->value.as.stringValue->str);break;
+            case AST_BOOL : printf("%s",child->value.as.booleanValue == 1 ? "true" : "false");break;
+            case AST_LIST: bulletin_print_list(visitor,child);break; 
+            default:
+                printf("%p\n",(void *)child);
+            break;
+        }
+        if(i !=  node->value.as.listValue->Size - 1 )
+            printf(" , ");
+
+    }
+    printf(" ]");
+    
+
+}
 
 static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
@@ -58,6 +85,7 @@ static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t 
             case AST_NUMBER : printf("%g",child->value.as.numberValue);break;
             case AST_STRING : printf("%s",child->value.as.stringValue->str);break;
             case AST_BOOL : printf("%s",child->value.as.booleanValue == 1 ? "true" : "false");break;
+            case AST_LIST: bulletin_print_list(visitor,child);break;
             default:
                 printf("%p\n",(void *)child);
             break;
@@ -106,6 +134,10 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_IF: return visitor_visit_if(visitor,node);break;
         case AST_WHILE: return visitor_visit_while(visitor,node);break;
         case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);break;
+        case AST_LIST: return visitor_visit_list_init(visitor,node);break;
+        case AST_LIST_ASSIGNEMENT: return visitor_visit_list_assignement(visitor,node);break;
+        case AST_LIST_ACCESS: return visitor_visit_list_access(visitor,node);break;
+
         case AST_NOOP:
             return node;
         default:
@@ -768,4 +800,116 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     
 
     return value;
+}
+
+ast_t * visitor_visit_list_init(visitor_t * visitor,ast_t *node){
+    Value_t * val = &node->value;
+    for (int i = 0; i < val->as.listValue->Size; i++){
+        val->as.listValue->Item[i] =  visitor_visit(visitor,val->as.listValue->Item[i]);
+    }
+
+    return node;
+    
+}
+
+
+ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
+
+
+    ast_t * variable = visitor_visit(visitor,node->left);
+    ast_t * index = visitor_visit(visitor,node->list_ptr);
+
+    if(variable->type == AST_LIST){
+        if(index->type == AST_NUMBER){
+            if(index->value.as.numberValue > variable->value.as.listValue->Size){
+                Print_visitor_error(
+                0,
+                0,
+                "./Ceflo",
+                "%s[%g] n'existe pas \n",
+                variable->variable_name,
+                index->value.as.numberValue
+                );
+                exit(1);
+            }
+            // ast_t * value =  List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
+            // value->assignement_variable_name = variable->assignement_variable_name;
+            // value->list_ptr = index;
+            // value->value.as.listValue = variable->value.as.listValue;
+            return List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
+        }
+    }
+
+    if(variable->type == AST_STRING){
+        if(index->type == AST_NUMBER){
+            if(index->value.as.numberValue > variable->value.as.stringValue->lenght){
+                Print_visitor_error(
+                0,
+                0,
+                "./Ceflo",
+                "%s[%g] n'existe pas \n",
+                variable->variable_name,
+                index->value.as.numberValue
+                );
+                exit(1);
+            }
+            ast_t * value =  newAst(AST_CHAR);
+            newValue(&value->value,CHAR);
+            value->value.as.charValue = String_index(variable->value.as.stringValue,(int)index->value.as.numberValue);
+            value->list_ptr = index;
+            value->ref_string = variable;
+            value->is_string_modif = true;
+            return value;
+        }
+    }
+
+
+    return variable;
+}
+
+ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
+
+    ast_t * variable = visitor_visit(visitor,node->assignement_left);
+    // scope_t *scope = variable->scope;
+    ast_t * value = visitor_visit(visitor,node->assignement_value);
+    // printf("[%s] [%g] \n",variable->variable_name,variable->value.as.numberValue);
+
+    if(node->op.type != TOKEN_EQUAL){
+        ast_t * binop = newAst(AST_BINOP);
+        binop->left = variable;
+        binop->right = value;
+        binop->op = node->op;
+        variable->value = visitor_visit(visitor,binop)->value;
+        // printf("%p\n",(void*)binop->next);
+    }else{
+        modifValue(variable,value);
+
+        // variable->value = ast_copy(value,NULL)->value;
+        // variable->type = value->type;
+        // printf("%s %s \n",AST_TO_STRING[value->type],variable->value.as.stringValue->str);
+    }
+
+    
+    if(variable->is_string_modif){
+        string_t * str = variable->ref_string->value.as.stringValue;
+        if(value->type == AST_CHAR){
+            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,value->value.as.charValue);
+        }
+        else if(value->type == AST_NUMBER)
+            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,(char) value->value.as.numberValue);
+        else{
+            variable->ref_string->type = AST_NONE;
+        }
+        variable->is_string_modif = false;
+    }
+    
+    // printf("ICI ICI %s\n",variable->assignement_variable_name);
+    
+    // scope_append_variable_definition(
+        // scope,
+        // variable->assignement_variable_name,
+        // variable
+    // );
+
+    return variable;
 }

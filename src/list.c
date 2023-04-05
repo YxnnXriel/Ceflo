@@ -50,9 +50,20 @@ int List_Append(list_t *list , void *value){
     return 1;
 }
 
+void * List_Modif(list_t *list,void * value,int index){
+    if(List_Get(list,index) != NULL){
+        list->Item[index] = value;
+        return list;
+    }else{
+        return NULL;
+    }
+}
+
 void * List_Get(list_t *list,int index){
     return index < list->Size ? list->Item[index] : (void*)0;
 }
+
+
 void * List_Get_Last(list_t *list){
     return list->Size != 0 ? list->Item[list->Size -1]:(void*)0;
 }
