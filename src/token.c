@@ -25,7 +25,7 @@ token_t token_cpy(token_t tok){
 int freeToken(token_t *token){
     
     if(token->value){
-        if(token->type <= 23){
+        if(token->type <= 24){
             free(token->value);
         }
 

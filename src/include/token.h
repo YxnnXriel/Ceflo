@@ -20,6 +20,7 @@ typedef enum{
         TOKEN_OR, // or
         TOKEN_AND, // and
         TOKEN_PASS , // pass
+        TOKEN_NEW , // new
         TOKEN_CONTINUE, // continue
         TOKEN_BREAK, // break
         TOKEN_NONE, // None
@@ -33,6 +34,7 @@ typedef enum{
         TOKEN_ARROW, // ->
         TOKEN_COLON , // :
         TOKEN_DOUBLE_COLON , // ::
+        TOKEN_DOT , // .
         TOKEN_SEMI, // ;
         TOKEN_COMA, // , 
         TOKEN_LPARENT,  // (
@@ -87,6 +89,7 @@ static const char *TOKEN_TO_STRING[]={
     "or",
     "and",
     "pass",
+    "new",
     "continue",
     "break",
     "None",
@@ -100,6 +103,7 @@ static const char *TOKEN_TO_STRING[]={
     "->",
     ":",
     "::",
+    ".",
     ";",
     ",",
     "(",

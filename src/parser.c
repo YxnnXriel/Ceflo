@@ -24,6 +24,11 @@ static void ScopeReset(){
     *l = 0;
 }
 
+static void ScopeSet(int value){
+    int * l = ScopeCount();
+    *l = value;
+}
+
 static void ScopePlus(){
     int *p = ScopeCount();
     *p += 1;
@@ -234,6 +239,15 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
     
     if(parser->current.type == TOKEN_LPARENT){
         return parser_parse_function_call(parser,scope);
+    }
+
+    if(parser->current.type == TOKEN_DOT){
+        parser_eat(TOKEN_DOT,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+        ast_t * obj_acces = newAst(AST_OBJ_ACCESS);
+        obj_acces->left = variable;
+        obj_acces->right = parser_parse_expr(parser,scope);
+
+        variable = obj_acces;
     }
 
     if(parser->current.type == TOKEN_LBRACE){
@@ -541,6 +555,15 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
         return parser_parse_variable(parser,scope);
     }
 
+    if(parser->current.type == TOKEN_NEW){
+        parser_eat(TOKEN_NEW,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        parser_eat(TOKEN_ID,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        ast_t * func = parser_parse_function_call(parser,scope);
+        func->type = AST_STRUCT;
+        
+        return func;
+    }
+
     switch (parser->current.type){
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
@@ -698,12 +721,14 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
     ast_struct->struct_definition_item = __init__list__(sizeof(ast_t*));
     parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
 
+    
     if(parser->current.type != TOKEN_RBRACKET){
 
+        // int prevScope = GetScope();
+        // ScopePlus();
         ast_t *item = parser_parse_statment(parser,scope);
-
         if(item->type != AST_NOOP){
-            if(!isInClassDefinition(item)){
+            if(!isInClassDefinition(item) ){
                 Print_error(
                     parser->lexer,
                     "StructDefError: %s n'est pas permis dans la definition d'une structure\n",
@@ -716,12 +741,12 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
                 item
             );
         }
-
         while (parser->current.type == TOKEN_SEMI || parser->current.type != TOKEN_RBRACKET){
             if(parser->current.type == TOKEN_SEMI){
                 parser_eat(TOKEN_SEMI,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
             }
             item = parser_parse_statment(parser,scope);
+
             if(item->type != AST_NOOP){
                 if(!isInClassDefinition(item)){
                     Print_error(
@@ -737,6 +762,9 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
                 );
             }
         }
+        // ScopeMinus();
+        // ScopeSet(prevScope);
+        
         
 
     }

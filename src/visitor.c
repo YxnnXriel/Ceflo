@@ -123,12 +123,14 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_NUMBER:
         case AST_STRING:
         case AST_NONE:
+        case AST_OBJ:
         case AST_RETURN:
         case AST_BREAK:
             return visitor_visit_data(visitor,node);break;
         case AST_COMPOUND: return visitor_visit_compound(visitor,node);break;
-        case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);break;
         case AST_STRUCT_DEFINITION: return visitor_visit_struct_definition(visitor,node);break;
+        case AST_STRUCT: return visitor_visit_struct(visitor,node);break;
+        case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);break;
         case AST_VARIABLE: return visitor_visit_variable(visitor,node);break;
         case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor,node);break;
         case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor,node);break;
@@ -139,7 +141,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_LIST: return visitor_visit_list_init(visitor,node);break;
         case AST_LIST_ASSIGNEMENT: return visitor_visit_list_assignement(visitor,node);break;
         case AST_LIST_ACCESS: return visitor_visit_list_access(visitor,node);break;
-
+        case AST_OBJ_ACCESS:return visitor_visit_object_access(visitor,node);break;
         case AST_NOOP:
             return node;
         default:
@@ -233,6 +235,97 @@ ast_t * visitor_visit_struct_definition(visitor_t * visitor,ast_t *node){
     return node;
 }
 
+ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
+
+
+
+    ast_t *structDef = scope_get_struct_definition(
+        visitor->global_scope,
+        node->function_call_name
+    );
+
+    if(structDef == NULL){
+        Print_visitor_error(
+            0,
+            0,
+            "./Ceflo",
+            "struct %s n'est pas définit \n",
+            node->function_call_name
+        );
+        exit(1);   
+    }
+
+    ast_t *obj = newAst(AST_OBJ);
+    newValue(&obj->value,OBJECT);
+    newObject(&obj->value.as.ObjectValue);
+    Obj_t * newObj = &obj->value.as.ObjectValue;
+    newObj->self = newScope();
+
+    visitor_t vs;
+    // newObj->self->countScope = visitor->global_scope->countScope;
+    // newObj->self->scope_parent = visitor->global_scope;
+    newVisitorWithScope(&vs,newObj->self);
+
+    ast_t * init = NULL;
+    
+    for (int i = 0; i < structDef->struct_definition_item->Size; i++){
+        ast_t *item = List_Get(structDef->struct_definition_item,i);
+        if(item->type == AST_FUNCTION_DEFINITION){
+            if(strcmp("__init__",item->function_definition_name) == 0){
+                init = item;
+            }
+        }
+        visitor_visit(
+            &vs,
+            ast_copy(item,vs.global_scope)
+        );
+
+    }
+
+
+    if(init != NULL){
+
+        free(node->function_call_name);
+        allowChar(&node->function_call_name,"__init__");
+        node->type = AST_FUNCTION_CALL;
+        visitor_visit(
+            &vs,
+            node
+        );
+
+    }
+
+
+    // printf("%p \n",newObj->self);
+
+    return obj;
+
+}
+
+
+ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
+
+    ast_t * variable = visitor_visit(visitor,node->left);
+
+    visitor_t vs;
+
+    // printf("%s \n",AST_TO_STRING[variable->type]);
+
+    if(variable->type != AST_OBJ){
+        printf("ce n'est pas une structure\n");
+        exit(1);
+    }
+    newVisitorWithScope(&vs,variable->value.as.ObjectValue.self);
+
+    // printf("%p \n",variable->value.as.ObjectValue.self);
+
+
+
+
+
+    return visitor_visit(&vs,node->right);
+}
+
 ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 
     ast_t * value = visitor_visit(visitor,node->variable_definition_value);
@@ -265,11 +358,13 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
     }
 
     if(value == NULL){
+        
         if(visitor->global_scope->scope_parent != NULL && visitor->global_scope->scope_parent->countScope != 0 ){
             visitor_t visi;
             newVisitorWithScope(&visi,visitor->global_scope->scope_parent);
             return visitor_visit_variable(&visi,node);
         }
+
     }
 
     if(value ==  NULL){

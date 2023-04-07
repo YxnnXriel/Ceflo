@@ -17,6 +17,7 @@
         AST(AST_NUMBER)    \
         AST(AST_STRING)    \
         AST(AST_OBJ)   \
+        AST(AST_OBJ_ACCESS)   \
         AST(AST_LIST)   \
         AST(AST_LIST_ACCESS)   \
         AST(AST_LIST_ASSIGNEMENT)   \
@@ -29,6 +30,7 @@
         AST(AST_BREAK)  \
         AST(AST_ASSIGNEMENT)  \
         AST(AST_STRUCT_DEFINITION)  \
+        AST(AST_STRUCT)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
@@ -63,9 +65,7 @@ typedef struct LIST_AST_STRUCT{
 }list_ast_t;
 
 typedef struct OBJECT_STRUCT {
-    list_ast_t *constructor_list;
     struct SCOPE_STRUCT *self;
-    struct OBJECT_STRUCT *next;
 }Obj_t;
 
 
@@ -77,7 +77,7 @@ typedef struct AST_TYPE_VALUE{
         char charValue;
         string_t *stringValue;
         list_t *listValue;
-        Obj_t *ObjectValue; // la j'alloue un object
+        Obj_t ObjectValue; // la j'alloue un object
     }as;
 }Value_t;
 

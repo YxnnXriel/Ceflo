@@ -74,6 +74,8 @@ static TokenEnum lexer_precise_id(char *chaine ){
         return TOKEN_AND;
     if(cpm("pass"))
         return TOKEN_PASS;
+    if(cpm("new"))
+        return TOKEN_NEW;
     else
         return TOKEN_ID;
 
@@ -219,7 +221,7 @@ token_t lexer_get_next_token(lexer_t *lexer){
             case '}': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_RBRACKET,"{"));
             case '[': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_LBRACE,"["));
             case ']': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_RBRACE,"]"));
-
+            case '.': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_DOT,"."));
             case ',': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_COMA,","));
             case ';': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_SEMI,";"));
 

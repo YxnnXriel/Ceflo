@@ -1,21 +1,8 @@
 
+struct coord{
+    var X;
+    var Y;
+};
 
-struct Personne{
-    var Nom;
-    var Prenom;
-    func __init__(nom,prenom){
-        Nom = nom;
-        Prenom = prenom;
-    }
-
-    func __str__(){
-        return Nom +"  "+ Prenom
-    }
-    
-}
-
-
-
-
-
-
+var p = new coord();
+println(p.X, "  " , p.Y);

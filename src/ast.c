@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "include/ast.h"
+#include "include/scope.h"
 
 static ast_t *var;
 
@@ -109,8 +110,6 @@ ast_t * List_Ast_Get(list_ast_t *list , int index){
 }
 
 void newObject(Obj_t * object){
-    newList_Ast(object->constructor_list);
-    object->next = NULL;
     object->self = NULL;
 }
 
@@ -160,6 +159,11 @@ void freeAst(ast_t *node){
         // if(node->value.as.stringValue != NULL){
             String_free(node->value.as.stringValue);
         // }
+    }
+    if(node->type == AST_OBJ){
+        freeScope(
+            node->value.as.ObjectValue.self
+        );
     }
 
     if(node->type == AST_LIST){
@@ -239,8 +243,10 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_VARIABLE_DEFINITION: ast_r_scope(ast_cpy_variable_definition(ast,scope),scope);break;
         case AST_STRUCT_DEFINITION: ast_r_scope(ast_cpy_struct_definition(ast,scope),scope);break;
         case AST_VARIABLE: return ast_r_scope(ast_cpy_variable(ast),scope);break;
+        case AST_STRUCT:
         case AST_FUNCTION_CALL: return ast_r_scope(ast_cpy_function_call(ast,scope),scope);break;
         case AST_FUNCTION_DEFINITION: return ast_r_scope(ast_cpy_function_definition(ast,scope),scope);break;
+        case AST_OBJ_ACCESS:
         case AST_BINOP: return ast_r_scope(ast_cpy_binop(ast,scope),scope);break;
         case AST_RETURN: return ast_r_scope(ast_cpy_return(ast,scope),scope);break;
         case AST_IF: return ast_r_scope(ast_cpy_if(ast,scope),scope);break;
