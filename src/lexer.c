@@ -62,7 +62,7 @@ static TokenEnum lexer_precise_id(char *chaine ){
         return TOKEN_TRUE;
     if(cpm("false"))
         return TOKEN_FALSE;
-    if(cpm("None"))
+    if(cpm("none"))
         return TOKEN_NONE;
     if(cpm("continue"))
         return TOKEN_CONTINUE;

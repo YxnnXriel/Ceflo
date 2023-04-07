@@ -1,8 +1,14 @@
 
-struct coord{
-    var X;
-    var Y;
-};
 
-var p = new coord();
-println(p.X, "  " , p.Y);
+struct Product{
+    var Nom
+    var Qte
+    var Prix
+}
+
+
+
+var l = new Product();
+
+
+println(l.Nom)

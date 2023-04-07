@@ -235,6 +235,25 @@ ast_t * visitor_visit_struct_definition(visitor_t * visitor,ast_t *node){
     return node;
 }
 
+
+static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
+    
+    ast_t * structdef = scope_get_struct_definition(
+        scope,
+        node->function_call_name
+    );
+    
+    if(structdef != NULL)
+        return structdef;
+
+    if(structdef == NULL){
+        if(scope->scope_parent != NULL ){
+            return visitor_visit_get_struct(scope->scope_parent,node);
+        }
+    }   
+    return NULL; 
+}
+
 ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 
 
@@ -245,6 +264,13 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     );
 
     if(structDef == NULL){
+        if(visitor->global_scope->scope_parent != NULL){
+            structDef = visitor_visit_get_struct(visitor->global_scope->scope_parent,node);
+        }
+    }
+
+    if(structDef == NULL){
+        
         Print_visitor_error(
             0,
             0,
@@ -255,6 +281,7 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
         exit(1);   
     }
 
+
     ast_t *obj = newAst(AST_OBJ);
     newValue(&obj->value,OBJECT);
     newObject(&obj->value.as.ObjectValue);
@@ -262,9 +289,9 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     newObj->self = newScope();
 
     visitor_t vs;
-    // newObj->self->countScope = visitor->global_scope->countScope;
-    // newObj->self->scope_parent = visitor->global_scope;
+    newObj->self->scope_parent = visitor->global_scope;
     newVisitorWithScope(&vs,newObj->self);
+    // vs.global_scope->scope_parent = visitor->global_scope;
 
     ast_t * init = NULL;
     
@@ -295,6 +322,7 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 
     }
 
+    obj->is_new_obj =  true;
 
     // printf("%p \n",newObj->self);
 
@@ -334,7 +362,15 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     if(node->variable_definition_static_type_name)
         allowChar(&value->variable_definition_static_type_name,node->variable_definition_static_type_name);
 
-    // if()
+
+    if(value->type == AST_OBJ ){
+        // je fais une copie
+        if(value->is_new_obj == false){
+            value = ast_copy(value,visitor->global_scope);
+        }
+        else
+            value->is_new_obj = false;    
+    }
 
     scope_append_variable_definition(
         visitor->global_scope,
@@ -919,6 +955,15 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         binop->op = node->op;
         value =  visitor_visit(visitor,binop);
         // printf("%p\n",(void*)binop->next);
+    }
+
+    if(value->type == AST_OBJ ){
+        // je fais une copie
+        if(value->is_new_obj == false){
+            value = ast_copy(value,visitor->global_scope);
+        }
+        else
+            value->is_new_obj = false;    
     }
 
     scope_append_variable_definition(

@@ -9,6 +9,8 @@ scope_t* newScope(){
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
     scope->function_names = new_ListString();
+    scope->struct_names = new_ListString();
+    scope->variable_names = new_ListString();
     scope->scope_parent = NULL;
     scope->countScope = -1;
     return scope;
@@ -37,6 +39,7 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 
         Hash_Modif(&scope->variable_definition,key,value);
     }else{
+        ListString_Append(scope->variable_names,key);
         Hash_Append(&scope->variable_definition,key,value);
     }
 }
@@ -108,35 +111,58 @@ void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *va
         );
         exit(1);
     }else{
+        ListString_Append(scope->struct_names,key);
         Hash_Append(&scope->struct_definition,value->struct_definition_name,value);   
     }
 }
 
 int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
+    if(ref != NULL){
 
-    for (int i = 0; i < ref->function_definition.Size ; i++){
-        
-        ast_t * func = scope_get_function_definition(
-            ref,
-            ListString_Get(ref->function_names,i)
-        );
-    
-
-        // ast_t * func = (ast_t*) Hash_Get_by_index(
-        //     &ref->function_definition,
-        //     i
-        // );
-
+        for (int i = 0; i < ref->function_definition.Size ; i++){
             
-        // printf("%s \n",ListString_Get(ref->function_names,i));
-        scope_append_function_definition(
-            end,
-            func->function_definition_name,
-            ast_copy(func,end)
-        );
-    }
+            ast_t * func = scope_get_function_definition(
+                ref,
+                ListString_Get(ref->function_names,i)
+            );
+            scope_append_function_definition(
+                end,
+                func->function_definition_name,
+                ast_copy(func,end)
+            );
+        }
 
+        for (int i = 0; i < ref->variable_definition.Size ; i++){
+            
+            ast_t * var = scope_get_variable_definition(
+                ref,
+                ListString_Get(ref->variable_names,i)
+            );
+            scope_append_variable_definition(
+                end,
+                ListString_Get(ref->variable_names,i),
+                ast_copy(var,end)
+            );
+        }
+
+        for (int i = 0; i < ref->struct_definition.Size ; i++){
+            
+            ast_t * structt = scope_get_struct_definition(
+                ref,
+                ListString_Get(ref->struct_names,i)
+            );
+            scope_append_struct_definition(
+                end,
+                ListString_Get(ref->struct_names,i),
+                ast_copy(structt,end)
+            );
+        }
+
+        end->countScope = ref->countScope;
+        end->scope_parent = ref->scope_parent;
+
+    }
 
     return 1;
 
@@ -151,6 +177,12 @@ void freeScope(scope_t * scope){
         }
         if(scope->function_names){
             ListString_Clear(scope->function_names);
+        }
+        if(scope->variable_names){
+            ListString_Clear(scope->variable_names);
+        }
+        if(scope->struct_names){
+            ListString_Clear(scope->struct_names);
         }
         if(scope->struct_definition.Size != 0){
             Hash_Del(&scope->struct_definition);

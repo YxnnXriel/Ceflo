@@ -70,6 +70,8 @@ ast_t *newAst(uint8_t type){
     new->struct_definition_name = NULL;
 
 
+    new->is_new_obj = false;
+
     // STRING
     new->is_string_modif = false;
     new->ref_string = NULL;
@@ -129,6 +131,8 @@ void modifValue(ast_t * value , ast_t * new){
             value->type = AST_STRING; 
         }
 
+    }else if(new->type == AST_OBJ){
+        printf("YEAP\n");
     }else{
         value->value = new->value;
         value->type = new->type;
@@ -237,6 +241,7 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_BOOL:
         case AST_NUMBER:
         case AST_STRING:
+        case AST_OBJ:
         case AST_NONE:
             return ast_r_scope(ast_cpy_Value(ast),scope);break;
         case AST_COMPOUND: return ast_r_scope(ast_cpy_compound(ast,scope),scope);break;
@@ -322,6 +327,19 @@ ast_t *ast_cpy_Value(ast_t * ast){
     if(ast->type == AST_STRING){
         newValue(&a->value,STRING);
         a->value.as.stringValue = new_String(ast->value.as.stringValue->str);
+    }else if (ast->type == AST_OBJ){
+
+        a->is_new_obj = ast->is_new_obj;
+        newValue(&a->value,OBJECT);
+        newObject(&a->value.as.ObjectValue);
+        Obj_t *obj = &a->value.as.ObjectValue;
+        obj->self = newScope();
+        
+        scope_cpy_with_scope(
+            obj->self,
+            ast->value.as.ObjectValue.self
+        );
+
     }else{
         a->value = ast->value;
     }
@@ -375,7 +393,7 @@ ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope){
 }
 
 ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
-    ast_t * function = newAst(AST_FUNCTION_CALL);
+    ast_t * function = newAst(ast->type);
 
     function->countScope = ast->countScope;
 

@@ -164,6 +164,8 @@ typedef struct AST_STRUCT{
     char *struct_definition_name;
     list_t *struct_definition_item; // function , variable ect ...
 
+    // OBJ
+    bool is_new_obj;
 
     // STRING
     bool is_string_modif;

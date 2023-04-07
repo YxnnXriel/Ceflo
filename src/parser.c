@@ -451,6 +451,17 @@ ast_t *parser_parse_string(parser_t *parser , scope_t * scope){
     return string;
 }
 
+static ast_t *parser_parse_none(parser_t *parser , scope_t * scope){
+
+    ast_t *none = newAst(AST_NONE);
+    parser_eat(TOKEN_NONE,STRING_ERROR," %s inconnue \n",parser->current.value);
+    none->countScope = GetScope();
+
+    none->scope = scope;
+
+    return none;
+}
+
 ast_t *parser_parse_expr(parser_t *parser , scope_t *scope){
 
     ast_t * value = parser_parse_expression(parser,scope);
@@ -551,10 +562,6 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
         return group;
     }
 
-    if(parser->current.type == TOKEN_ID){
-        return parser_parse_variable(parser,scope);
-    }
-
     if(parser->current.type == TOKEN_NEW){
         parser_eat(TOKEN_NEW,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
         parser_eat(TOKEN_ID,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
@@ -563,6 +570,15 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
         
         return func;
     }
+
+    if(parser->current.type == TOKEN_NONE){
+        return parser_parse_none(parser,scope);
+    }
+
+    if(parser->current.type == TOKEN_ID){
+        return parser_parse_variable(parser,scope);
+    }
+
 
     switch (parser->current.type){
         case TOKEN_INTEGER:
