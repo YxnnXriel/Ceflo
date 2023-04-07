@@ -14,6 +14,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_data(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node);
+ast_t * visitor_visit_struct_definition(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node);

@@ -2,7 +2,7 @@
 #define __ERROR_H__
 
     #include <stdarg.h>
-
+    #include "lexer.h"
 #define FOREACH_ERROR(ERR)    \
         ERR(SUCCES)    \
         ERR(VARIABLE_DEFINITION_ERROR)    \
@@ -31,6 +31,8 @@ typedef enum{
 static const char *ERROR_TO_STRING[]={
     FOREACH_ERROR(GENERATE_STRING_ERROR)
 };
+
+void Print_error(lexer_t * lexer , char *fmt, ...);
 
 void Print_parser_error(int line , int colone ,char *fileName, errorE err , char *fmt , va_list args );
 

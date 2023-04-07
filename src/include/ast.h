@@ -28,6 +28,7 @@
         AST(AST_WHILE)  \
         AST(AST_BREAK)  \
         AST(AST_ASSIGNEMENT)  \
+        AST(AST_STRUCT_DEFINITION)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
@@ -99,6 +100,7 @@ typedef struct AST_STRUCT{
     char * variable_definition_name;
     struct AST_STRUCT *variable_definition_value;
     type_ceflo variable_definition_static_type;
+    char *variable_definition_static_type_name;
 
 
     // AST_VARIABLE
@@ -158,6 +160,9 @@ typedef struct AST_STRUCT{
     //List_ACCES
     struct AST_STRUCT *list_ptr; // [0]
 
+    // STRUCT DEFINITION
+    char *struct_definition_name;
+    list_t *struct_definition_item; // function , variable ect ...
 
 
     // STRING
@@ -208,6 +213,7 @@ ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope);
+ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
 
 
 

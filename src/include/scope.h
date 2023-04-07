@@ -8,6 +8,7 @@
 typedef struct SCOPE_STRUCT{
     stk_t  variable_definition;
     stk_t function_definition;
+    stk_t struct_definition;
 
     listString_t * function_names;
     int countScope;
@@ -23,6 +24,10 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef);
 void scope_append_function_definition(scope_t *scope , const char *key , ast_t *value);
+
+
+ast_t *scope_get_struct_definition(scope_t * scope , const char *structdef);
+void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *value);
 
 
 int scope_cpy_with_scope(scope_t *end , scope_t *ref);

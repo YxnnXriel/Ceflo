@@ -31,7 +31,7 @@ ast_t *newAst(uint8_t type){
     new->variable_definition_name = NULL;
     new->variable_definition_value = NULL;
     new->variable_definition_static_type = NONE;
-
+    new->variable_definition_static_type_name = NULL;
     new->variable_name = NULL;
 
     new->function_definition_name = NULL;
@@ -63,6 +63,10 @@ ast_t *newAst(uint8_t type){
     // while
     new->while_expr = NULL;
     new->while_body = NULL;
+
+    // TYPE DEFINITION
+    new->struct_definition_item = NULL;
+    new->struct_definition_name = NULL;
 
 
     // STRING
@@ -137,7 +141,9 @@ void freeAst(ast_t *node){
     if(node->variable_definition_name != NULL){
         free(node->variable_definition_name);
     }
-
+    if(node->variable_definition_static_type_name != NULL){
+        free(node->variable_definition_static_type_name);
+    }
     if(node->variable_name != NULL)
         free(node->variable_name);
 
@@ -146,6 +152,9 @@ void freeAst(ast_t *node){
     
     if(node->function_call_name != NULL)
         free(node->function_call_name);
+
+    if(node->struct_definition_name != NULL)
+        free(node->struct_definition_name);
 
     if(node->type == AST_STRING){
         // if(node->value.as.stringValue != NULL){
@@ -162,7 +171,11 @@ void freeAst(ast_t *node){
         free(node->list_compound->Item);
         free(node->list_compound);
     }
-    
+
+    if(node->struct_definition_item != NULL){
+        free(node->struct_definition_item->Item);
+        free(node->struct_definition_item);
+    }    
 
     // if(node->scope){
     //     if(node->type == AST_COMPOUND)
@@ -224,6 +237,7 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
             return ast_r_scope(ast_cpy_Value(ast),scope);break;
         case AST_COMPOUND: return ast_r_scope(ast_cpy_compound(ast,scope),scope);break;
         case AST_VARIABLE_DEFINITION: ast_r_scope(ast_cpy_variable_definition(ast,scope),scope);break;
+        case AST_STRUCT_DEFINITION: ast_r_scope(ast_cpy_struct_definition(ast,scope),scope);break;
         case AST_VARIABLE: return ast_r_scope(ast_cpy_variable(ast),scope);break;
         case AST_FUNCTION_CALL: return ast_r_scope(ast_cpy_function_call(ast,scope),scope);break;
         case AST_FUNCTION_DEFINITION: return ast_r_scope(ast_cpy_function_definition(ast,scope),scope);break;
@@ -422,6 +436,32 @@ ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
 ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     ast_t *variable = ast_cpy_variable_definition_lit(ast->variable_definition_name,NULL);
     variable->variable_definition_value = ast_copy(ast->variable_definition_value,scope);
+    if(ast->variable_definition_static_type_name != NULL)
+        allowChar(
+            &variable->variable_definition_static_type_name,
+            ast->variable_definition_static_type_name
+        );
+        
     variable->countScope = ast->countScope;
     return variable;
+}
+
+
+ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
+
+    ast_t * a = newAst(AST_STRUCT_DEFINITION);
+    a->countScope = ast->countScope;
+    allowChar(&a->struct_definition_name,ast->struct_definition_name);
+    a->struct_definition_item = __init__list__(sizeof(ast_t*));
+
+    for (int i = 0; i < ast->struct_definition_item->Size; i++){
+        ast_t * item = List_Get(ast->struct_definition_item,i);
+        List_Append(
+            a->struct_definition_item,
+            ast_copy(item,scope)
+        );
+    }
+
+    return a;
+    
 }

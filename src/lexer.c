@@ -115,7 +115,7 @@ token_t lexer_collect_id(lexer_t *lexer){
     value[0] = '\0';
 
 
-    while(lexer_get_value(isalnum(lexer->current_char),lexer,&value)){
+    while(lexer_get_value(isalnum(lexer->current_char) || lexer->current_char == '_',lexer,&value)){
         lexer_advance(lexer);
     }
     
@@ -199,7 +199,7 @@ token_t lexer_get_next_token(lexer_t *lexer){
         if(isdigit(lexer->current_char))    
             return lexer_collect_digit(lexer);
         
-        if(isalnum(lexer->current_char)){
+        if(isalnum(lexer->current_char) || lexer->current_char == '_'){
             return lexer_collect_id(lexer);
         }
 

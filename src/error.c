@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
-
 #include "include/error.h"
 
 
@@ -19,7 +18,14 @@ void Print_parser_error(int line , int colone ,char *fileName, errorE err , char
 
 }
 
+void Print_error(lexer_t * lexer , char *fmt, ...){
+    printf("%s:%d:%d: ","./Ceflo",lexer->line,lexer->colone);
+    va_list args;
+    va_start(args,fmt);
+    vprintf(fmt,args);
+    va_end(args);
 
+}
 
 static void visitor_print_six(int fmt,int line){
     if(line == -1){

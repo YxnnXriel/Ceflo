@@ -77,6 +77,41 @@ void scope_append_function_definition(scope_t *scope , const char *key , ast_t *
 
 }
 
+ast_t *scope_get_struct_definition(scope_t * scope , const char *structdef){
+    
+    if(scope->struct_definition.Size == 0)
+        return NULL;
+
+    ast_t * value = Hash_Get(&scope->struct_definition,structdef);
+
+    return value;
+
+}
+void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *value){
+    ast_t * stk_val = scope_get_struct_definition(scope,key);
+
+    
+    if(stk_val != NULL){
+        printf("MultipleStructDefinition : <%s>\n",stk_val->struct_definition_name);
+        Print_visitor_error(
+            0,
+            0,
+            "./Ceflo",
+            "Deja Definit ici \n",0
+        );
+
+        Print_visitor_error(
+            0,
+            0,
+            "./Ceflo",
+            "Redefinit encore la\n",0
+        );
+        exit(1);
+    }else{
+        Hash_Append(&scope->struct_definition,value->struct_definition_name,value);   
+    }
+}
+
 int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
 
@@ -116,7 +151,10 @@ void freeScope(scope_t * scope){
         }
         if(scope->function_names){
             ListString_Clear(scope->function_names);
-        }       
+        }
+        if(scope->struct_definition.Size != 0){
+            Hash_Del(&scope->struct_definition);
+        }
         free(scope);
     }
 }

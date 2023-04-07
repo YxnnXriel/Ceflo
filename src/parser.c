@@ -141,6 +141,7 @@ ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
     {
         case TOKEN_VAR : return parser_parse_variable_definition(parser,scope);
         case TOKEN_FUNC : return parser_parse_function_definition(parser,scope);
+        case TOKEN_STRUCT : return parser_parse_struct_definition(parser,scope);
         case TOKEN_ID : return parser_parse_variable(parser,scope);
         case TOKEN_RETURN : return parser_parse_return(parser,scope);
         case TOKEN_IF : return parser_parse_if(parser,scope);
@@ -160,6 +161,27 @@ ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
     #undef type
 }
 
+static type_ceflo GetType(char *name){
+    
+    if(strcmp(name,"none") == 0)
+        return NONE;
+    if(strcmp(name,"float")==0)
+        return NUMBER;
+    if(strcmp(name,"int")==0)
+        return NUMBER;
+    if(strcmp(name,"char")==0)
+        return CHAR;
+    if(strcmp(name,"str")==0)
+        return STRING;
+    if(strcmp(name,"bool")==0)
+        return BOOL;
+    if(strcmp(name,"list") == 0)
+        return LIST;
+
+    return OBJECT;
+}
+
+
 ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
 
     // var k::int = l;
@@ -171,6 +193,13 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
     allowChar(&variable->variable_definition_name,parser->current.value);
     parser_eat(TOKEN_ID,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
     
+    if(parser->current.type == TOKEN_DOUBLE_COLON){
+        parser_eat(TOKEN_DOUBLE_COLON,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+        variable->variable_definition_static_type = GetType(parser->current.value);
+        allowChar(&variable->variable_definition_static_type_name,parser->current.value);
+        parser_eat(TOKEN_ID,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+    }
+
     if(parser->current.type == TOKEN_EQUAL){
         parser_eat(TOKEN_EQUAL,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
         variable->variable_definition_value = parser_parse_expr(parser,scope);
@@ -276,23 +305,6 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 }
 
 
-static type_ceflo GetType(char *name){
-    
-    if(strcmp(name,"none") == 0)
-        return NONE;
-    if(strcmp(name,"float")==0)
-        return NUMBER;
-    if(strcmp(name,"int")==0)
-        return NUMBER;
-    if(strcmp(name,"char")==0)
-        return CHAR;
-    if(strcmp(name,"str")==0)
-        return STRING;
-    if(strcmp(name,"bool")==0)
-        return BOOL;
-    
-    return OBJECT;
-}
 
 ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 
@@ -663,4 +675,74 @@ ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
     
 
     return list;
+}
+
+
+static bool isInClassDefinition(ast_t * item){
+    switch (item->type){
+        case AST_FUNCTION_DEFINITION:
+        case AST_VARIABLE_DEFINITION:
+        return true;
+        default:
+            return false;
+    }
+}
+
+ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
+
+    ast_t * ast_struct = newAst(AST_STRUCT_DEFINITION);
+    parser_eat(TOKEN_STRUCT,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    allowChar(&ast_struct->struct_definition_name,parser->current.value);
+    parser_eat(TOKEN_ID,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    ast_struct->struct_definition_item = __init__list__(sizeof(ast_t*));
+    parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    if(parser->current.type != TOKEN_RBRACKET){
+
+        ast_t *item = parser_parse_statment(parser,scope);
+
+        if(item->type != AST_NOOP){
+            if(!isInClassDefinition(item)){
+                Print_error(
+                    parser->lexer,
+                    "StructDefError: %s n'est pas permis dans la definition d'une structure\n",
+                    AST_TO_STRING[item->type]
+                );
+                exit(1);
+            }
+            List_Append(
+                ast_struct->struct_definition_item,
+                item
+            );
+        }
+
+        while (parser->current.type == TOKEN_SEMI || parser->current.type != TOKEN_RBRACKET){
+            if(parser->current.type == TOKEN_SEMI){
+                parser_eat(TOKEN_SEMI,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+            }
+            item = parser_parse_statment(parser,scope);
+            if(item->type != AST_NOOP){
+                if(!isInClassDefinition(item)){
+                    Print_error(
+                        parser->lexer,
+                        "StructDefError: %s n'est pas permis dans la definition d'une structure\n",
+                        AST_TO_STRING[item->type]
+                    );
+                    exit(1);
+                }
+                List_Append(
+                    ast_struct->struct_definition_item,
+                    item
+                );
+            }
+        }
+        
+
+    }
+    parser_eat(TOKEN_RBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+
+    return ast_struct;
+
 }

@@ -49,7 +49,7 @@ ast_t *parser_parse_while(parser_t *parser , scope_t *scope);
 ast_t *parser_parse_break(parser_t *parser , scope_t *scope);
 
 ast_t *parser_parse_list(parser_t *parser , scope_t *scope);
-
+ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope);
 
 
 
