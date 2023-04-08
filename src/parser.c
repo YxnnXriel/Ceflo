@@ -49,9 +49,6 @@ void newParser(parser_t *parser,lexer_t *lexer){
     parser->current = lexer_get_next_token(parser->lexer);
     parser->prev = AS_TOKEN(TOKEN_EOF,"EOF") ;
 
-    // parser->prev = AS_TOKEN(TOKEN_EOF,"EOF");
-    // parser->prev = parser->current ;
-
 }
 
 int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
@@ -65,8 +62,8 @@ int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
         Print_parser_error(
             parser->lexer->line,
             parser->lexer->colone,
-            "./Ceflo",
-            // parser->lexer->fileName->str,
+            // "./Ceflo",
+            parser->lexer->fileName->str,
             errorType,
             fmt,
             args
@@ -193,6 +190,7 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
 
     ast_t *variable = newAst(AST_VARIABLE_DEFINITION);
     variable->countScope = GetScope();
+    variable->scope = scope;
     parser_eat(TOKEN_VAR,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
 
     allowChar(&variable->variable_definition_name,parser->current.value);
@@ -212,7 +210,6 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
         variable->variable_definition_value = newAst(AST_NONE);
     }
 
-    variable->scope = scope;
 
 
     return variable;
@@ -241,14 +238,6 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         return parser_parse_function_call(parser,scope);
     }
 
-    if(parser->current.type == TOKEN_DOT){
-        parser_eat(TOKEN_DOT,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
-        ast_t * obj_acces = newAst(AST_OBJ_ACCESS);
-        obj_acces->left = variable;
-        obj_acces->right = parser_parse_expr(parser,scope);
-
-        variable = obj_acces;
-    }
 
     if(parser->current.type == TOKEN_LBRACE){
 
@@ -284,6 +273,14 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
     }
 
+    if(parser->current.type == TOKEN_DOT){
+        parser_eat(TOKEN_DOT,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+        ast_t * obj_acces = newAst(AST_OBJ_ACCESS);
+        obj_acces->left = variable;
+        obj_acces->right = parser_parse_expr(parser,scope);
+
+        variable = obj_acces;
+    }
 
     if(parser->current.type == TOKEN_EQUAL){
         parser_eat(TOKEN_EQUAL,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
@@ -612,7 +609,6 @@ ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
 
     if(parser->current.type != TOKEN_SEMI){
         ast_return->return_expr = parser_parse_expr(parser,scope);
-        
     }
 
     return ast_return;

@@ -1,14 +1,10 @@
-
-
-struct Product{
-    var Nom
-    var Qte
-    var Prix
+struct Personne{
+    var Nom = "Yxnn Xrie";
+    var Age = 21;
 }
 
+var list = [new Personne(),2]
 
+list[0].Nom += "l";
 
-var l = new Product();
-
-
-println(l.Nom)
+println(list[0].Nom);

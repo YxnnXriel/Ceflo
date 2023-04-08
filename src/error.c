@@ -15,6 +15,7 @@ void Print_parser_error(int line , int colone ,char *fileName, errorE err , char
         fmt,
         args
     );
+    va_end(args);
 
 }
 

@@ -7,11 +7,11 @@
 
 typedef struct{
     string_t *fileCode;
-    // string_t *fileName;
     int index;
     char current_char;
     int line;
     int colone;
+    string_t *fileName;
 }lexer_t;
 
 void newLexer(lexer_t *lexer,const char* source);

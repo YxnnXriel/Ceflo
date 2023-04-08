@@ -8,7 +8,7 @@
 void newLexer(lexer_t *lexer,const char* source){
 
     lexer->fileCode = String_Read_FIle(source);
-    // lexer->fileName = new_String(source);
+    lexer->fileName = new_String(source);
     lexer->line = 1;
     lexer->colone = 1;
     lexer->index = 0;
@@ -315,21 +315,44 @@ token_t lexer_advance_return_token(lexer_t *lexer , token_t token){
     return token;
 }
 
+static char lexer_peek_retour(lexer_t *lex){
+    if( (lex->index + 1) < lex->fileCode->lenght){
+        if(lex->current_char == '\\' && lexer_peek(lex,'n')) return '\n';
+        if(lex->current_char == '\\' && lexer_peek(lex,'a')) return '\a';
+        if(lex->current_char == '\\' && lexer_peek(lex,'b')) return '\b';
+        if(lex->current_char == '\\' && lexer_peek(lex,'t')) return '\t';
+        if(lex->current_char == '\\' && lexer_peek(lex,'t')) return '\\';
+        if(lex->current_char == '\\' && lexer_peek(lex,'"')) return '\"';
+        if(lex->current_char == '\\' && lexer_peek(lex,'\'')) return '\'';
+
+
+    }
+
+    return -1;
+}
+
 char * lexer_make_as_string(lexer_t *lexer){
     char *chaine = calloc(2 ,sizeof(char*));
-    chaine[0] = lexer->current_char;
+
+    char l = lexer_peek_retour(lexer);
+    if(l != -1)
+        lexer_advance(lexer);
+
+    chaine[0] = l != -1 ? l:lexer->current_char;
     chaine[1] = '\0';
+
     return chaine;
 }
- 
 
 int lexerFree(lexer_t *lex){
 
     if(lex->fileCode){
         String_free(lex->fileCode);
     }
-    // if(lex->fileName){
-    //     String_free(lex->fileName);
-    // }
+    if(lex->fileName != NULL){
+        String_free(lex->fileName);
+
+    }
+
     return 1;
 }
