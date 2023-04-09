@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "include/ast.h"
 #include "include/scope.h"
+#include "include/visitor.h"
 
 static ast_t *var;
 
@@ -115,8 +116,69 @@ void newObject(Obj_t * object){
     object->self = NULL;
 }
 
+
 void newValue(Value_t * value , uint8_t type){
     value->type = type;
+}
+
+
+bool printObj(ast_t * value){
+    ast_t *obj = NULL; 
+
+    if(GetFunction(value->value.as.ObjectValue.self,"__str__",&obj) == true){
+        visitor_t visi;
+        visi.global_scope = value->value.as.ObjectValue.self;
+        printValueAst(
+            visitor_visit_function(
+                &visi,
+                obj,
+                NULL
+            ),
+            &visi
+        );
+        return true;
+    }
+
+    return false;
+}
+
+bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor){
+    printf("[ ");
+    if(value->value.as.listValue->Size == 0){
+        printf("Vide !");
+    }else{
+        for (int i = 0; i < value->value.as.listValue->Size; i++){
+            ast_t * child = List_Get(value->value.as.listValue,i);
+
+            child = visitor_visit(visitor,child);
+            printValueAst(child,visitor);
+            if(i !=  value->value.as.listValue->Size - 1 )
+                printf(" , ");
+
+        }
+    }
+    printf(" ]");
+}
+
+void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
+
+    switch (value->type){
+            case AST_NONE : printf("none");break;
+            case AST_CHAR : printf("%c",value->value.as.charValue);break;
+            case AST_NUMBER : printf("%g",value->value.as.numberValue);break;
+            case AST_STRING : printf("%s",value->value.as.stringValue->str);break;
+            case AST_BOOL : printf("%s",value->value.as.booleanValue == 1 ? "true" : "false");break;
+            case AST_LIST: printlist(value,visitor);break;
+            case AST_OBJ:{
+                if(printObj(value) == false){
+                    printf("%p",(void *)value);
+                }
+            }break;
+            default:
+                printf("%p",(void *)value);
+            break;
+    }
+    
 }
 
 void modifValue(ast_t * value , ast_t * new){
@@ -137,6 +199,15 @@ void modifValue(ast_t * value , ast_t * new){
         value->value = new->value;
         value->type = new->type;
     }
+}
+
+bool GetFunction(scope_t *scope , const char *funcName , ast_t ** res){
+    *res = scope_get_function_definition(
+        scope,
+        funcName
+    );
+
+    return *res != NULL ? true : false;
 }
 
 void freeAst(ast_t *node){

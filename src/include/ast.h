@@ -57,6 +57,8 @@ typedef enum{
 
 struct AST_STRUCT;
 struct SCOPE_STRUCT;
+struct VISITOR_STRUCT;
+
 
 #define LIST_AST_COUNT 255
 typedef struct LIST_AST_STRUCT{
@@ -186,6 +188,9 @@ void newObject(Obj_t * object);
 void newValue(Value_t * value , uint8_t type);
 void modifValue(ast_t * value , ast_t * new);
 
+void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor);
+bool printObj(ast_t * value);
+bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor);
 
 int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
@@ -198,6 +203,8 @@ void clearAstNode(ast_t * val);
 void freeAst(ast_t *node);
 void clearAst();
 void freeSingleAst(ast_t * node);
+
+bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** res);
 
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value);

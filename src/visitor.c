@@ -42,55 +42,14 @@ static void GbFree(){
 }
 
 
-static void bulletin_print_list(visitor_t * visitor , ast_t * node ){
-
-    printf("[ ");
-    for (int i = 0; i < node->value.as.listValue->Size; i++){
-        ast_t * child = List_Get(node->value.as.listValue,i);
-
-        child = visitor_visit(visitor,child);
-
-        switch (child->type){
-            case AST_NONE : printf("none");break;
-            case AST_CHAR : printf("'%c'",child->value.as.charValue);break;
-            case AST_NUMBER : printf("%g",child->value.as.numberValue);break;
-            case AST_STRING : printf("\"%s\"",child->value.as.stringValue->str);break;
-            case AST_BOOL : printf("%s",child->value.as.booleanValue == 1 ? "true" : "false");break;
-            case AST_LIST: bulletin_print_list(visitor,child);break; 
-            default:
-                printf("%p\n",(void *)child);
-            break;
-        }
-        if(i !=  node->value.as.listValue->Size - 1 )
-            printf(" , ");
-
-    }
-    printf(" ]");
-    
-
-}
 
 static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
     
     for (int i = 0; i < (int) args->size; i++){
         ast_t * child = List_Ast_Get(args,i);
-
         child = visitor_visit(visitor,child);
-
-
-
-        switch (child->type){
-            case AST_NONE : printf("none");break;
-            case AST_CHAR : printf("%c",child->value.as.charValue);break;
-            case AST_NUMBER : printf("%g",child->value.as.numberValue);break;
-            case AST_STRING : printf("%s",child->value.as.stringValue->str);break;
-            case AST_BOOL : printf("%s",child->value.as.booleanValue == 1 ? "true" : "false");break;
-            case AST_LIST: bulletin_print_list(visitor,child);break;
-            default:
-                printf("%p\n",(void *)child);
-            break;
-        }
+        printValueAst(child,visitor);
     }
     printf("\n");
 
@@ -445,6 +404,40 @@ static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
         }
     }   
     return NULL; 
+}
+
+
+ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
+    
+    ast_t *first = GetFirstAst();
+    ResetFirstAst();
+
+    scope_t * newscope = newScope();
+    ast_t *newFunc = ast_copy(func,newscope);
+
+    if(args != NULL){
+        for (int i = 0; i < (int) newFunc->function_call_args.size; i++){
+            char * variable_name = List_Ast_Get(&newFunc->function_defintion_args,i)->variable_name;
+            ast_t * value = visitor_visit(visitor,List_Ast_Get(&args->function_call_args,i));
+            scope_append_variable_definition(
+                newscope,
+                variable_name,
+                value
+            );
+        }
+    }
+    
+    visitor_t visit;
+    newVisitorWithScope(&visit,newscope);
+    visit.global_scope->countScope = newFunc->function_definition_body->countScope; 
+    visit.global_scope->scope_parent = visitor->global_scope;
+
+    ast_t *returnValue =  visitor_visit(&visit,newFunc->function_definition_body);   
+
+    GbPush(newscope,GetFirstAst());
+    ModifFirstAst(first);   
+
+    return returnValue;
 }
 
 ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
