@@ -14,6 +14,7 @@ struct Personne{
 
 }
 
+
 var list = [new Personne("Yann",22),new Personne("Grace",18)]
 
 println(list);
