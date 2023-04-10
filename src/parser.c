@@ -1,3 +1,14 @@
+/**
+ * @file parser.c
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-10
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,8 +19,56 @@
 
 
 
-static Return_Type Rt;
+                                    // FOR CEFLO TYPE
 
+
+static bool isInClassDefinition(ast_t * item){
+    switch (item->type){
+        case AST_FUNCTION_DEFINITION:
+        case AST_VARIABLE_DEFINITION:
+        return true;
+        default:
+            return false;
+    }
+}
+
+
+static type_ceflo GetType(char *name){
+    
+    if(strcmp(name,"none") == 0)
+        return NONE;
+    if(strcmp(name,"float")==0)
+        return NUMBER;
+    if(strcmp(name,"int")==0)
+        return NUMBER;
+    if(strcmp(name,"char")==0)
+        return CHAR;
+    if(strcmp(name,"str")==0)
+        return STRING;
+    if(strcmp(name,"bool")==0)
+        return BOOL;
+    if(strcmp(name,"list") == 0)
+        return LIST;
+
+    return OBJECT;
+}
+
+
+static char * GetOp(TokenEnum type){
+    switch (type){
+        case TOKEN_PLUS_EQUAL: return "+=";
+        case TOKEN_MINUS_EQUAL: return "-=";
+        case TOKEN_MULT_EQUAL: return "*=";
+        case TOKEN_DIV_EQUAL: return "/=";
+    }
+    return "=";
+}
+
+
+
+
+                                        // FOR SCOPE
+static Return_Type Rt;
 static parser_t *GetCurrentParser(){
     static parser_t parser;
     return &parser;
@@ -44,6 +103,18 @@ static int GetScope(){
     return *val;
 }
 
+
+
+
+
+                                // FOR PARSER
+
+/**
+ * @brief NEW PARSER
+ * 
+ * @param parser 
+ * @param lexer 
+ */
 void newParser(parser_t *parser,lexer_t *lexer){
     parser->lexer = lexer;
     parser->current = lexer_get_next_token(parser->lexer);
@@ -51,6 +122,20 @@ void newParser(parser_t *parser,lexer_t *lexer){
 
 }
 
+
+
+
+
+
+/**
+ * @brief eat current token and get next token, if error catch panic
+ * 
+ * @param type 
+ * @param errorType 
+ * @param fmt 
+ * @param ... 
+ * @return int 
+ */
 int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
 
     parser_t *parser = GetCurrentParser();
@@ -79,6 +164,17 @@ int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
 }
 
 
+
+
+
+
+
+/**
+ * @brief beginner of Parsing
+ * 
+ * @param lexer 
+ * @return ast_t* 
+ */
 ast_t *parser_parse(lexer_t *lexer){
 
     parser_t *parser = GetCurrentParser();
@@ -93,12 +189,38 @@ ast_t *parser_parse(lexer_t *lexer){
     return node;
 }
 
+
+
+
+
+
+
+/**
+ * @brief Parsing begin here
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_statments(parser_t *parser , scope_t * scope){
 
     return parser_parse_compound(parser,scope);
 
 }
 
+
+
+
+
+
+
+/**
+ * @brief parser body of many declaration
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_compound(parser_t *parser , scope_t * scope){
 
 
@@ -132,12 +254,21 @@ ast_t *parser_parse_compound(parser_t *parser , scope_t * scope){
     #undef COMPOUND
 }
 
+
+
+
+
+
+/**
+ * @brief parse One statment
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
 
     #define type parser->current.type
-
-    // printf("ICI \n");
-    // printf("%s  %s   %s \n",__func__,TOKEN_TO_STRING[type],parser->current.value);
 
     switch (type)
     {
@@ -163,30 +294,21 @@ ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
     #undef type
 }
 
-static type_ceflo GetType(char *name){
-    
-    if(strcmp(name,"none") == 0)
-        return NONE;
-    if(strcmp(name,"float")==0)
-        return NUMBER;
-    if(strcmp(name,"int")==0)
-        return NUMBER;
-    if(strcmp(name,"char")==0)
-        return CHAR;
-    if(strcmp(name,"str")==0)
-        return STRING;
-    if(strcmp(name,"bool")==0)
-        return BOOL;
-    if(strcmp(name,"list") == 0)
-        return LIST;
-
-    return OBJECT;
-}
 
 
+
+
+
+
+/**
+ * @brief after catch VAR keyword , the parser try parse variable declaration
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
 
-    // var k::int = l;
 
     ast_t *variable = newAst(AST_VARIABLE_DEFINITION);
     variable->countScope = GetScope();
@@ -216,30 +338,37 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
 }
 
 
-static char * GetOp(TokenEnum type){
-    switch (type){
-        case TOKEN_PLUS_EQUAL: return "+=";
-        case TOKEN_MINUS_EQUAL: return "-=";
-        case TOKEN_MULT_EQUAL: return "*=";
-        case TOKEN_DIV_EQUAL: return "/=";
-    }
-    return "=";
-}
 
+
+
+
+
+
+
+
+/**
+ * @brief parser parse ID , and check after token for make sense
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
     ast_t * variable = newAst(AST_VARIABLE);
     variable->countScope = GetScope();
     allowChar(&variable->variable_name,parser->current.value);
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
-    // printf("[%s]\n",parser->prev.value);
+
+    // current token :
     
     if(parser->current.type == TOKEN_LPARENT){
+        //.... maybe the declaration is a function call 
         return parser_parse_function_call(parser,scope);
     }
 
-
     if(parser->current.type == TOKEN_LBRACE){
+        //...., maybe the declaration is a list : access or assignement
 
         while (parser->current.type == TOKEN_LBRACE){
         
@@ -274,6 +403,8 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
     }
 
     if(parser->current.type == TOKEN_DOT){
+        //...., maybe the declaration is a struct , access or assignement
+        
         parser_eat(TOKEN_DOT,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
         ast_t * obj_acces = newAst(AST_OBJ_ACCESS);
         obj_acces->left = variable;
@@ -282,7 +413,9 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         variable = obj_acces;
     }
 
+
     if(parser->current.type == TOKEN_EQUAL){
+        //...., maybe the declaration is a assignement 
         parser_eat(TOKEN_EQUAL,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
         ast_t * assign = newAst(AST_ASSIGNEMENT);
         assign->assignement_left = variable;
@@ -298,6 +431,9 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         parser->current.type == TOKEN_DIV_EQUAL ||
         parser->current.type == TOKEN_MULT_EQUAL
     ){
+
+        //...., maybe the declaration is a modifier variable
+
         ast_t * modifier = newAst(AST_ASSIGNEMENT);
         modifier->countScope = GetScope();
         modifier->scope = scope;
@@ -308,6 +444,7 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         return modifier;
     }
 
+    //...., maybe the declaration is a acces variable
 
     variable->scope = scope;
     
@@ -316,6 +453,20 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 }
 
 
+
+
+
+
+
+
+
+/**
+ * @brief after catch FUNC keyword , the parser try parse and analyse function definition
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 
 ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 
@@ -364,6 +515,17 @@ ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 
 }
 
+
+
+
+
+/**
+ * @brief parse try parse function call
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
     ast_t *function = newAst(AST_FUNCTION_CALL);
     function->countScope = GetScope();
@@ -388,6 +550,18 @@ ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
     return function;
 }
 
+
+
+
+
+
+/**
+ * @brief parser parse digit
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
 
     ast_t *number = newAst(
@@ -404,6 +578,21 @@ ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
 
     return number;
 }
+
+
+
+
+
+
+
+
+/**
+ * @brief parser parse char
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_char(parser_t *parser , scope_t * scope){
     ast_t * ast_char = newAst(AST_CHAR);
 
@@ -419,6 +608,19 @@ ast_t *parser_parse_char(parser_t *parser , scope_t * scope){
 
     return ast_char;
 }
+
+
+
+
+
+
+/**
+ * @brief parser parse boolean
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_bool(parser_t *parser , scope_t * scope){
 
     ast_t *boolean = newAst(AST_BOOL);
@@ -433,6 +635,18 @@ ast_t *parser_parse_bool(parser_t *parser , scope_t * scope){
     return boolean;
 
 }
+
+
+
+
+
+/**
+ * @brief parser parse string
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_string(parser_t *parser , scope_t * scope){
 
     ast_t *string = newAst(AST_STRING);
@@ -448,6 +662,18 @@ ast_t *parser_parse_string(parser_t *parser , scope_t * scope){
     return string;
 }
 
+
+
+
+
+
+/**
+ * @brief for none 
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 static ast_t *parser_parse_none(parser_t *parser , scope_t * scope){
 
     ast_t *none = newAst(AST_NONE);
@@ -459,6 +685,24 @@ static ast_t *parser_parse_none(parser_t *parser , scope_t * scope){
     return none;
 }
 
+
+
+
+
+
+
+
+
+
+            // here , i use recursive parsing for analysing a math expression
+
+/**
+ * @brief expr is something like : expression || expression OR expression && expression  
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_expr(parser_t *parser , scope_t *scope){
 
     ast_t * value = parser_parse_expression(parser,scope);
@@ -483,6 +727,20 @@ ast_t *parser_parse_expr(parser_t *parser , scope_t *scope){
 
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief expression is term +,- an other term
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
     ast_t * value = parser_parse_term(parser,scope);
     value->countScope = GetScope();
@@ -525,6 +783,20 @@ ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
 
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief term,  is a factor /,* an other factor
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
     ast_t * value = parser_parse_factor(parser,scope);
     value->countScope = GetScope();
@@ -548,6 +820,18 @@ ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
     return value;
 }
 
+
+
+
+
+
+/**
+ * @brief factor may be a value , function call , group expression ...
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
 
     if(parser->current.type == TOKEN_LPARENT){
@@ -596,6 +880,23 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
 }
 
 
+
+
+
+
+
+
+
+
+
+
+/**
+ * @brief parse return 
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
 
     if(GetScope() == 0){
@@ -614,6 +915,16 @@ ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
     return ast_return;
 }
 
+
+
+
+/**
+ * @brief parsing if statement
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_if(parser_t *parser , scope_t *scope){
     ast_t *ast_if = newAst(AST_IF);
     ast_if->scope = scope;
@@ -653,6 +964,21 @@ ast_t *parser_parse_if(parser_t *parser , scope_t *scope){
 }
 
 
+
+
+
+
+
+
+
+
+/**
+ * @brief parsing while statement
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_while(parser_t *parser , scope_t *scope){
 
     ast_t * ast_while = newAst(AST_WHILE);
@@ -671,6 +997,18 @@ ast_t *parser_parse_while(parser_t *parser , scope_t *scope){
     return ast_while;
 }
 
+
+
+
+
+
+/**
+ * @brief parsing break
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
     ast_t * ast_break = newAst(AST_BREAK);
     parser_eat(TOKEN_BREAK,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
@@ -678,6 +1016,20 @@ ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
     return ast_break;
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief for list value
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
     // assert(false && printf("%s pas implementer \n",__func__));    
     
@@ -713,16 +1065,22 @@ ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
 }
 
 
-static bool isInClassDefinition(ast_t * item){
-    switch (item->type){
-        case AST_FUNCTION_DEFINITION:
-        case AST_VARIABLE_DEFINITION:
-        return true;
-        default:
-            return false;
-    }
-}
 
+
+
+
+
+
+
+
+
+/**
+ * @brief for definition structure KEYWORD, I try to analyze it
+ * 
+ * @param parser 
+ * @param scope 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
 
     ast_t * ast_struct = newAst(AST_STRUCT_DEFINITION);
@@ -736,8 +1094,6 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
     
     if(parser->current.type != TOKEN_RBRACKET){
 
-        // int prevScope = GetScope();
-        // ScopePlus();
         ast_t *item = parser_parse_statment(parser,scope);
         if(item->type != AST_NOOP){
             if(!isInClassDefinition(item) ){
@@ -774,11 +1130,6 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
                 );
             }
         }
-        // ScopeMinus();
-        // ScopeSet(prevScope);
-        
-        
-
     }
     parser_eat(TOKEN_RBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
 

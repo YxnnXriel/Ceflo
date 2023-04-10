@@ -1,18 +1,30 @@
-#ifndef __LEXER_H__
-#define __LEXER_H__
+/**
+ * @file lexer.h
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-09
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+                #ifndef __LEXER_H__
+                #define __LEXER_H__
 
 
-#include "str.h"
-#include "token.h"
+                        #include "str.h"
+                        #include "token.h"
 
-typedef struct{
-    string_t *fileCode;
-    int index;
-    char current_char;
-    int line;
-    int colone;
-    string_t *fileName;
-}lexer_t;
+    typedef struct{
+        string_t *fileCode;
+        int index;
+        char current_char;
+        int line;
+        int colone;
+        string_t *fileName;
+    }lexer_t;
+
 
 void newLexer(lexer_t *lexer,const char* source);
 

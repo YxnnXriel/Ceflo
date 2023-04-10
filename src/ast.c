@@ -1,11 +1,26 @@
+/**
+ * @file ast.c
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-10
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "include/ast.h"
 #include "include/scope.h"
 #include "include/visitor.h"
 
-static ast_t *var;
 
+                                                // FIRST AST
+static ast_t *var;
 static ast_t *iniAst(){
     return var;
 }
@@ -26,7 +41,19 @@ void __init_first_ast(){
     first = NULL;
 }
 
+
+
+                                // NEW AST
+
+
+/**
+ * @brief NEW AST
+ * 
+ * @param type 
+ * @return ast_t* 
+ */
 ast_t *newAst(uint8_t type){
+
     ast_t *new = calloc(1,sizeof(*new));
 
     new->type = type;
@@ -86,6 +113,19 @@ ast_t *newAst(uint8_t type){
     return new;
 }
 
+
+
+
+
+
+
+                                        // VALUE
+
+/**
+ * @brief NEW LIST AST
+ * 
+ * @param list 
+ */
 void newList_Ast(list_ast_t *list){
     list->size = 0;
     for (int i = 0; i < LIST_AST_COUNT; i++){
@@ -93,6 +133,14 @@ void newList_Ast(list_ast_t *list){
     }
 }
 
+
+/**
+ * @brief append ast node in list ast
+ * 
+ * @param list 
+ * @param ast 
+ * @return int 
+ */
 int List_Ast_Append(list_ast_t *list , ast_t *ast){
 
     if(list->size >= LIST_AST_COUNT){
@@ -106,22 +154,53 @@ int List_Ast_Append(list_ast_t *list , ast_t *ast){
     return 1;
 }
 
+
+/**
+ * @brief Get node ASt in list ast
+ * 
+ * @param list 
+ * @param index 
+ * @return ast_t* 
+ */
 ast_t * List_Ast_Get(list_ast_t *list , int index){
     if(list->size == 0 || index > (int)list->size)
         return NULL;
     return list->list[index];
 }
 
+
+
+
+/**
+ * @brief NEW OBJECT
+ * 
+ * @param object 
+ */
 void newObject(Obj_t * object){
     object->self = NULL;
 }
 
 
+
+/**
+ * @brief NEW VALUE
+ * 
+ * @param value 
+ * @param type 
+ */
 void newValue(Value_t * value , uint8_t type){
     value->type = type;
 }
 
 
+
+/**
+ * @brief print OBJ
+ * 
+ * @param value 
+ * @return true 
+ * @return false 
+ */
 bool printObj(ast_t * value){
     ast_t *obj = NULL; 
 
@@ -142,6 +221,15 @@ bool printObj(ast_t * value){
     return false;
 }
 
+
+/**
+ * @brief print list Value
+ * 
+ * @param value 
+ * @param visitor 
+ * @return true 
+ * @return false 
+ */
 bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor){
     printf("[ ");
     if(value->value.as.listValue->Size == 0){
@@ -160,6 +248,15 @@ bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor){
     printf(" ]");
 }
 
+
+
+
+/**
+ * @brief Print Value
+ * 
+ * @param value 
+ * @param visitor 
+ */
 void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
 
     switch (value->type){
@@ -181,6 +278,13 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
     
 }
 
+
+/**
+ * @brief Modif Value
+ * 
+ * @param value 
+ * @param new 
+ */
 void modifValue(ast_t * value , ast_t * new){
     
     if(new->type == AST_STRING){
@@ -194,13 +298,30 @@ void modifValue(ast_t * value , ast_t * new){
         }
 
     }else if(new->type == AST_OBJ){
-        printf("YEAP\n");
+        printf("YEAP %s \n",__func__);
     }else{
         value->value = new->value;
         value->type = new->type;
     }
 }
 
+
+
+
+
+
+
+                                            // FUNCTION AST
+
+/**
+ * @brief Get the Function object
+ * 
+ * @param scope 
+ * @param funcName 
+ * @param res 
+ * @return true 
+ * @return false 
+ */
 bool GetFunction(scope_t *scope , const char *funcName , ast_t ** res){
     *res = scope_get_function_definition(
         scope,
@@ -210,6 +331,14 @@ bool GetFunction(scope_t *scope , const char *funcName , ast_t ** res){
     return *res != NULL ? true : false;
 }
 
+
+                                        // FIRST AST
+
+/**
+ * @brief Del ast node
+ * 
+ * @param node 
+ */
 void freeAst(ast_t *node){
 
     if(node->variable_definition_name != NULL){
@@ -295,7 +424,7 @@ void clearAstNode(ast_t * val){
 
 }
 
-
+                                    // COPY AST
 
 static ast_t *ast_r_scope(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast->scope = scope;

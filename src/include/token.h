@@ -1,3 +1,16 @@
+/**
+ * @file token.h
+ * @author your name (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-09
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+
+
 #ifndef __TOKEN_H__
 #define __TOKEN_H__
 
@@ -66,7 +79,6 @@ typedef struct{
     char * value;
 }token_t;
 
-// #define BOOL_VAL(value) ((Value){VAL_BOOl,{.boolean = value}})
 
 #define AS_TOKEN(ty,val) ((token_t){.type = ty,.value = val })
 

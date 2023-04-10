@@ -1,3 +1,15 @@
+/**
+ * @file visitor.c
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-10
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +19,7 @@
 #include "include/error.h"
 
 
-
+// this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{
     scope_t *sScope;
     ast_t *sAst;
@@ -15,6 +27,24 @@ typedef struct GARBAGE_FUNCTION_STRUCT{
 }Gb_t;
 
 static Gb_t *gg;
+
+static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
+    
+    ast_t * functionDef = scope_get_function_definition(
+        scope,
+        node->function_call_name
+    );
+    
+    if(functionDef != NULL)
+        return functionDef;
+
+    if(functionDef == NULL){
+        if(scope->scope_parent != NULL ){
+            return visitor_visit_get_function(scope->scope_parent,node);
+        }
+    }   
+    return NULL; 
+}
 
 
 void newGb(){
@@ -41,7 +71,23 @@ static void GbFree(){
     
 }
 
+static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
+    
+    ast_t * structdef = scope_get_struct_definition(
+        scope,
+        node->function_call_name
+    );
+    
+    if(structdef != NULL)
+        return structdef;
 
+    if(structdef == NULL){
+        if(scope->scope_parent != NULL ){
+            return visitor_visit_get_struct(scope->scope_parent,node);
+        }
+    }   
+    return NULL; 
+}
 
 static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
@@ -56,13 +102,55 @@ static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t 
     return node; 
 }
 
+static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
+    visitor->global_scope = scope;
+}
+
+
+
+/*
+
+    [NOTE]
+        each node is a AST NODE , and each node is assigned to a function
+        VISITOR parameter save the scope of each block declaration or statement
+        during a function call , new scope is defined and the function definiton save in the previous scope(depend of scope parent if this last exist) is copied
+        all statement into the function definition copie is copied
+        after end call, GARBAGE_FUNCTION_STRUCT clear this copie and return the result if is exist
+        
+        variable definition , structure definition , function definition are save in the current scope
+        I dont have put secure on the multiple variable definition on different scope definition ( in a function who haves a function declaration on herself (in body function definition) )
+            [the secure in the next :) ]
+
+        the list and string value are pointers, if you update the list, the list will be updated
+        yes, string is copied when this one is a parameter of function call , but not list value
+
+        AST_OBJ for me is just a scope who a many element (variable , function ect ..)
+
+        [HELP]
+        use ctrl + f , '$' for walk to different AST branch 
+*/
+
+
+/**
+ * @brief NEW VISITOR
+ * 
+ * @param visitor 
+ */
 void newVisitor(visitor_t * visitor){
     visitor->global_scope = newScope();
 }
 
-static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
-    visitor->global_scope = scope;
-}
+
+
+//                          ===================================== $COMPOUND ==============================================
+
+/**
+ * @brief big switch statment on node of tree
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 
 
@@ -112,6 +200,20 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
     return node;
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief visit list node of current branch 
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
     
     // printf("\tCompound Size : %d\n",node->list_compound->Size);
@@ -174,16 +276,189 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
     return node;
 }
 
-ast_t * visitor_visit_data(visitor_t * visitor,ast_t *node){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $LIST ==============================================
+
+
+/**
+ * @brief visit list Value
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
+ast_t * visitor_visit_list_init(visitor_t * visitor,ast_t *node){
+    Value_t * val = &node->value;
+    for (int i = 0; i < val->as.listValue->Size; i++){
+        val->as.listValue->Item[i] =  visitor_visit(visitor,val->as.listValue->Item[i]);
+    }
+
     return node;
+    
 }
 
 
-// static ast_t * try_cast_value(ast_t * value , type_ceflo type){
 
-//     if(value.)
+/**
+ * @brief try Get an access for the list
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
+ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
 
-// }
+
+    ast_t * variable = visitor_visit(visitor,node->left);
+    ast_t * index = visitor_visit(visitor,node->list_ptr);
+
+    if(variable->type == AST_LIST){
+        if(index->type == AST_NUMBER){
+            if(index->value.as.numberValue > variable->value.as.listValue->Size){
+                Print_visitor_error(
+                0,
+                0,
+                "./Ceflo",
+                "%s[%g] n'existe pas \n",
+                variable->variable_name,
+                index->value.as.numberValue
+                );
+                exit(1);
+            }
+            // ast_t * value =  List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
+            // value->assignement_variable_name = variable->assignement_variable_name;
+            // value->list_ptr = index;
+            // value->value.as.listValue = variable->value.as.listValue;
+            return List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
+        }
+    }
+
+    if(variable->type == AST_STRING){
+        if(index->type == AST_NUMBER){
+            if(index->value.as.numberValue > variable->value.as.stringValue->lenght){
+                Print_visitor_error(
+                0,
+                0,
+                "./Ceflo",
+                "%s[%g] n'existe pas \n",
+                variable->variable_name,
+                index->value.as.numberValue
+                );
+                exit(1);
+            }
+            ast_t * value =  newAst(AST_CHAR);
+            newValue(&value->value,CHAR);
+            value->value.as.charValue = String_index(variable->value.as.stringValue,(int)index->value.as.numberValue);
+            value->list_ptr = index;
+            value->ref_string = variable;
+            value->is_string_modif = true;
+            return value;
+        }
+    }
+
+
+    return variable;
+}
+
+
+
+/**
+ * @brief modifier the list at index
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
+ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
+
+    ast_t * variable = visitor_visit(visitor,node->assignement_left);
+    // scope_t *scope = variable->scope;
+    ast_t * value = visitor_visit(visitor,node->assignement_value);
+    // printf("[%s] [%g] \n",variable->variable_name,variable->value.as.numberValue);
+
+    if(node->op.type != TOKEN_EQUAL){
+        ast_t * binop = newAst(AST_BINOP);
+        binop->left = variable;
+        binop->right = value;
+        binop->op = node->op;
+        variable->value = visitor_visit(visitor,binop)->value;
+        // printf("%p\n",(void*)binop->next);
+    }else{
+        modifValue(variable,value);
+
+        // variable->value = ast_copy(value,NULL)->value;
+        // variable->type = value->type;
+        // printf("%s %s \n",AST_TO_STRING[value->type],variable->value.as.stringValue->str);
+    }
+
+    
+    if(variable->is_string_modif){
+        string_t * str = variable->ref_string->value.as.stringValue;
+        if(value->type == AST_CHAR){
+            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,value->value.as.charValue);
+        }
+        else if(value->type == AST_NUMBER)
+            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,(char) value->value.as.numberValue);
+        else{
+            variable->ref_string->type = AST_NONE;
+        }
+        variable->is_string_modif = false;
+    }
+    
+    // printf("ICI ICI %s\n",variable->assignement_variable_name);
+    
+    // scope_append_variable_definition(
+        // scope,
+        // variable->assignement_variable_name,
+        // variable
+    // );
+
+    return variable;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $OBJECT ==============================================
+
+
+/**
+ * @brief save structure defintion
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 
 ast_t * visitor_visit_struct_definition(visitor_t * visitor,ast_t *node){
     scope_append_struct_definition(
@@ -195,24 +470,14 @@ ast_t * visitor_visit_struct_definition(visitor_t * visitor,ast_t *node){
 }
 
 
-static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
-    
-    ast_t * structdef = scope_get_struct_definition(
-        scope,
-        node->function_call_name
-    );
-    
-    if(structdef != NULL)
-        return structdef;
 
-    if(structdef == NULL){
-        if(scope->scope_parent != NULL ){
-            return visitor_visit_get_struct(scope->scope_parent,node);
-        }
-    }   
-    return NULL; 
-}
-
+/**
+ * @brief transform new + structName in AST_OBJ
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 
 
@@ -290,6 +555,13 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 }
 
 
+/**
+ * @brief try get/update/call element of value OBJ
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->left);
@@ -313,6 +585,41 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
     return visitor_visit(&vs,node->right);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $VARIABLE ==============================================
+
+
+/**
+ * @brief save variable definition in the current scope
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 
     ast_t * value = visitor_visit(visitor,node->variable_definition_value);
@@ -341,6 +648,14 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     return node;
 }
 
+
+/**
+ * @brief Get variable definition by name ( this one return the value of the variable )
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
     ast_t * value = scope_get_variable_definition(
@@ -375,6 +690,42 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $FUNCTION ==============================================
+
+
+/**
+ * @brief save function defintion in the current scope
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
     scope_append_function_definition(
         visitor->global_scope,
@@ -388,25 +739,15 @@ ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
     return node;
 }
 
-static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
-    
-    ast_t * functionDef = scope_get_function_definition(
-        scope,
-        node->function_call_name
-    );
-    
-    if(functionDef != NULL)
-        return functionDef;
 
-    if(functionDef == NULL){
-        if(scope->scope_parent != NULL ){
-            return visitor_visit_get_function(scope->scope_parent,node);
-        }
-    }   
-    return NULL; 
-}
-
-
+/**
+ * @brief visit a function by name
+ * 
+ * @param visitor 
+ * @param func 
+ * @param args 
+ * @return ast_t* 
+ */
 ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     
     ast_t *first = GetFirstAst();
@@ -440,6 +781,14 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     return returnValue;
 }
 
+
+/**
+ * @brief visit function call
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     // printf("ICI %s\n",node->function_call_name);
@@ -543,6 +892,36 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     return returnValue;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $VALUE ==============================================
+
+
+
+
+/**
+ * @brief walk the tree of expr node
+ * 
+ * @param visitor 
+ * @param left 
+ * @param op 
+ * @param right 
+ * @return ast_t* 
+ */
 ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t *op , ast_t *right){
 
     #define BINOP(l,o,r)    l(left->value) o r(right->value)
@@ -867,6 +1246,13 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
     return value;
 }
 
+/**
+ * @brief join result of walk of tree expr
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
 
     ast_t *value = NULL;
@@ -884,7 +1270,12 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
     return value;
 }
 
-
+/**
+ * @brief evalue value
+ * 
+ * @param value 
+ * @return int 
+ */
 static int visitor_visit_evaluate_expr(ast_t *value){
 
     switch (value->type){
@@ -896,6 +1287,43 @@ static int visitor_visit_evaluate_expr(ast_t *value){
 
     return 0;
 }
+
+
+/**
+ * @brief value
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
+ast_t * visitor_visit_data(visitor_t * visitor,ast_t *node){
+    return node;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $CONTROLE ==============================================
+
+
+/**
+ * @brief for if node of tree
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
+
 
 ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
 
@@ -918,6 +1346,13 @@ ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
     return node;
 }
 
+/**
+ * @brief for while node of tree
+ * 
+ * @param visitor 
+ * @param node 
+ * @return ast_t* 
+ */
 ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
     // printf("while - %d \n",visitor->global_scope->countScope);
     
@@ -933,6 +1368,30 @@ ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
     
     return node;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                          ===================================== $MODIFIER ==============================================
+
+
+
 
 ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
@@ -967,116 +1426,4 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     
 
     return value;
-}
-
-ast_t * visitor_visit_list_init(visitor_t * visitor,ast_t *node){
-    Value_t * val = &node->value;
-    for (int i = 0; i < val->as.listValue->Size; i++){
-        val->as.listValue->Item[i] =  visitor_visit(visitor,val->as.listValue->Item[i]);
-    }
-
-    return node;
-    
-}
-
-
-ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
-
-
-    ast_t * variable = visitor_visit(visitor,node->left);
-    ast_t * index = visitor_visit(visitor,node->list_ptr);
-
-    if(variable->type == AST_LIST){
-        if(index->type == AST_NUMBER){
-            if(index->value.as.numberValue > variable->value.as.listValue->Size){
-                Print_visitor_error(
-                0,
-                0,
-                "./Ceflo",
-                "%s[%g] n'existe pas \n",
-                variable->variable_name,
-                index->value.as.numberValue
-                );
-                exit(1);
-            }
-            // ast_t * value =  List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
-            // value->assignement_variable_name = variable->assignement_variable_name;
-            // value->list_ptr = index;
-            // value->value.as.listValue = variable->value.as.listValue;
-            return List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
-        }
-    }
-
-    if(variable->type == AST_STRING){
-        if(index->type == AST_NUMBER){
-            if(index->value.as.numberValue > variable->value.as.stringValue->lenght){
-                Print_visitor_error(
-                0,
-                0,
-                "./Ceflo",
-                "%s[%g] n'existe pas \n",
-                variable->variable_name,
-                index->value.as.numberValue
-                );
-                exit(1);
-            }
-            ast_t * value =  newAst(AST_CHAR);
-            newValue(&value->value,CHAR);
-            value->value.as.charValue = String_index(variable->value.as.stringValue,(int)index->value.as.numberValue);
-            value->list_ptr = index;
-            value->ref_string = variable;
-            value->is_string_modif = true;
-            return value;
-        }
-    }
-
-
-    return variable;
-}
-
-ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
-
-    ast_t * variable = visitor_visit(visitor,node->assignement_left);
-    // scope_t *scope = variable->scope;
-    ast_t * value = visitor_visit(visitor,node->assignement_value);
-    // printf("[%s] [%g] \n",variable->variable_name,variable->value.as.numberValue);
-
-    if(node->op.type != TOKEN_EQUAL){
-        ast_t * binop = newAst(AST_BINOP);
-        binop->left = variable;
-        binop->right = value;
-        binop->op = node->op;
-        variable->value = visitor_visit(visitor,binop)->value;
-        // printf("%p\n",(void*)binop->next);
-    }else{
-        modifValue(variable,value);
-
-        // variable->value = ast_copy(value,NULL)->value;
-        // variable->type = value->type;
-        // printf("%s %s \n",AST_TO_STRING[value->type],variable->value.as.stringValue->str);
-    }
-
-    
-    if(variable->is_string_modif){
-        string_t * str = variable->ref_string->value.as.stringValue;
-        if(value->type == AST_CHAR){
-            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,value->value.as.charValue);
-        }
-        else if(value->type == AST_NUMBER)
-            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,(char) value->value.as.numberValue);
-        else{
-            variable->ref_string->type = AST_NONE;
-        }
-        variable->is_string_modif = false;
-    }
-    
-    // printf("ICI ICI %s\n",variable->assignement_variable_name);
-    
-    // scope_append_variable_definition(
-        // scope,
-        // variable->assignement_variable_name,
-        // variable
-    // );
-
-    return variable;
 }

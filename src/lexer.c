@@ -1,10 +1,31 @@
+/**
+ * @file lexer.c
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-09
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-
+    
 #include "include/lexer.h"
 
+
+
+
+
+/**
+ * @brief new lexer
+ * 
+ * @param lexer 
+ * @param source 
+ */
 void newLexer(lexer_t *lexer,const char* source){
 
     lexer->fileCode = String_Read_FIle(source);
@@ -16,6 +37,19 @@ void newLexer(lexer_t *lexer,const char* source){
 
 }
 
+
+
+
+
+
+
+
+
+/**
+ * @brief advance one caractere
+ * 
+ * @param lexer 
+ */
 void lexer_advance(lexer_t *lexer){
     if(lexer->current_char == 10 || lexer->current_char == '\0'){
         lexer->line +=1;
@@ -31,6 +65,19 @@ void lexer_advance(lexer_t *lexer){
 
 
 
+
+
+
+
+
+
+
+/**
+ * @brief precise what id is it
+ * 
+ * @param chaine 
+ * @return TokenEnum 
+ */
 static TokenEnum lexer_precise_id(char *chaine ){
 
     #define cpm(value) strcmp(chaine,value) == 0
@@ -83,6 +130,19 @@ static TokenEnum lexer_precise_id(char *chaine ){
 }
 
 
+
+
+
+
+
+
+/**
+ * @brief look on cararctere in the front
+ * 
+ * @param lexer 
+ * @param c 
+ * @return int 
+ */
 static int lexer_peek(lexer_t *lexer, char c){
     
     if(lexer->index + 1 < lexer->fileCode->lenght){
@@ -97,6 +157,21 @@ static int lexer_peek(lexer_t *lexer, char c){
 
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief make value as string
+ * 
+ * @param is 
+ * @param lexer 
+ * @param value 
+ * @return int 
+ */
 static int lexer_get_value(int is,lexer_t *lexer ,  char **value ){
     if(is){
         char *s = lexer_make_as_string(lexer);
@@ -110,6 +185,19 @@ static int lexer_get_value(int is,lexer_t *lexer ,  char **value ){
 }
 
 
+
+
+
+
+
+
+
+/**
+ * @brief for identifier
+ * 
+ * @param lexer 
+ * @return token_t 
+ */
 token_t lexer_collect_id(lexer_t *lexer){
 
     char *value = calloc(1,sizeof(char));
@@ -129,6 +217,19 @@ token_t lexer_collect_id(lexer_t *lexer){
     return tok;
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief for number
+ * 
+ * @param lexer 
+ * @return token_t 
+ */
 token_t  lexer_collect_digit(lexer_t *lexer){
     char *value = calloc(1,sizeof(char));
     
@@ -153,6 +254,19 @@ token_t  lexer_collect_digit(lexer_t *lexer){
     return AS_TOKEN(type,value);
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief for strings
+ * 
+ * @param lexer 
+ * @return token_t 
+ */
 token_t lexer_collect_string(lexer_t *lexer){
 
 
@@ -169,6 +283,17 @@ token_t lexer_collect_string(lexer_t *lexer){
     return AS_TOKEN(TOKEN_STRING,value);
 }
 
+
+
+
+
+
+/**
+ * @brief for caractere
+ * 
+ * @param lexer 
+ * @return token_t 
+ */
 token_t lexer_collect_char(lexer_t *lexer){
     char *value = calloc(1,sizeof(char));
     
@@ -183,12 +308,34 @@ token_t lexer_collect_char(lexer_t *lexer){
     return AS_TOKEN(TOKEN_CHAR,value);
 }
 
+
+
+
+
+
+
+
+/**
+ * @brief del white space
+ * 
+ * @param lexer 
+ */
 void lexer_advance_skip_white_space(lexer_t *lexer){
     while(lexer->current_char == 10 || lexer->current_char == ' ' || lexer->current_char == '\t')
         lexer_advance(lexer);
 }
 
 
+
+
+
+
+/**
+ * @brief make sense of the current lexicon
+ * 
+ * @param lexer 
+ * @return token_t 
+ */
 token_t lexer_get_next_token(lexer_t *lexer){
 
 
@@ -309,12 +456,34 @@ token_t lexer_get_next_token(lexer_t *lexer){
     return AS_TOKEN(TOKEN_EOF,"\0");
 }
 
+
+
+
+
+/**
+ * @brief advance for lexer and return token
+ * 
+ * @param lexer 
+ * @param token 
+ * @return token_t 
+ */
 token_t lexer_advance_return_token(lexer_t *lexer , token_t token){
 
     lexer_advance(lexer);
     return token;
 }
 
+
+
+
+
+
+/**
+ * @brief check if current char is a unicode
+ * 
+ * @param lex 
+ * @return char 
+ */
 static char lexer_peek_retour(lexer_t *lex){
     if( (lex->index + 1) < lex->fileCode->lenght){
         if(lex->current_char == '\\' && lexer_peek(lex,'n')) return '\n';
@@ -331,6 +500,16 @@ static char lexer_peek_retour(lexer_t *lex){
     return -1;
 }
 
+
+
+
+
+/**
+ * @brief transform char to string
+ * 
+ * @param lexer 
+ * @return char* 
+ */
 char * lexer_make_as_string(lexer_t *lexer){
     char *chaine = calloc(2 ,sizeof(char*));
 
@@ -344,6 +523,15 @@ char * lexer_make_as_string(lexer_t *lexer){
     return chaine;
 }
 
+
+
+
+/**
+ * @brief clear lexer
+ * 
+ * @param lex 
+ * @return int 
+ */
 int lexerFree(lexer_t *lex){
 
     if(lex->fileCode){

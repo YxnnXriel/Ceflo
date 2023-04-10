@@ -1,14 +1,25 @@
+/**
+ * @file parser.h
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-10
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
     #include <stdarg.h>
 
 
-#include "lexer.h"
-#include "token.h"
-#include "ast.h"
-#include "scope.h"
-#include "error.h"
+        #include "lexer.h"
+        #include "token.h"
+        #include "ast.h"
+        #include "scope.h"
+        #include "error.h"
 
 typedef struct{
     lexer_t *lexer;

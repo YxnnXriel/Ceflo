@@ -1,3 +1,14 @@
+/**
+ * @file visitor.h
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-10
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #ifndef __VISITOR_H__
 #define __VISITOR_H__
     
@@ -26,7 +37,6 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node);
 ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node);
-
 
 
 ast_t * visitor_visit_list_init(visitor_t * visitor,ast_t *node);

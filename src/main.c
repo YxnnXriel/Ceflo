@@ -1,3 +1,15 @@
+
+/**
+ * @file main.c
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-10
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,7 +21,7 @@
 
 
 /**
- * TODO: apporter les securités sur les fonctions , les variables , le casting
+ * TODO: secure lexer entry,and try free current ast if we meet a problem
  */
 
 int main(int argc, char const *argv[]){

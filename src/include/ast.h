@@ -1,3 +1,15 @@
+/**
+ * @file ast.h
+ * @author Yann Ariel (yannariel13@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-09
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+
 #ifndef __AST_H__
 #define __AST_H__
 
@@ -83,11 +95,12 @@ typedef struct AST_TYPE_VALUE{
     }as;
 }Value_t;
 
-#define AS_BOOL(value) ((value).as.booleanValue)
-#define AS_NUMBER(value) ((value).as.numberValue)
-#define AS_CHAR(value) ((value).as.charValue)
-#define AS_STRING(value) ((value).as.stringValue->str)
-#define AS_LIST(value) ((value).as.listValue)
+
+    #define AS_BOOL(value) ((value).as.booleanValue)
+    #define AS_NUMBER(value) ((value).as.numberValue)
+    #define AS_CHAR(value) ((value).as.charValue)
+    #define AS_STRING(value) ((value).as.stringValue->str)
+    #define AS_LIST(value) ((value).as.listValue)
 
 
 
@@ -98,80 +111,132 @@ typedef struct AST_STRUCT{
         FOREACH_AST(GENERATE_AST_ENUM)
     }type;
 
-    // AST_VARIABLE_DEFINITION
-    char * variable_definition_name;
-    struct AST_STRUCT *variable_definition_value;
-    type_ceflo variable_definition_static_type;
-    char *variable_definition_static_type_name;
 
 
-    // AST_VARIABLE
-    char *variable_name;
+    /* ======  AST_VARIABLE_DEFINITION ====== */
+        char * variable_definition_name;
+        struct AST_STRUCT *variable_definition_value;
+        type_ceflo variable_definition_static_type;
+        char *variable_definition_static_type_name;
 
 
-    // AST_FUNCTION_DEFINITION
-    char *function_definition_name;
-    list_ast_t function_defintion_args;
-    struct AST_STRUCT* function_definition_body;
-    type_ceflo function_definition_return_type;
+    /* ======  AST_VARIABLE ====== */
+        char *variable_name;
 
 
-    // AST_FUNCTION_CALL
-    char *function_call_name;
-    list_ast_t function_call_args;
 
-    // AST_VALUE
-    Value_t value;
 
-    struct AST_STRUCT *next;
 
-    // AST_COMPOUND
-    list_t *list_compound;
-    Return_Type type_compound;
-    // scope
-    struct SCOPE_STRUCT *scope;
-    int countScope;
+
+
+
+
+    /* ======  AST_FUNCTION_DEFINITION ====== */
+        char *function_definition_name;
+        list_ast_t function_defintion_args;
+        struct AST_STRUCT* function_definition_body;
+        type_ceflo function_definition_return_type;
+
+
+
+    /* ======  AST_FUNCTION_CALL ====== */
+        char *function_call_name;
+        list_ast_t function_call_args;
+
+
+
+
+
+
+    /* ======  AST_VALUE ====== */
+        Value_t value;
+
+
+
+
+
+
+
+
+
+    /* ======  scope ====== */
+        struct SCOPE_STRUCT *scope;
+        int countScope;
 
     
 
-    // binop
-    struct AST_STRUCT *left;
-    struct AST_STRUCT *right;
-    token_t op;
-
-    // return
-    struct AST_STRUCT *return_expr;
-    bool is_return_value;
-
-    // if
-    struct AST_STRUCT *if_expr;
-    struct AST_STRUCT *if_body;
-    struct AST_STRUCT *if_other;
-    struct AST_STRUCT *else_body;
-
-    // while
-    struct AST_STRUCT *while_expr;
-    struct AST_STRUCT *while_body;
+    /* ======  binop ====== */
+        struct AST_STRUCT *left;
+        struct AST_STRUCT *right;
+        token_t op;
 
 
-    // assignement
-    struct AST_STRUCT *assignement_left;
-    struct AST_STRUCT *assignement_value;
-    const char *assignement_variable_name;
 
-    //List_ACCES
-    struct AST_STRUCT *list_ptr; // [0]
+    /* ======  return ====== */
+        struct AST_STRUCT *return_expr;
+        bool is_return_value;
 
-    // STRUCT DEFINITION
-    char *struct_definition_name;
-    list_t *struct_definition_item; // function , variable ect ...
 
-    // OBJ
-    bool is_new_obj;
 
-    // STRING
-    bool is_string_modif;
-    struct AST_STRUCT *ref_string; // [0]
+
+    /* ======  if ====== */
+        struct AST_STRUCT *if_expr;
+        struct AST_STRUCT *if_body;
+        struct AST_STRUCT *if_other;
+        struct AST_STRUCT *else_body;
+
+
+
+    /* ======  while ====== */
+        struct AST_STRUCT *while_expr;
+        struct AST_STRUCT *while_body;
+
+
+    /* ======  assignement ====== */
+        struct AST_STRUCT *assignement_left;
+        struct AST_STRUCT *assignement_value;
+        const char *assignement_variable_name;
+
+
+
+
+
+    /* ====== List_ACCES ====== */
+        struct AST_STRUCT *list_ptr;
+
+
+
+
+    // ======  STRUCT DEFINITION ======
+        char *struct_definition_name;
+        list_t *struct_definition_item; // ======  function , variable ect ... ======
+
+
+
+
+    /* ======  OBJ ====== */
+        bool is_new_obj;
+        // vas de pair avec valeu. Si il est false c'est que value de type AST_OBJ doit etre copier
+
+
+    /* ======  STRING ====== */
+        bool is_string_modif;// utiliser pour modifier un caractere dans une chaine
+        struct AST_STRUCT *ref_string; // pointeur sur la chaine en question
+
+
+
+
+    /* ======  AST_COMPOUND ====== */
+        list_t *list_compound;
+        Return_Type type_compound;
+
+
+
+
+    /* ======== NEXT AST ======== */
+        struct AST_STRUCT *next;
+        // utiliser pour connaitre le prochaine object AST
+        // utiliser pour la suppression de l'arbre en atente d'un GB
 
 }ast_t;
 
@@ -180,22 +245,26 @@ static const char *AST_TO_STRING[] ={
     FOREACH_AST(GENERATE_AST_ENUM_STRING)
 };
 
-void __init_first_ast();
+// NEW AST
 ast_t *newAst(uint8_t type);
 
-void newList_Ast(list_ast_t *list);
-void newObject(Obj_t * object);
+
+// VALUE
 void newValue(Value_t * value , uint8_t type);
 void modifValue(ast_t * value , ast_t * new);
-
+void newList_Ast(list_ast_t *list);
+void newObject(Obj_t * object);
 void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor);
 bool printObj(ast_t * value);
 bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor);
-
 int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 
+
+
+// FIRST AST
+void __init_first_ast();
 ast_t * GetFirstAst();
 void ModifFirstAst(ast_t * new);
 void ResetFirstAst();
@@ -204,8 +273,11 @@ void freeAst(ast_t *node);
 void clearAst();
 void freeSingleAst(ast_t * node);
 
+// FUNCTION AST
 bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** res);
 
+
+// COPY AST
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value);
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
