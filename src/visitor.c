@@ -154,10 +154,6 @@ void newVisitor(visitor_t * visitor){
 ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 
 
-    // if(node->type == AST_FUNCTION_CALL){
-    //     printf("%s \n",node->function_call_name);
-    // }
-
     if(node == (void*)0)
         return NULL;
 
@@ -215,8 +211,6 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
  * @return ast_t* 
  */
 ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
-    
-    // printf("\tCompound Size : %d\n",node->list_compound->Size);
 
     for (int i = 0; i < node->list_compound->Size; i++){
         ast_t *child = List_Get(node->list_compound,i);
@@ -229,29 +223,15 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
             if(noeud ->type == AST_RETURN){
                 if(noeud ->return_expr != NULL){
                     
-                    // printf("-----------------------------\n");
+
                     ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
                     ast_t *value =  ast_copy(return_value,node->scope);  
-                    // printf("<%g> (%d) \n",value->value.as.numberValue,value->countScope);
-                    // printf("%s\n",node->type_compound == R_FUNCTION_CALL_TYPE ? "FUNCTION_CALL":"IF");
-                    
-                        // printf("YEAP %d\n",noeud->countScope);
+
                     value->is_return_value = true; 
                     GbFree();
                     return value;
                 }
             }
-
-            // if(noeud->is_return_value == true &&
-            //     (noeud->countScope > node->countScope && visitor->global_scope->countScope != 0 ) &&
-            //     node->type_compound != R_FUNCTION_CALL_TYPE
-            // ){
-            // printf("%s\n",node->type_compound == R_FUNCTION_CALL_TYPE ? "FUNCTION_CALL":"IF");
-
-            // if(noeud->is_return_value){
-            //     printf("noeud->countScope - 1 = %d , ",noeud->countScope - 1);
-            //     printf("visitor->global_scope->countScope = %d \n",visitor->global_scope->countScope);
-            // }
 
             if((noeud->is_return_value == true) 
                 &&
@@ -266,7 +246,6 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
                 }
             }else{
                 noeud->is_return_value =  false;
-                // return noeud;
             }
 
         }
@@ -343,10 +322,7 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 );
                 exit(1);
             }
-            // ast_t * value =  List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
-            // value->assignement_variable_name = variable->assignement_variable_name;
-            // value->list_ptr = index;
-            // value->value.as.listValue = variable->value.as.listValue;
+
             return List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
         }
     }
@@ -390,9 +366,9 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
 ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->assignement_left);
-    // scope_t *scope = variable->scope;
+
     ast_t * value = visitor_visit(visitor,node->assignement_value);
-    // printf("[%s] [%g] \n",variable->variable_name,variable->value.as.numberValue);
+
 
     if(node->op.type != TOKEN_EQUAL){
         ast_t * binop = newAst(AST_BINOP);
@@ -400,14 +376,10 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
         binop->right = value;
         binop->op = node->op;
         variable->value = visitor_visit(visitor,binop)->value;
-        // printf("%p\n",(void*)binop->next);
-    }else{
-        modifValue(variable,value);
 
-        // variable->value = ast_copy(value,NULL)->value;
-        // variable->type = value->type;
-        // printf("%s %s \n",AST_TO_STRING[value->type],variable->value.as.stringValue->str);
-    }
+    }else
+        modifValue(variable,value);
+    
 
     
     if(variable->is_string_modif){
@@ -423,13 +395,6 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
         variable->is_string_modif = false;
     }
     
-    // printf("ICI ICI %s\n",variable->assignement_variable_name);
-    
-    // scope_append_variable_definition(
-        // scope,
-        // variable->assignement_variable_name,
-        // variable
-    // );
 
     return variable;
 }
@@ -515,7 +480,7 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     visitor_t vs;
     newObj->self->scope_parent = visitor->global_scope;
     newVisitorWithScope(&vs,newObj->self);
-    // vs.global_scope->scope_parent = visitor->global_scope;
+
 
     ast_t * init = NULL;
     
@@ -548,7 +513,6 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 
     obj->is_new_obj =  true;
 
-    // printf("%p \n",newObj->self);
 
     return obj;
 
@@ -568,17 +532,12 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
 
     visitor_t vs;
 
-    // printf("%s \n",AST_TO_STRING[variable->type]);
 
     if(variable->type != AST_OBJ){
         printf("ce n'est pas une structure\n");
         exit(1);
     }
     newVisitorWithScope(&vs,variable->value.as.ObjectValue.self);
-
-    // printf("%p \n",variable->value.as.ObjectValue.self);
-
-
 
 
 
@@ -733,8 +692,6 @@ ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
         node
     );
 
-    // printf("[%s] == %d \n",node->function_definition_name,node->countScope);
-
 
     return node;
 }
@@ -820,18 +777,13 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         );
     }
 
-    // printf("%d \n", node->countScope);
+
     ast_t *first = GetFirstAst();
-    // printf("first save : %p\n",first);
     ResetFirstAst();
-    // printf("reset first ast : %p\n",GetFirstAst());
-    
+
     scope_t * newscope = newScope();
 
     ast_t *newFunction = ast_copy(functionDef,newscope);
-
-    // printf("scope : %p\n",visitor->global_scope);
-    // printf("newscope : %p\n",newscope);
 
     if(node->function_call_args.size != functionDef->function_defintion_args.size){
         Print_visitor_error(
@@ -847,12 +799,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     for (int i = 0; i < (int) node->function_call_args.size; i++){
         char * variable_name = List_Ast_Get(&functionDef->function_defintion_args,i)->variable_name;
-        // printf("---------------------\n");
             ast_t * value = visitor_visit(visitor,List_Ast_Get(&node->function_call_args,i));
-        //     printf("[%g] \n",value->value.as.numberValue);
-        // printf("---------------------\n");
-        
-        // value = visitor_visit(visitor,value);
 
         scope_append_variable_definition(
             newscope,
@@ -868,27 +815,13 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     
     visit.global_scope->scope_parent = visitor->global_scope;
 
-
-
-    // printf("%d \n", newFunction->function_definition_body->countScope);
-
-    // printf("VISIT : function  %s \n",newFunction->function_definition_name);
-
     ast_t *returnValue =  visitor_visit(&visit,newFunction->function_definition_body);   
     
-
-    // freeScope(newscope);
-
-    // printf("end first ast : %p\n",GetFirstAst());
-    // clearAst(GetFirstAst());
-        // printf("ICI ICI \n");
     GbPush(newscope,GetFirstAst());
 
     ModifFirstAst(first);   
-    // printf("modif first ast : %p\n",GetFirstAst());
 
 
-    // printf("___________________\n");
     return returnValue;
 }
 
@@ -1354,7 +1287,7 @@ ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
  * @return ast_t* 
  */
 ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
-    // printf("while - %d \n",visitor->global_scope->countScope);
+
     
     while (visitor_visit_evaluate_expr(visitor_visit(visitor,node->while_expr))){
         ast_t *res =  visitor_visit(visitor,node->while_body);
@@ -1398,7 +1331,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     ast_t * variable = visitor_visit(visitor,node->assignement_left);
     scope_t *scope = variable->scope;
     ast_t * value = visitor_visit(visitor,node->assignement_value);
-    // printf("[%s] [%g] \n",variable->variable_name,variable->value.as.numberValue);
+
 
     if(node->op.type != TOKEN_ID){
         ast_t * binop = newAst(AST_BINOP);
@@ -1406,7 +1339,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         binop->right = value;
         binop->op = node->op;
         value =  visitor_visit(visitor,binop);
-        // printf("%p\n",(void*)binop->next);
+
     }
 
     if(value->type == AST_OBJ ){

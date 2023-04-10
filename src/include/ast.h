@@ -91,7 +91,7 @@ typedef struct AST_TYPE_VALUE{
         char charValue;
         string_t *stringValue;
         list_t *listValue;
-        Obj_t ObjectValue; // la j'alloue un object
+        Obj_t ObjectValue; 
     }as;
 }Value_t;
 
@@ -103,6 +103,7 @@ typedef struct AST_TYPE_VALUE{
     #define AS_LIST(value) ((value).as.listValue)
 
 
+    #define OBJECT_SELF(ast) ((ast->value.as.ObjectValue.self))
 
 
 typedef struct AST_STRUCT{
@@ -216,7 +217,7 @@ typedef struct AST_STRUCT{
 
     /* ======  OBJ ====== */
         bool is_new_obj;
-        // vas de pair avec valeu. Si il est false c'est que value de type AST_OBJ doit etre copier
+        // vas de pair avec value. Si il est false c'est que value de type AST_OBJ doit etre copier
 
 
     /* ======  STRING ====== */

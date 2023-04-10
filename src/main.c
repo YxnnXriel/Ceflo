@@ -26,24 +26,12 @@
 
 int main(int argc, char const *argv[]){
 
+	if(argc >= 2){
 		lexer_t lexer;
+
 		newLexer(&lexer,argv[1]);
 
-		// token_t token = AS_TOKEN(EOF,"NULL");
-
-		// while( (token = lexer_get_next_token(&lexer)).type != TOKEN_EOF){
-		// 	printf("`%s` -- `%s`\n",TOKEN_TO_STRING[token.type],token.value);
-		// 	freeToken(&token);
-		// }
-
-
-		// lexerFree(&lexer);
-
-
 		ast_t *node = parser_parse(&lexer);
-
-
-		// printf("%d\n",node->list_compound->Size);
 
 		visitor_t visitor;
 		newVisitor(&visitor);
@@ -58,6 +46,13 @@ int main(int argc, char const *argv[]){
 		freeScope(visitor.global_scope);
 		
 		lexerFree(&lexer);
+
+	}else{
+		printf("[CEFLO]\n");
+		printf("./Ceflo [args]\n");
+		printf("file error\n");
+	}
+
 
 
 
