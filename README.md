@@ -96,32 +96,27 @@ Contact me by email yannariel13@gmail.com for help, ask questions or contribute 
 
 ```go
 
-    struct Personne:{
+    struct Personne{
         
-        var Nom::str
-        var Prenom::str
-        
-        func __init__(name,subname){
-            Nom = name
-            Prenom = subname
-        }
+        var Nom = "Yxnn Xriel";
+        var Age = 21;
 
-
-        // This function should take nothing as parameters and should return nothing.
         func __str__(){
-            return Nom + "  " + Prenom;
+            return Nom + "  " + Age;
         }
 
-
-        func sayHello(){
-            println("Hello");
+        func __init__(nom,age){
+            Nom = nom
+            Age = age
         }
+
     }
 
 
-    var p1::Personne = new Personne("John","Doe");
+    var list = [new Personne("Yann",22),new Personne("Grace",18)]
 
-    println(p1); // John  Doe
+    println(list);
+
 
 ```
 
