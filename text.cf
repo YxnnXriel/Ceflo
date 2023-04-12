@@ -1,20 +1,3 @@
-struct Personne{
-    
-    var Nom = "Yxnn Xriel";
-    var Age = 21;
-
-    func __str__(){
-        return Nom + "  " + Age;
-    }
-
-    func __init__(nom,age){
-        Nom = nom
-        Age = age
-    }
-
-}
+println("Hi , Mom !");
 
 
-var list = [new Personne("Yann",22),new Personne("Grace",18)]
-
-println(list);

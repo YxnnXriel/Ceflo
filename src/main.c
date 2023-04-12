@@ -22,6 +22,9 @@
 
 /**
  * TODO: secure lexer entry,and try free current ast if we meet a problem
+ * - Faire les attributs et les fonction d'une liste 
+ * - Ajouter un dictionnaire(si c'est possible)
+ * - Bien d'autre
  */
 
 int main(int argc, char const *argv[]){
