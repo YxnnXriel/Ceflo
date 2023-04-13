@@ -151,7 +151,7 @@ typedef struct AST_STRUCT{
 
     /* ======  AST_VALUE ====== */
         Value_t value;
-
+        bool is_marked;
 
 
 
@@ -262,6 +262,7 @@ int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 
+bool isValue(ast_t* self);
 
 
 // FIRST AST

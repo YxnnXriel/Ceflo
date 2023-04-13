@@ -73,6 +73,9 @@ ast_t *newAst(uint8_t type){
     new->list_compound = NULL;
     new->type_compound = R_FUNCTION_CALL_TYPE;
 
+
+    new->is_marked = true;
+
     new->scope = NULL;
     new->countScope = -1;
     // binop
@@ -306,6 +309,27 @@ void modifValue(ast_t * value , ast_t * new){
 }
 
 
+
+/**
+ * @brief Check if Ast is Value type
+ * 
+ * @param self 
+ * @return true 
+ * @return false 
+ */
+bool isValue(ast_t* self){
+    if(
+        self->type == AST_BOOL ||
+        self->type == AST_CHAR ||
+        self->type == AST_NUMBER ||
+        self->type == AST_STRING ||
+        self->type == AST_LIST ||
+        self->type == AST_OBJ
+    )
+        return true;
+    
+    return false;
+}
 
 
 
