@@ -4,9 +4,7 @@ var list = [];
 
 list.append(1,2,3,"Yann Ariel");
 
-list.print();
 
-list.delete(0);
+var list2 = list.get(0,3)
 
-list.print();
-println();
+println(list2)

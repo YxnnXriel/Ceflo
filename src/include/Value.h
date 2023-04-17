@@ -21,9 +21,9 @@
 
     #define VALUE_LIST_ATTR 5
     static struct value_list attr_value_list[] = {
-        {"append",&value_List_append},
         {"get",&value_List_get},
         {"delete",&value_List_deleted},
+        {"append",&value_List_append},
         {"lenght",&value_List_lenght},
         {"print",&value_List_print},
     };

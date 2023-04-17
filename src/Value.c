@@ -10,21 +10,28 @@
 #define RETURN_NONE newAst(AST_NONE)
 
 static ast_t * value_list_for(int index_function , visitor_t * visitor , list_t *list , ast_t * value ){
-    ast_t *get = index_function == 2 ? newAst(AST_LIST) : NULL;
+    ast_t *get = NULL ;
 
-    if (index_function == 2){
-        newValue(&get->value,LIST);
-        get->value.as.listValue = __init__list__(sizeof(ast_t*));
+    if(index_function == 0){
+        if(value->function_call_args.size > 1){
+            get = newAst(AST_LIST);
+            newValue(&get->value,LIST);
+            get->value.as.listValue = __init__list__(sizeof(ast_t*));
+        }
     }
-    
+
+
 
     for (int i = 0; i < (int)value->function_call_args.size; i++){
         ast_t *val =  attr_value_list[index_function].func_list_name(visitor,list,List_Ast_Get(&value->function_call_args,i));
-        if(index_function == 2)
-            List_Append(get->value.as.listValue,val);
-
+        if(index_function == 0){
+            if(value->function_call_args.size == 1)
+                return val;
+            else
+                List_Append(get->value.as.listValue,val);
+        }
     }
-    return get != NULL ? get : value;
+    return get != NULL ? get: value;
 }
 
 static ast_t * value_list_switch_function_call(int index_function , visitor_t * visitor , list_t *list , ast_t * value){
