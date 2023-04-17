@@ -249,8 +249,26 @@ bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor){
         }
     }
     printf(" ]");
+    return true;
+
 }
 
+
+bool printlistByeValue(Value_t * value , struct VISITOR_STRUCT * visitor){
+    ast_t v;
+    v.value = *value;
+    printlist(&v,visitor);
+    return true;
+}
+
+bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor){
+
+    Value_t val;
+    newValue(&val,LIST);
+    val.as.listValue = list;
+    printlistByeValue(&val,visitor);
+    return true;
+}
 
 
 
@@ -410,8 +428,8 @@ void freeAst(ast_t *node){
     }    
 
     // if(node->scope){
-    //     if(node->type == AST_COMPOUND)
-    //         free(node->scope);
+    //     if(node->type != AST_COMPOUND)
+    //         freeScope(node->scope);
     // }
 }
 

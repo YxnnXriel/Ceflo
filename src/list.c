@@ -72,6 +72,20 @@ void * List_Get_Firts(list_t *list){
 }
 
 
+int List_Del_without_supp(list_t *list , int index){
+
+    if(index > list->Size)
+        return 0;
+    
+    // printf("    FIN\n");
+    for (int i = index; i < list->Size -1; i++)
+        list->Item[i] = list->Item[i+1];
+    
+    list->Size = list->Size -1;
+    
+    return 0;
+
+}
 
 int List_Del(list_t *list , int index,void (*free_method)(void *x)){
 

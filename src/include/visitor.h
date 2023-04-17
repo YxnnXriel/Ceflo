@@ -17,6 +17,7 @@
 
 typedef struct VISITOR_STRUCT{
     scope_t *global_scope;
+
 }visitor_t;
 
 void newVisitor(visitor_t * visitor);

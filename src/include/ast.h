@@ -220,6 +220,9 @@ typedef struct AST_STRUCT{
         // vas de pair avec value. Si il est false c'est que value de type AST_OBJ doit etre copier
 
 
+
+
+
     /* ======  STRING ====== */
         bool is_string_modif;// utiliser pour modifier un caractere dans une chaine
         struct AST_STRUCT *ref_string; // pointeur sur la chaine en question
@@ -258,11 +261,15 @@ void newObject(Obj_t * object);
 void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor);
 bool printObj(ast_t * value);
 bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor);
+bool printlistByeValue(Value_t * value , struct VISITOR_STRUCT * visitor);
+bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor);
+
 int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 
 bool isValue(ast_t* self);
+
 
 
 // FIRST AST

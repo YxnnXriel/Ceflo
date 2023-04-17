@@ -18,6 +18,8 @@
 #include "include/ast.h"
 #include "include/error.h"
 
+    #include "include/bulletin.h"
+    #include "include/Value.h"
 
 // this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{
@@ -89,18 +91,6 @@ static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
     return NULL; 
 }
 
-static ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args ){
-
-    
-    for (int i = 0; i < (int) args->size; i++){
-        ast_t * child = List_Ast_Get(args,i);
-        child = visitor_visit(visitor,child);
-        printValueAst(child,visitor);
-    }
-    printf("\n");
-
-    return node; 
-}
 
 static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
     visitor->global_scope = scope;
@@ -158,6 +148,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         return NULL;
 
     // printf("[< %s >] \n",AST_TO_STRING[node->type]);
+
 
 
     switch (node->type){
@@ -529,19 +520,24 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->left);
+    ast_t * res = NULL; 
 
-    visitor_t vs;
 
-
-    if(variable->type != AST_OBJ){
-        printf("ce n'est pas une structure\n");
-        exit(1);
+    if(variable->type == AST_OBJ){
+        visitor_t vs;
+        newVisitorWithScope(&vs,variable->value.as.ObjectValue.self);
+        return visitor_visit(&vs,node->right);
     }
-    newVisitorWithScope(&vs,variable->value.as.ObjectValue.self);
 
 
+    if(variable->type == AST_LIST){
 
-    return visitor_visit(&vs,node->right);
+        res = value_list_switch_function(visitor,variable->value.as.listValue,node->right);
+        return res!= NULL ? res : variable;
+    }
+
+
+    return node;
 }
 
 
@@ -750,9 +746,14 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     // printf("ICI %s\n",node->function_call_name);
 
-    if(strcmp("println",node->function_call_name) == 0){
 
-        return bulletin_println(visitor,node,&node->function_call_args);
+    ast_t * res = bulletin_switch_function(
+        visitor,node,
+        &node->function_call_args
+    );
+
+    if(res != NULL){
+        return res;
     }
 
     ast_t * functionDef = scope_get_function_definition(

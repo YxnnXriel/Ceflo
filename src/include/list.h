@@ -18,6 +18,8 @@
     void * List_Modif(list_t *list,void * value,int index);
 
     int List_Del(list_t *list , int index,void (*free_method)(void *x));
+    int List_Del_without_supp(list_t *list , int index);
+
     void List_Free(list_t *list);
     int List_Del_all(list_t *list ,void (*free_method)(void *x));
 
