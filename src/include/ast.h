@@ -290,7 +290,7 @@ bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** re
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value);
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
-ast_t *ast_cpy_Value(ast_t * ast);
+ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_variable(ast_t * ast);
 ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope );

@@ -25,6 +25,7 @@
  * - Faire les attributs et les fonction d'une liste 
  * - Ajouter un dictionnaire(si c'est possible)
  * - Bien d'autre
+ * - Fix Bug function call and List
  */
 
 int main(int argc, char const *argv[]){

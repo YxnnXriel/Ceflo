@@ -289,11 +289,11 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
             case AST_LIST: printlist(value,visitor);break;
             case AST_OBJ:{
                 if(printObj(value) == false){
-                    printf("%p",(void *)value);
+                    printf("obj:<%p>",(void *)value);
                 }
             }break;
             default:
-                printf("%p",(void *)value);
+                printf("<%p>",(void *)value);
             break;
     }
     
@@ -485,7 +485,8 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
         case AST_STRING:
         case AST_OBJ:
         case AST_NONE:
-            return ast_r_scope(ast_cpy_Value(ast),scope);break;
+        case AST_LIST:
+            return ast_r_scope(ast_cpy_Value(ast,scope),scope);break;
         case AST_COMPOUND: return ast_r_scope(ast_cpy_compound(ast,scope),scope);break;
         case AST_VARIABLE_DEFINITION: ast_r_scope(ast_cpy_variable_definition(ast,scope),scope);break;
         case AST_STRUCT_DEFINITION: ast_r_scope(ast_cpy_struct_definition(ast,scope),scope);break;
@@ -561,9 +562,8 @@ ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
     return a;
 }   
 
-ast_t *ast_cpy_Value(ast_t * ast){
+ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
     ast_t * a = newAst(ast->type);
-    
     a->countScope = ast->countScope;
 
     if(ast->type == AST_STRING){
@@ -582,7 +582,18 @@ ast_t *ast_cpy_Value(ast_t * ast){
             ast->value.as.ObjectValue.self
         );
 
-    }else{
+    }else if(ast->type == AST_LIST){
+        newValue(&a->value,LIST);
+        a->value.as.listValue = __init__list__(sizeof(ast_t*));
+        a->countScope = ast->countScope;
+        for (int i = 0; i < ast->value.as.listValue->Size; i++){
+            List_Append(
+                a->value.as.listValue,
+                ast_copy(List_Get(ast->value.as.listValue,i),scope)
+            );
+        }
+    }
+    else{
         a->value = ast->value;
     }
 

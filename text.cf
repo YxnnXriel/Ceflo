@@ -1,10 +1,30 @@
 
 
-var list = [];
-
-list.append(1,2,3,"Yann Ariel");
 
 
-var list2 = list.get(0,3)
 
-println(list2)
+struct List {
+    var list;
+    var lenght;
+
+    func __init__(){
+        list = [];
+        lenght = 0;
+    }
+    func append(item){
+        list.append(item);
+        lenght += 1;
+    }
+
+    func __str__(){
+        println(list);
+        return lenght;
+    }
+}
+
+
+
+var k = new List();
+k.append(1)
+println(k)
+

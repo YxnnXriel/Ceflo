@@ -36,7 +36,6 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 
     if(stk_val != NULL){
         // update
-
         Hash_Modif(&scope->variable_definition,key,value);
     }else{
         ListString_Append(scope->variable_names,key);

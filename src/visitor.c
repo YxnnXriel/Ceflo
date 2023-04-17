@@ -20,6 +20,7 @@
 
     #include "include/bulletin.h"
     #include "include/Value.h"
+    #include "include/debug.h"
 
 // this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{
@@ -144,10 +145,15 @@ void newVisitor(visitor_t * visitor){
 ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 
 
-    if(node == (void*)0)
+    if(node == (void*)0){
+        // printf("NODE NULL \n");
         return NULL;
+    }
+    printf("[< %s >] \n",AST_TO_STRING[node->type]);
 
-    // printf("[< %s >] \n",AST_TO_STRING[node->type]);
+    if(node->type == AST_FUNCTION_CALL){
+        printf("%s \n",node->function_call_name);
+    }
 
 
 
@@ -580,9 +586,9 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     ast_t * value = visitor_visit(visitor,node->variable_definition_value);
 
     value->variable_definition_static_type = node->variable_definition_static_type;
+
     if(node->variable_definition_static_type_name)
         allowChar(&value->variable_definition_static_type_name,node->variable_definition_static_type_name);
-
 
     if(value->type == AST_OBJ ){
         // je fais une copie
@@ -613,12 +619,14 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
  */
 ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
+
     ast_t * value = scope_get_variable_definition(
         visitor->global_scope,
         node->variable_name
     );
 
     if(value != NULL){
+        Debug_Print_Ast_Type(value);
         return value;
     }
 
@@ -1331,6 +1339,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->assignement_left);
     scope_t *scope = variable->scope;
+
     ast_t * value = visitor_visit(visitor,node->assignement_value);
 
 
