@@ -9,6 +9,9 @@
 
 #define RETURN_NONE newAst(AST_NONE)
 
+#define FOR_GLOBAL(value) ((value)->variable_forGlobal = true)
+#define RESET_GLOBAL(value) ((value)->variable_forGlobal = false)
+
 static ast_t * value_list_for(int index_function , visitor_t * visitor , list_t *list , ast_t * value ){
     ast_t *get = NULL ;
 
@@ -68,23 +71,27 @@ ast_t * value_List_lenght(visitor_t * visitor , list_t *list , ast_t * value){
 }
 
 ast_t * value_List_append(visitor_t * visitor , list_t *list , ast_t * value){
-
+    FOR_GLOBAL(value);
     ast_t * item = visitor_visit(visitor,value);
-    List_Append(list,value);
+    RESET_GLOBAL(value);
+    List_Append(list,ast_copy(item,visitor->global_scope));
     return item;
 }
 
 ast_t * value_List_get(visitor_t * visitor , list_t *list , ast_t * value){
+    
+    FOR_GLOBAL(value);
+    ast_t * l = visitor_visit(visitor,value);
+    RESET_GLOBAL(value);
 
-    ast_t *none = newAst(AST_NONE); 
-
-    if(value->type == AST_NUMBER){
-        if(value->value.as.numberValue < list->Size)
-            return List_Get(list,value->value.as.numberValue);
-        return none;
+    if(l->type == AST_NUMBER){
+        if(l->value.as.numberValue < list->Size)
+            return List_Get(list,l->value.as.numberValue);
+        
+        return RETURN_NONE;
     }
 
-    return none;
+    return RETURN_NONE;
 }
 
 ast_t * value_List_deleted(visitor_t * visitor , list_t *list , ast_t * value){

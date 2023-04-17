@@ -73,6 +73,9 @@ static void GbFree(){
     }
     
 }
+void freeVsisitorGB(){
+    GbFree();
+}
 
 static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
     
@@ -149,11 +152,11 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         // printf("NODE NULL \n");
         return NULL;
     }
-    printf("[< %s >] \n",AST_TO_STRING[node->type]);
+    // printf("[< %s >] \n",AST_TO_STRING[node->type]);
 
-    if(node->type == AST_FUNCTION_CALL){
-        printf("%s \n",node->function_call_name);
-    }
+    // if(node->type == AST_FUNCTION_CALL){
+    //     printf("%s \n",node->function_call_name);
+    // }
 
 
 
@@ -225,7 +228,7 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
                     ast_t *value =  ast_copy(return_value,node->scope);  
 
                     value->is_return_value = true; 
-                    GbFree();
+                    // GbFree();
                     return value;
                 }
             }
@@ -248,7 +251,7 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
         }
     }
     
-    GbFree();
+    // GbFree();
     return node;
 }
 
@@ -527,7 +530,10 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->left);
     ast_t * res = NULL; 
+    ast_t * right = node->right;
 
+
+    // Debug_Print_Ast_Type(right);
 
     if(variable->type == AST_OBJ){
         visitor_t vs;
@@ -538,7 +544,7 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
 
     if(variable->type == AST_LIST){
 
-        res = value_list_switch_function(visitor,variable->value.as.listValue,node->right);
+        res = value_list_switch_function(visitor,variable->value.as.listValue,right);
         return res!= NULL ? res : variable;
     }
 
@@ -610,6 +616,13 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 }
 
 
+
+static ast_t* getVariable(visitor_t * visitor , ast_t * node){
+        visitor_t visi;
+        newVisitorWithScope(&visi,visitor->global_scope->scope_parent);
+        return visitor_visit_variable(&visi,node);
+}
+
 /**
  * @brief Get variable definition by name ( this one return the value of the variable )
  * 
@@ -626,16 +639,20 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
     );
 
     if(value != NULL){
-        Debug_Print_Ast_Type(value);
+        // Debug_Print_Ast_Type(value);
         return value;
     }
 
     if(value == NULL){
         
-        if(visitor->global_scope->scope_parent != NULL && visitor->global_scope->scope_parent->countScope != 0 ){
-            visitor_t visi;
-            newVisitorWithScope(&visi,visitor->global_scope->scope_parent);
-            return visitor_visit_variable(&visi,node);
+        if(node->variable_forGlobal == false)
+            if(visitor->global_scope->scope_parent != NULL && visitor->global_scope->scope_parent->countScope != 0 ){
+                return getVariable(visitor,node);
+            }
+        else{
+            if(visitor->global_scope->scope_parent != NULL){
+                return getVariable(visitor,node);
+            }
         }
 
     }
@@ -652,10 +669,6 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
     }
 
 }
-
-
-
-
 
 
 

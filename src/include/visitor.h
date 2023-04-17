@@ -49,5 +49,6 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node);
 
 void newGb();
 ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args);
+void freeVsisitorGB();
 
 #endif

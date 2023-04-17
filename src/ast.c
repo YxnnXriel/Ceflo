@@ -62,6 +62,7 @@ ast_t *newAst(uint8_t type){
     new->variable_definition_static_type = NONE;
     new->variable_definition_static_type_name = NULL;
     new->variable_name = NULL;
+    new->variable_forGlobal = false;
 
     new->function_definition_name = NULL;
     // new->function_defintion_args = NULL;
@@ -585,11 +586,11 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
     }else if(ast->type == AST_LIST){
         newValue(&a->value,LIST);
         a->value.as.listValue = __init__list__(sizeof(ast_t*));
-        a->countScope = ast->countScope;
+
         for (int i = 0; i < ast->value.as.listValue->Size; i++){
             List_Append(
                 a->value.as.listValue,
-                ast_copy(List_Get(ast->value.as.listValue,i),scope)
+                ast_copy((ast_t*)List_Get(ast->value.as.listValue,i),scope)
             );
         }
     }
@@ -603,6 +604,7 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
 ast_t * ast_cpy_variable(ast_t * ast){
     ast_t * variable = newAst(AST_VARIABLE);
     variable->countScope = ast->countScope;
+    variable->variable_forGlobal = ast->variable_forGlobal; 
     allowChar(&variable->variable_name,ast->variable_name);
     return variable;
 }

@@ -11,11 +11,15 @@ struct List {
         list = [];
         lenght = 0;
     }
+
     func append(item){
         list.append(item);
         lenght += 1;
     }
 
+    func get(item){
+        return list.get(item);
+    }
     func __str__(){
         println(list);
         return lenght;
@@ -25,6 +29,15 @@ struct List {
 
 
 var k = new List();
+var i = 0;
+
 k.append(1)
-println(k)
+k.append(2)
+k.append(3)
+k.append(9)
+k.append("Yann Ariel")
+
+println(k.get(3))
+
+
 

@@ -45,8 +45,9 @@ int main(int argc, char const *argv[]){
 
 		visitor_visit(&visitor,node);
 
-		clearAst();
 
+		freeVsisitorGB();
+		clearAst();
 		freeScope(visitor.global_scope);
 		
 		lexerFree(&lexer);
