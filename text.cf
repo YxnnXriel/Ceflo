@@ -1,0 +1,12 @@
+
+
+var list = [];
+
+list.append(1,2,3,"Yann Ariel");
+
+list.print();
+
+list.delete(0);
+
+list.print();
+println();
