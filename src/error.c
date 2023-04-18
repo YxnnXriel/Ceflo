@@ -39,7 +39,7 @@ static void visitor_print_six(int fmt,int line){
         printf("|");
     
     }else{
-        printf("  ");
+        printf("   ");
         printf("%d",line);
         printf("   ");
         printf("|");

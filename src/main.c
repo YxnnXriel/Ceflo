@@ -45,7 +45,6 @@ int main(int argc, char const *argv[]){
 
 		visitor_visit(&visitor,node);
 
-
 		freeVsisitorGB();
 		clearAst();
 		freeScope(visitor.global_scope);

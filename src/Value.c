@@ -96,14 +96,19 @@ ast_t * value_List_get(visitor_t * visitor , list_t *list , ast_t * value){
 
 ast_t * value_List_deleted(visitor_t * visitor , list_t *list , ast_t * value){
 
-    if(value->type == AST_NUMBER){
+
+    FOR_GLOBAL(value);
+    ast_t * l = visitor_visit(visitor,value);
+    RESET_GLOBAL(value);
+
+    if(l->type == AST_NUMBER){
 
         List_Del_without_supp(
             list,
-            value->value.as.numberValue
+            l->value.as.numberValue
         );
 
-        return value;            
+        return l;            
     }
 
     return newAst(AST_NONE);
@@ -129,4 +134,37 @@ ast_t * value_list_switch_function(visitor_t * visitor,list_t *list , ast_t *val
     }
 
     return NULL;
+}
+
+
+
+
+
+
+
+
+// ======================================== $STR ======================================================================
+
+
+ast_t * value_str_switch_function(visitor_t * visitor,string_t * str, ast_t *value){
+
+    if(value->type == AST_FUNCTION_CALL){
+        for (int i = 0; i < VALUE_STRING_ATTR; i++){
+            if(strcmp(attr_value_str[i].name,value->function_call_name)==0){
+                return attr_value_str[i].func(visitor,str,value);
+            }
+        }
+        
+    }
+
+    return NULL;
+
+}
+
+ast_t *Value_String_lenght(visitor_t *visitor , string_t * str , ast_t * value){
+    ast_t * val = newAstWithLine(AST_NUMBER,value->line,value->colone);
+    newValue(&val->value,NUMBER);
+    val->value.as.numberValue = str->lenght;
+
+    return val;
 }

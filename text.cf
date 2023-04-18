@@ -1,43 +1,119 @@
 
-
-
-
-
-struct List {
-    var list;
-    var lenght;
-
-    func __init__(){
-        list = [];
-        lenght = 0;
+struct Token {
+    var Type;
+    var Value;
+    func __init__(ty , val){
+        Type = ty
+        Value = val
     }
 
-    func append(item){
-        list.append(item);
-        lenght += 1;
-    }
-
-    func get(item){
-        return list.get(item);
-    }
     func __str__(){
-        println(list);
-        return lenght;
+        if Value == none{
+            return "Type : "+ Type  + " None"
+        }
+        return "Type : "+ Type + " " + Value
     }
 }
 
+struct Lexer{
+    var Code;
+    var Index;
+    var Current_char;
+
+    func __init__(code){
+        Code = code;
+        Index = 0;
+        Current_char = Code[Index];
+    }
+
+    func __str__(){
+        println("Index: ",Index, "Code: ", Code.lenght());
+    }
+
+    func lexer_advance(){
+        var i = Code.lenght();
+        if ( Index < i ){
+            Index +=1;
+            Current_char = Code[Index];
+        }
+    }
+
+    func lexer_collect_id() {
+        var value = ""
+
+        while Current_char >= 'A' or Current_char <= 'Z' {
+            value += Current_char;
+        }
+        
+        return new Token("TOKEN_ID",value);
+    }
+
+    func lexer_collect_digit() {
+        var value = ""
+        while (Current_char >= '0' and Current_char <= '9' ){
+            value += Current_char;
+            lexer_advance();
+        }
+        
+        var Tok = new Token("TOKEN_DIGIT",value);
+        return Tok;
+    }
+
+    func lexer_skip_white_space(){
+
+        while Current_char == '\n' or Current_char == ' '{
+            lexer_advance();
+        }
+    }
+
+    func lexer_make_token() {
+
+        if Index < Code.lenght() {
+            if Current_char == '\n' or Current_char == ' '{
+                lexer_skip_white_space();
+            }
+
+            if Current_char >= '0' and Current_char <= '9' {
+                return lexer_collect_digit();
+            }
+
+            if Current_char == '+'{
+                lexer_advance();
+                return new Token("TOKEN_PLUS","+");
+            }
+            if Current_char == '-'{
+                lexer_advance();
+                return new Token("TOKEN_MINUS","-");
+            }
+            
+            if Current_char == '*'{
+                lexer_advance();
+                return new Token("TOKEN_MULT","*");
+            }
+
+            if Current_char == '/'{
+                lexer_advance();
+                return new Token("TOKEN_DIV","/");
+            }
+            
+            return new Token("TOKEN_EOF",none);
+        }
+        return new Token("TOKEN_EOF",none);
+    }
+
+}
 
 
-var k = new List();
-var i = 0;
+func Interpreter(){
 
-k.append(1)
-k.append(2)
-k.append(3)
-k.append(9)
-k.append("Yann Ariel")
+    var lexer = new Lexer("2 * 2 + 2");
+    var Tok = lexer.lexer_make_token();
 
-println(k.get(3))
+    while (Tok.Type != "TOKEN_EOF"){
+        println(Tok);
+        Tok = lexer.lexer_make_token();
+    }
 
+}
 
-
+Interpreter();

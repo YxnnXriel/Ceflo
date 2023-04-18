@@ -155,7 +155,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
     // printf("[< %s >] \n",AST_TO_STRING[node->type]);
 
     // if(node->type == AST_FUNCTION_CALL){
-    //     printf("%s \n",node->function_call_name);
+    //     printf("=== %s === \n",node->function_call_name);
     // }
 
 
@@ -226,12 +226,22 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
 
                     ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
                     ast_t *value =  ast_copy(return_value,node->scope);  
-
                     value->is_return_value = true; 
+                    // if(value->countScope <= -1)
+                    //     value->countScope = visitor->global_scope->countScope -1;
+                    // Debug_Print_Ast_Type(value);
                     // GbFree();
+                    // printf("========= ");
+                    // printValueAst(value,visitor);;
+                    // printf("========= \n");
+
                     return value;
                 }
             }
+
+
+            // if(noeud->is_return_value)
+            //     printf("noued : %d    visitor : %d (%.2p) \n",noeud->countScope-1,visitor->global_scope->countScope , visitor->global_scope );
 
             if((noeud->is_return_value == true) 
                 &&
@@ -239,12 +249,17 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
 
             ){
                 if(visitor->global_scope->countScope == 0){
+                    // printf("Yes Yes \n");
                     noeud->is_return_value =  false;
 
                 }else{
+                    // printf("No \n");
+                    // Debug_Print_Ast_Type(noeud);
                     return noeud ;
                 }
             }else{
+                if(noeud->is_return_value)
+                    // printf("Yes \n");
                 noeud->is_return_value =  false;
             }
 
@@ -313,8 +328,8 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
         if(index->type == AST_NUMBER){
             if(index->value.as.numberValue > variable->value.as.listValue->Size){
                 Print_visitor_error(
-                0,
-                0,
+                variable->line,
+                variable->colone,
                 "./Ceflo",
                 "%s[%g] n'existe pas \n",
                 variable->variable_name,
@@ -331,8 +346,8 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
         if(index->type == AST_NUMBER){
             if(index->value.as.numberValue > variable->value.as.stringValue->lenght){
                 Print_visitor_error(
-                0,
-                0,
+                variable->line,
+                variable->colone,
                 "./Ceflo",
                 "%s[%g] n'existe pas \n",
                 variable->variable_name,
@@ -461,8 +476,8 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     if(structDef == NULL){
         
         Print_visitor_error(
-            0,
-            0,
+            node->line,
+            node->colone,
             "./Ceflo",
             "struct %s n'est pas définit \n",
             node->function_call_name
@@ -476,6 +491,9 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     newObject(&obj->value.as.ObjectValue);
     Obj_t * newObj = &obj->value.as.ObjectValue;
     newObj->self = newScope();
+    newObj->self->countScope = node->countScope;
+    obj->countScope = node->countScope;
+
 
     visitor_t vs;
     newObj->self->scope_parent = visitor->global_scope;
@@ -532,7 +550,6 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
     ast_t * res = NULL; 
     ast_t * right = node->right;
 
-
     // Debug_Print_Ast_Type(right);
 
     if(variable->type == AST_OBJ){
@@ -548,6 +565,11 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
         return res!= NULL ? res : variable;
     }
 
+    if(variable->type == AST_STRING){
+
+        res = value_str_switch_function(visitor,variable->value.as.stringValue,right);
+        return res!= NULL ? res : variable;
+    }
 
     return node;
 }
@@ -592,6 +614,7 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     ast_t * value = visitor_visit(visitor,node->variable_definition_value);
 
     value->variable_definition_static_type = node->variable_definition_static_type;
+    value->countScope = visitor->global_scope->countScope;
 
     if(node->variable_definition_static_type_name)
         allowChar(&value->variable_definition_static_type_name,node->variable_definition_static_type_name);
@@ -659,8 +682,8 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
     if(value ==  NULL){
         Print_visitor_error(
-            0,
-            0,
+            node->line,
+            node->colone,
             "./Ceflo",
             "var %s n'est pas définit \n",
             node->variable_name
@@ -791,8 +814,8 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     if(functionDef == NULL){
         Print_visitor_error(
-            0,
-            0,
+            node->line,
+            node->colone,
             "./Ceflo",
             "func %s n'est pas définit \n",
             node->function_call_name
@@ -804,13 +827,17 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     ResetFirstAst();
 
     scope_t * newscope = newScope();
-
+    int visitorScopeCount = visitor->global_scope->countScope;
+    if(visitorScopeCount <= 1){
+        newscope->countScope = functionDef->function_definition_body->countScope + visitorScopeCount;
+    }
     ast_t *newFunction = ast_copy(functionDef,newscope);
-
+    // printf("            [ %d ] \n",visitor->global_scope->countScope);
+    
     if(node->function_call_args.size != functionDef->function_defintion_args.size){
         Print_visitor_error(
-            0,
-            0,
+            node->line,
+            node->colone,
             "./Ceflo",
             "func %s prends %d argument(s) \n",
             node->function_call_name,
@@ -830,6 +857,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         );
     }
 
+    // printf("visitor : %d \n",visitor->global_scope->countScope);
 
     visitor_t visit;
     newVisitorWithScope(&visit,newscope);
@@ -1198,7 +1226,13 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
             break;
 
     }
+    
+
+
+    // printf("ça na pas marcher !\n");
+
     return value;
+
 }
 
 /**
@@ -1214,6 +1248,7 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
 
     ast_t *left = visitor_visit(visitor,node->left);
     ast_t *right = visitor_visit(visitor,node->right);
+
 
     value = visitor_visit_recursive_binop(
         visitor,

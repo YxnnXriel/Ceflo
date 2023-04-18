@@ -224,7 +224,7 @@ ast_t *parser_parse_statments(parser_t *parser , scope_t * scope){
 ast_t *parser_parse_compound(parser_t *parser , scope_t * scope){
 
 
-    ast_t * compound = newAst(AST_COMPOUND);
+    ast_t * compound = newAstWithLine(AST_COMPOUND,parser->lexer->line,parser->lexer->colone);
 
     compound->scope  = scope;
     compound->countScope = GetScope();
@@ -310,7 +310,7 @@ ast_t *parser_parse_statment(parser_t *parser , scope_t * scope){
 ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
 
 
-    ast_t *variable = newAst(AST_VARIABLE_DEFINITION);
+    ast_t *variable = newAstWithLine(AST_VARIABLE_DEFINITION,parser->lexer->line,parser->lexer->colone);
     variable->countScope = GetScope();
     variable->scope = scope;
     parser_eat(TOKEN_VAR,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
@@ -355,7 +355,7 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
  */
 ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
-    ast_t * variable = newAst(AST_VARIABLE);
+    ast_t * variable = newAstWithLine(AST_VARIABLE,parser->lexer->line,parser->lexer->colone);
     variable->countScope = GetScope();
     allowChar(&variable->variable_name,parser->current.value);
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
@@ -372,7 +372,7 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
         while (parser->current.type == TOKEN_LBRACE){
         
-            ast_t * list_acces = newAst(AST_LIST_ACCESS);
+            ast_t * list_acces = newAstWithLine(AST_LIST_ACCESS,parser->lexer->line,parser->lexer->colone);
             list_acces->left = variable;
             list_acces->scope = scope;
             list_acces->countScope = GetScope();
@@ -388,7 +388,7 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
             parser->current.type == TOKEN_DIV_EQUAL ||
             parser->current.type == TOKEN_MULT_EQUAL
         ){
-            ast_t * list_assign = newAst(AST_LIST_ASSIGNEMENT);
+            ast_t * list_assign = newAstWithLine(AST_LIST_ASSIGNEMENT,parser->lexer->line,parser->lexer->colone);
             list_assign->scope = scope;
             list_assign->countScope = GetScope();
             list_assign->op = parser->current.type == TOKEN_EQUAL ? parser->current :
@@ -406,7 +406,7 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         //...., maybe the declaration is a struct , access or assignement
         
         parser_eat(TOKEN_DOT,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
-        ast_t * obj_acces = newAst(AST_OBJ_ACCESS);
+        ast_t * obj_acces = newAstWithLine(AST_OBJ_ACCESS,parser->lexer->line,parser->lexer->colone);
         obj_acces->left = variable;
         obj_acces->right = parser_parse_expr(parser,scope);
 
@@ -417,7 +417,7 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
     if(parser->current.type == TOKEN_EQUAL){
         //...., maybe the declaration is a assignement 
         parser_eat(TOKEN_EQUAL,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
-        ast_t * assign = newAst(AST_ASSIGNEMENT);
+        ast_t * assign = newAstWithLine(AST_ASSIGNEMENT,parser->lexer->line,parser->lexer->colone);
         assign->assignement_left = variable;
         assign->assignement_value = parser_parse_expr(parser,scope);
         assign->countScope = GetScope();
@@ -434,7 +434,7 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
         //...., maybe the declaration is a modifier variable
 
-        ast_t * modifier = newAst(AST_ASSIGNEMENT);
+        ast_t * modifier = newAstWithLine(AST_ASSIGNEMENT,parser->lexer->line,parser->lexer->colone);
         modifier->countScope = GetScope();
         modifier->scope = scope;
         modifier->assignement_left = variable;
@@ -470,16 +470,15 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
 ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 
-    ast_t *function = newAst(AST_FUNCTION_DEFINITION);
-    newList_Ast(&function->function_defintion_args); 
+    ast_t *function = newAstWithLine(AST_FUNCTION_DEFINITION,parser->lexer->line,parser->lexer->colone);
     function->countScope = GetScope();
+    newList_Ast(&function->function_defintion_args); 
 
     parser_eat(TOKEN_FUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
     allowChar(&function->function_definition_name,parser->current.value);
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
 
     parser_eat(TOKEN_LPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
-    ScopePlus();
     
     if(parser->current.type != TOKEN_RPARENT){
         ast_t *arg = parser_parse_variable(parser,scope);
@@ -497,6 +496,7 @@ ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
         function->function_definition_return_type = GetType(parser->current.value);
         parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
     }
+    ScopePlus();
 
     parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
 
@@ -527,7 +527,7 @@ ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
  * @return ast_t* 
  */
 ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
-    ast_t *function = newAst(AST_FUNCTION_CALL);
+    ast_t *function = newAstWithLine(AST_FUNCTION_CALL,parser->lexer->line,parser->lexer->colone);
     function->countScope = GetScope();
     allowChar(&function->function_call_name,parser->prev.value);
 
@@ -564,8 +564,9 @@ ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
  */
 ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
 
-    ast_t *number = newAst(
+    ast_t *number = newAstWithLine(
         AST_NUMBER
+        ,parser->lexer->line,parser->lexer->colone
     );
 
     newValue(&number->value,NUMBER);
@@ -575,6 +576,7 @@ ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
 
     number->scope = scope;
     number->countScope = GetScope();
+
 
     return number;
 }
@@ -594,7 +596,7 @@ ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
  * @return ast_t* 
  */
 ast_t *parser_parse_char(parser_t *parser , scope_t * scope){
-    ast_t * ast_char = newAst(AST_CHAR);
+    ast_t * ast_char = newAstWithLine(AST_CHAR,parser->lexer->line,parser->lexer->colone);
 
     if(strlen(parser->current.value) != 1){
         parser_eat(TOKEN_EOF,CHAR_ERROR," %s.lenght >= 1 \n",parser->current.value);
@@ -623,7 +625,7 @@ ast_t *parser_parse_char(parser_t *parser , scope_t * scope){
  */
 ast_t *parser_parse_bool(parser_t *parser , scope_t * scope){
 
-    ast_t *boolean = newAst(AST_BOOL);
+    ast_t *boolean = newAstWithLine(AST_BOOL,parser->lexer->line,parser->lexer->colone);
 
     newValue(&boolean->value,BOOL);
     boolean->value.as.booleanValue = parser->current.type == TOKEN_TRUE ? 1:0;
@@ -649,7 +651,7 @@ ast_t *parser_parse_bool(parser_t *parser , scope_t * scope){
  */
 ast_t *parser_parse_string(parser_t *parser , scope_t * scope){
 
-    ast_t *string = newAst(AST_STRING);
+    ast_t *string = newAstWithLine(AST_STRING,parser->lexer->line,parser->lexer->colone);
 
     newValue(&string->value,STRING);
     string->value.as.stringValue = new_String(parser->current.value);
@@ -676,7 +678,7 @@ ast_t *parser_parse_string(parser_t *parser , scope_t * scope){
  */
 static ast_t *parser_parse_none(parser_t *parser , scope_t * scope){
 
-    ast_t *none = newAst(AST_NONE);
+    ast_t *none = newAstWithLine(AST_NONE,parser->lexer->line,parser->lexer->colone);
     parser_eat(TOKEN_NONE,STRING_ERROR," %s inconnue \n",parser->current.value);
     none->countScope = GetScope();
 
@@ -713,7 +715,7 @@ ast_t *parser_parse_expr(parser_t *parser , scope_t *scope){
             parser->current.type == TOKEN_OR ||
             parser->current.type == TOKEN_AND 
     ){
-        ast_t *binop = newAst(AST_BINOP);
+        ast_t *binop = newAstWithLine(AST_BINOP,parser->lexer->line,parser->lexer->colone);
         binop->countScope = GetScope();
         binop->left = value;
         binop->scope = scope;
@@ -751,7 +753,7 @@ ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
             parser->current.type == TOKEN_EQUAL_EQUAL ||
             parser->current.type == TOKEN_DIF 
     ){
-        ast_t *binop = newAst(AST_BINOP);
+        ast_t *binop = newAstWithLine(AST_BINOP,parser->lexer->line,parser->lexer->colone);
         binop->countScope = GetScope();
         binop->left = value;
         binop->scope = scope;
@@ -767,7 +769,7 @@ ast_t *parser_parse_expression(parser_t *parser , scope_t *scope){
             parser->current.type == TOKEN_INF ||
             parser->current.type == TOKEN_INF_EQUAL
     ){
-        ast_t *binop = newAst(AST_BINOP);
+        ast_t *binop = newAstWithLine(AST_BINOP,parser->lexer->line,parser->lexer->colone);
         binop->countScope = GetScope();
         binop->left = value;
         binop->scope = scope;
@@ -806,7 +808,7 @@ ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
             parser->current.type == TOKEN_DIV ||
             parser->current.type == TOKEN_MODULO 
     ){
-        ast_t *binop = newAst(AST_BINOP);
+        ast_t *binop = newAstWithLine(AST_BINOP,parser->lexer->line,parser->lexer->colone);
         binop->countScope = GetScope();
         binop->left = value;
         binop->scope = scope;
@@ -903,7 +905,7 @@ ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
         parser_eat(TOKEN_SEMI,RETURN_ERROR,"return dans le main impossible \n");
     }
 
-    ast_t *ast_return = newAst(AST_RETURN);
+    ast_t *ast_return = newAstWithLine(AST_RETURN,parser->lexer->line,parser->lexer->colone);
     ast_return->countScope = GetScope();
     ast_return->scope = scope;
     parser_eat(TOKEN_RETURN,RETURN_ERROR,"%s inconnue \n",parser->current.value);
@@ -926,7 +928,7 @@ ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
  * @return ast_t* 
  */
 ast_t *parser_parse_if(parser_t *parser , scope_t *scope){
-    ast_t *ast_if = newAst(AST_IF);
+    ast_t *ast_if = newAstWithLine(AST_IF,parser->lexer->line,parser->lexer->colone);
     ast_if->scope = scope;
     ast_if->countScope = GetScope();
 
@@ -981,9 +983,10 @@ ast_t *parser_parse_if(parser_t *parser , scope_t *scope){
  */
 ast_t *parser_parse_while(parser_t *parser , scope_t *scope){
 
-    ast_t * ast_while = newAst(AST_WHILE);
+    ast_t * ast_while = newAstWithLine(AST_WHILE,parser->lexer->line,parser->lexer->colone);
     parser_eat(TOKEN_WHILE,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
     ast_while->countScope = GetScope();
+    // printf("while is : %d\n",ast_while->countScope);
     ast_while->while_expr = parser_parse_expr(parser,scope);
 
     parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
@@ -1010,7 +1013,7 @@ ast_t *parser_parse_while(parser_t *parser , scope_t *scope){
  * @return ast_t* 
  */
 ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
-    ast_t * ast_break = newAst(AST_BREAK);
+    ast_t * ast_break = newAstWithLine(AST_BREAK,parser->lexer->line,parser->lexer->colone);
     parser_eat(TOKEN_BREAK,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
     ast_break->countScope = GetScope();
     return ast_break;
@@ -1033,7 +1036,7 @@ ast_t *parser_parse_break(parser_t *parser , scope_t *scope){
 ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
     // assert(false && printf("%s pas implementer \n",__func__));    
     
-    ast_t * list = newAst(AST_LIST);
+    ast_t * list = newAstWithLine(AST_LIST,parser->lexer->line,parser->lexer->colone);
     newValue(&list->value,LIST);
 
     list->value.as.listValue = __init__list__(sizeof(ast_t*));
@@ -1083,7 +1086,7 @@ ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
  */
 ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
 
-    ast_t * ast_struct = newAst(AST_STRUCT_DEFINITION);
+    ast_t * ast_struct = newAstWithLine(AST_STRUCT_DEFINITION,parser->lexer->line,parser->lexer->colone);
     parser_eat(TOKEN_STRUCT,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
     allowChar(&ast_struct->struct_definition_name,parser->current.value);
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);

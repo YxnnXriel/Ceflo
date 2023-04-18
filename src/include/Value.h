@@ -36,9 +36,22 @@
 
     // STRING
 
+    ast_t *Value_String_lenght(visitor_t *visitor , string_t * str , ast_t * value);
+    struct value_str{
+        char *name;
+        ast_t * (*func)(visitor_t *visitor , string_t * str , ast_t * value);
+    };
+
+    #define VALUE_STRING_ATTR 1
+    
+    ast_t * value_str_switch_function(visitor_t * visitor,string_t * str, ast_t *value);
+    static struct value_str attr_value_str[] = {
+        {"lenght",&Value_String_lenght}
+    };
+
     // OBJECT
-
-
+    
+    
     // SOME VALUE
 
 

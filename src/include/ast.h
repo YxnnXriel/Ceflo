@@ -239,6 +239,8 @@ typedef struct AST_STRUCT{
 
     /* ======== NEXT AST ======== */
         struct AST_STRUCT *next;
+        int line;
+        int colone;
         // utiliser pour connaitre le prochaine object AST
         // utiliser pour la suppression de l'arbre en atente d'un GB
 
@@ -251,6 +253,8 @@ static const char *AST_TO_STRING[] ={
 
 // NEW AST
 ast_t *newAst(uint8_t type);
+ast_t *newAstWithLine(uint8_t type, int line , int colone);
+
 
 
 // VALUE
@@ -287,11 +291,19 @@ bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** re
 
 
 // COPY AST
+
+
+typedef ast_t * (*cpy_ast_fn)(ast_t * , struct SCOPE_STRUCT * );
+
+typedef struct {
+    cpy_ast_fn function;
+}cpy_ast_t;
+
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value);
 ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope);
-ast_t * ast_cpy_variable(ast_t * ast);
+ast_t * ast_cpy_variable(ast_t * ast, struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope );
 ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scope);
@@ -304,6 +316,8 @@ ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
+
+
 
 
 
