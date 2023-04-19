@@ -239,6 +239,8 @@ typedef struct AST_STRUCT{
 
     /* ======== NEXT AST ======== */
         struct AST_STRUCT *next;
+        struct AST_STRUCT *prev;
+
         int line;
         int colone;
         // utiliser pour connaitre le prochaine object AST
