@@ -151,7 +151,8 @@ typedef struct AST_STRUCT{
 
     /* ======  AST_VALUE ====== */
         Value_t value;
-        bool is_marked;
+        int marked_count;
+        bool is_for_variable;
 
 
 
@@ -270,10 +271,15 @@ bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor);
 bool printlistByeValue(Value_t * value , struct VISITOR_STRUCT * visitor);
 bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor);
 
+void Value_incref(ast_t * value);
+bool Value_decref(ast_t * value);
+
 int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
-
+void List_Ast_Sup(list_ast_t *list , int index);
+void List_ast_Shift(list_ast_t *list , int index);
+void List_Ast_Shift_All(list_ast_t * list);
 bool isValue(ast_t* self);
 
 
@@ -283,10 +289,12 @@ void __init_first_ast();
 ast_t * GetFirstAst();
 void ModifFirstAst(ast_t * new);
 void ResetFirstAst();
-void clearAstNode(ast_t * val);
+void clearAstNode(ast_t * node);
 void freeAst(ast_t *node);
 void clearAst();
-void freeSingleAst(ast_t * node);
+void freeSingleAst(ast_t * ast);
+
+void PrintAst();
 
 // FUNCTION AST
 bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** res);

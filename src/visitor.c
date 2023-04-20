@@ -64,14 +64,17 @@ static void GbPush(scope_t *scope , ast_t * node){
 
 static void GbFree(){
 
+    Debug_value_is_null(gg);
     while (gg != NULL){
+        printf("Yeah \n");
+        
         Gb_t * del = gg;
         gg = gg->next;
         freeScope(del->sScope);
-        clearAstNode(del->sAst);
+        clearAst(del->sAst);
         free(del);
     }
-    
+
 }
 void freeVsisitorGB(){
     GbFree();
@@ -98,7 +101,9 @@ static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
 
 static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
     visitor->global_scope = scope;
+    newList_Ast(&visitor->constants);
 }
+
 
 
 
@@ -132,9 +137,37 @@ static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
  */
 void newVisitor(visitor_t * visitor){
     visitor->global_scope = newScope();
+    newList_Ast(&visitor->constants);
 }
 
+void visitor_Sweep_value(visitor_t *visitor){
 
+    int x = 0;
+    for (int i = 0; i < (int)visitor->constants.size; i++){
+        if(Value_decref(List_Ast_Get(&visitor->constants,i))){
+            visitor->constants.list[i] = NULL;
+            x++;
+        }
+    }
+    if(x != 0){
+        List_Ast_Shift_All(&visitor->constants);
+        visitor->constants.size -= x;
+    }
+    
+}
+
+void visitor_append_value(visitor_t * visitor , ast_t * value){
+
+    if(visitor->constants.size == 100)
+        visitor_Sweep_value(visitor);
+    
+    List_Ast_Append(
+        &visitor->constants,
+        value
+    );
+
+
+}
 
 //                          ===================================== $COMPOUND ==============================================
 
@@ -616,6 +649,12 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     value->variable_definition_static_type = node->variable_definition_static_type;
     value->countScope = visitor->global_scope->countScope;
 
+    if(value->marked_count == 0)
+        Value_incref(value);
+
+    value->is_for_variable = true;
+    
+ 
     if(node->variable_definition_static_type_name)
         allowChar(&value->variable_definition_static_type_name,node->variable_definition_static_type_name);
 
@@ -627,6 +666,12 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
         else
             value->is_new_obj = false;    
     }
+
+    visitor_append_value(
+        visitor,
+        value
+    );
+
 
     scope_append_variable_definition(
         visitor->global_scope,
@@ -663,6 +708,7 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
     if(value != NULL){
         // Debug_Print_Ast_Type(value);
+        value->is_for_variable = true;
         return value;
     }
 
@@ -747,8 +793,8 @@ ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
  */
 ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     
-    ast_t *first = GetFirstAst();
-    ResetFirstAst();
+    // ast_t *first = GetFirstAst();
+    // ResetFirstAst();
 
     scope_t * newscope = newScope();
     ast_t *newFunc = ast_copy(func,newscope);
@@ -772,8 +818,11 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
 
     ast_t *returnValue =  visitor_visit(&visit,newFunc->function_definition_body);   
 
-    GbPush(newscope,GetFirstAst());
-    ModifFirstAst(first);   
+    freeScope(newscope);
+    freeSingleAst(newFunc);
+    // GbPush(newscope,GetFirstAst());
+    // ModifFirstAst(first);   
+
 
     return returnValue;
 }
@@ -823,8 +872,8 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     }
 
 
-    ast_t *first = GetFirstAst();
-    ResetFirstAst();
+    // ast_t *first = GetFirstAst();
+    // ResetFirstAst();
 
     scope_t * newscope = newScope();
     int visitorScopeCount = visitor->global_scope->countScope;
@@ -867,9 +916,12 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     ast_t *returnValue =  visitor_visit(&visit,newFunction->function_definition_body);   
     
-    GbPush(newscope,GetFirstAst());
+    // GbPush(newscope,newFunction);
 
-    ModifFirstAst(first);   
+    freeScope(newscope);
+    freeSingleAst(newFunction);
+
+    // ModifFirstAst(first);   
 
 
     return returnValue;
@@ -936,6 +988,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue != right->value.as.numberValue;break;
                             default : value->value.as.charValue = left->value.as.charValue + right->value.as.numberValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -947,6 +1000,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->value.type == right->value.type;break;
                             case TOKEN_DIF : value->value.as.booleanValue = left->value.type != right->value.type;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -969,6 +1023,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue!= right->value.as.charValue;break;
                             default : value->value.as.charValue = left->value.as.charValue + right->value.as.charValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -978,6 +1033,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         switch (op->type){
                             case TOKEN_PLUS : value->value.as.stringValue = String_cat("%c%s",left->value.as.charValue,right->value.as.stringValue->str);break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
             }
@@ -1012,6 +1068,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue!= right->value.as.charValue;break;
                             default : value->value.as.numberValue = left->value.as.numberValue + right->value.as.charValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
                     case AST_NUMBER:
@@ -1034,6 +1091,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue != right->value.as.numberValue;break;
                             default : value->value.as.numberValue = left->value.as.numberValue + right->value.as.numberValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -1045,6 +1103,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->value.type == right->value.type;break;
                             case TOKEN_DIF : value->value.as.booleanValue = left->value.type != right->value.type;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -1054,6 +1113,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_PLUS :
                             value->value.as.stringValue = String_cat("%g%s",left->value.as.numberValue,right->value.as.stringValue->str);break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
             }
@@ -1085,6 +1145,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue != right->value.as.charValue;break;
                             default : value->value.as.charValue  = left->value.as.booleanValue  + right->value.as.charValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -1112,6 +1173,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue != right->value.as.numberValue;break;
                             default : value->value.as.numberValue = left->value.as.booleanValue + right->value.as.numberValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
                     case AST_BOOL:
@@ -1130,6 +1192,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue != right->value.as.booleanValue;break;
                             default : value->value.as.booleanValue = left->value.as.booleanValue + right->value.as.booleanValue;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
                     case AST_NONE:
@@ -1140,6 +1203,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->type == right->type;break;
                             case TOKEN_DIF : value->value.as.booleanValue = left->type != right->type;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -1148,6 +1212,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         switch (op->type){
                             case TOKEN_PLUS : value->value.as.stringValue = String_cat("%s%s",left->value.as.booleanValue ? "true":"false",right->value.as.stringValue->str);break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
             }
@@ -1170,6 +1235,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             }
                                 break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -1181,6 +1247,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->type == right->type;break;
                             case TOKEN_DIF : value->value.as.booleanValue = left->type != right->type;break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
 
@@ -1192,6 +1259,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             // case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.charValue) == 0 ? 1 : 0; break;
                             // case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.charValue) != 0 ? 1 : 0; break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
                     case AST_STRING:
@@ -1207,6 +1275,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                             case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) == 0 ? 1 : 0; break;
                             case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) != 0 ? 1 : 0; break;
                         }
+                        Value_incref(value);
                         return value;
                         break;
             }
@@ -1222,6 +1291,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                     case TOKEN_OR : value->value.as.booleanValue = left->type || right->type;break;
 
                 }
+                Value_incref(value);
                 return value;
             break;
 
@@ -1256,6 +1326,15 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
         &node->op,
         right
     );
+
+    // for marked
+
+    // printf("            %d\n ",visitor->constants.size);
+    visitor_append_value(
+        visitor,
+        value
+    );
+
 
     return value;
 }
@@ -1390,7 +1469,6 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
     ast_t * value = visitor_visit(visitor,node->assignement_value);
 
-
     if(node->op.type != TOKEN_ID){
         ast_t * binop = newAst(AST_BINOP);
         binop->left = variable;
@@ -1408,6 +1486,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         else
             value->is_new_obj = false;    
     }
+
 
     scope_append_variable_definition(
         scope,

@@ -17,10 +17,14 @@
 
 typedef struct VISITOR_STRUCT{
     scope_t *global_scope;
+    list_ast_t constants;
 
 }visitor_t;
 
 void newVisitor(visitor_t * visitor);
+
+void visitor_Sweep_value(visitor_t *visitor);
+void visitor_append_value(visitor_t * visitor , ast_t * value);
 
 ast_t * visitor_visit(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node);

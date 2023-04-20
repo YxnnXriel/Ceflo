@@ -7,6 +7,7 @@
     void Debug_Print(const char *func_name);
     
     void Debug_Print_Ast_Type(ast_t *node);
+    void Debug_value_is_null(void *x);
 
 
 

@@ -17,10 +17,13 @@
 #include "include/ast.h"
 #include "include/scope.h"
 #include "include/visitor.h"
+#include "include/debug.h"
 
 
                                                 // FIRST AST
 static ast_t *var;
+static ast_t *prev;
+
 static ast_t *iniAst(){
     return var;
 }
@@ -34,6 +37,7 @@ void ModifFirstAst(ast_t * new){
 }
 void ResetFirstAst(){
     var = NULL;
+    prev = NULL;
 }
 
 void __init_first_ast(){
@@ -75,7 +79,8 @@ ast_t *newAst(uint8_t type){
     new->type_compound = R_FUNCTION_CALL_TYPE;
 
 
-    new->is_marked = true;
+    new->marked_count = 0;
+    new->is_for_variable = false;
 
     new->scope = NULL;
     new->countScope = -1;
@@ -111,8 +116,23 @@ ast_t *newAst(uint8_t type){
     new->assignement_value = NULL;
     new->assignement_variable_name = NULL;
     new->list_ptr = NULL;
-    new->next = var;
-    var = new;
+    new->prev = NULL;
+
+    if(prev == NULL){
+
+        new->next = NULL;
+        var = new;
+        prev = new;
+
+    }else{
+
+        var->prev = new;
+        new->next = var;
+        var = new;
+    }
+    
+
+
 
     return new;
 }
@@ -178,7 +198,27 @@ ast_t * List_Ast_Get(list_ast_t *list , int index){
     return list->list[index];
 }
 
+void List_Ast_Sup(list_ast_t *list , int index){
+    if(list->size == 0 || index > (int)list->size)
+        return;
+    list->list[index] = NULL;
+    list->size -= 1;
+}
 
+void List_ast_Shift(list_ast_t *list , int index){
+    for (int i = index; i < (int)list->size -1 ; i++){
+        list->list[i] = list->list[i+1];
+    }
+}
+
+
+void List_Ast_Shift_All(list_ast_t * list){
+    for (int i = 0; i < (int)list->size; i++){
+        if(list->list[i] == NULL){
+            List_ast_Shift(list,i);
+        }
+    }
+}
 
 
 /**
@@ -331,8 +371,28 @@ void modifValue(ast_t * value , ast_t * new){
         value->value = new->value;
         value->type = new->type;
     }
+    Value_incref(value);
+    new->marked_count--;
+
 }
 
+void Value_incref(ast_t * value){
+    value->marked_count++;
+}
+
+bool Value_decref(ast_t * value){
+    if(value == NULL)
+        return false;
+
+    value->marked_count--;
+
+    if(value->marked_count <= 0 && value->is_for_variable == false ){
+        // printf("                        (%p)\n",(void*)value);
+        freeSingleAst(value);
+        return true;
+    }
+    return false;
+}
 
 
 /**
@@ -457,10 +517,29 @@ void clearAst(){
 
 }
 
-void clearAstNode(ast_t * val){
-    ast_t *node = val;
+void freeSingleAst(ast_t * ast){
 
-    // printf("BEGIN \n");
+    if(ast != NULL){
+
+        if(ast->next == NULL){
+            prev = ast->prev;
+            prev->next = NULL;
+        }else if(ast->prev == NULL){
+            var = ast->next;
+            var->prev = NULL;
+        }else{
+            ast->next->prev = ast->prev;
+            ast->prev->next = ast->next;
+        }
+        freeAst(ast);
+        free(ast);
+    }
+
+}
+
+
+void clearAstNode(ast_t * node){
+
     while (node != NULL){
         // printf("%s\n",AST_TO_STRING[node->type]);
         ast_t * sup = node;
@@ -469,9 +548,20 @@ void clearAstNode(ast_t * val){
         free(sup);
     }
     // printf("END \n");
-    
 
 }
+
+void PrintAst(){
+    ast_t * node = var;
+    while (node != NULL){
+        printValueAst(node,NULL);
+        printf("\n");
+        node = node->next;
+    }
+    
+}
+
+
 
                                     // COPY AST
 
@@ -725,19 +815,6 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
 }
 
 
-void freeSingleAst(ast_t * node){
-
-    ast_t * value = node;
-
-    if(node->next == NULL){
-        freeAst(node);
-    }
-    else{
-        node = node->next;
-        freeAst(value);
-    }
-
-}
 
 ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
     ast_t * variable = newAst(AST_VARIABLE_DEFINITION);
