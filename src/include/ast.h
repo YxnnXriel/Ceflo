@@ -262,7 +262,7 @@ ast_t *newAstWithLine(uint8_t type, int line , int colone);
 
 // VALUE
 void newValue(Value_t * value , uint8_t type);
-void modifValue(ast_t * value , ast_t * new);
+void modifValue(ast_t ** ref  , ast_t * new);
 void newList_Ast(list_ast_t *list);
 void newObject(Obj_t * object);
 void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor);

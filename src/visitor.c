@@ -423,10 +423,11 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
         binop->left = variable;
         binop->right = value;
         binop->op = node->op;
-        variable->value = visitor_visit(visitor,binop)->value;
+        value = visitor_visit(visitor,binop);
 
-    }else
-        modifValue(variable,value);
+    }
+        
+    modifValue(&variable,value);
     
 
     

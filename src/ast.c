@@ -353,8 +353,10 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
  * @param value 
  * @param new 
  */
-void modifValue(ast_t * value , ast_t * new){
+void modifValue(ast_t ** ref , ast_t * new){
     
+    ast_t * value = *ref;
+
     if(new->type == AST_STRING){
 
         value->value.type = STRING;
@@ -366,7 +368,9 @@ void modifValue(ast_t * value , ast_t * new){
         }
 
     }else if(new->type == AST_OBJ){
-        printf("        YEAP %s \n",__func__);
+        value->value = ast_copy(new,new->scope)->value;
+        value->type = new->type;
+
     }else{
         value->value = new->value;
         value->type = new->type;
@@ -604,7 +608,10 @@ static void cpy_line(ast_t *a , ast_t *ast){
 
 static ast_t *ast_r_scope(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast->scope = scope;
-    ast->countScope = scope->countScope;
+    
+    if(scope != NULL)
+        ast->countScope = scope->countScope;
+    
     return ast;
 }
 
@@ -635,7 +642,9 @@ ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope){
 
     a->left = ast_copy(ast->left, scope);
     a->list_ptr = ast_copy(ast->list_ptr, scope);
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     
     return a;
@@ -647,7 +656,9 @@ ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->assignement_left = ast_copy(ast->assignement_left,scope);
     a->assignement_value = ast_copy(ast->assignement_value,scope);
     a->op = ast->op;
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 }
@@ -655,7 +666,9 @@ ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
 ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope){
 
     ast_t *a = newAst(ast->type);
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 
@@ -666,7 +679,9 @@ ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast_t * a = newAst(ast->type);
     a->while_expr = ast_copy(ast->while_expr,scope);
     a->while_body = ast_copy(ast->while_body,scope);
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 
@@ -681,7 +696,9 @@ ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->else_body = ast_copy(ast->else_body,scope);
     a->if_other = ast_copy(ast->if_other,scope);
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 }   
@@ -720,7 +737,9 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
         a->value = ast->value;
     }
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 }
@@ -730,7 +749,9 @@ ast_t * ast_cpy_variable(ast_t * ast,struct SCOPE_STRUCT * scope){
     a->variable_forGlobal = ast->variable_forGlobal; 
     allowChar(&a->variable_name,ast->variable_name);
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 }
@@ -743,7 +764,9 @@ ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->op = ast->op;
     a->right = ast_copy(ast->right,scope);
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 }
@@ -752,7 +775,9 @@ ast_t *ast_cpy_return(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast_t* a = newAst(ast->type);
     a->return_expr = ast_copy(ast->return_expr,scope);
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
     return a;
 }
 
@@ -770,7 +795,9 @@ ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope){
         );
     }
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
     return a;
 }
@@ -789,7 +816,9 @@ ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
         List_Ast_Append(&a->function_call_args,arg);
     }
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
     return a;
 }
 
@@ -834,7 +863,9 @@ ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
             ast->variable_definition_static_type_name
         );
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
         
     return a;
@@ -856,7 +887,9 @@ ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     }
 
 
-    // cpy_line(a,ast);
+    if(scope == NULL){
+        cpy_line(a,ast);
+    }
 
 
     return a;
