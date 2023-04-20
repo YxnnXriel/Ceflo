@@ -118,6 +118,11 @@ ast_t *newAst(uint8_t type){
     new->list_ptr = NULL;
     new->prev = NULL;
 
+
+    // LIST
+    new->ref_list = NULL;
+    new->ref_list_index = -1;
+
     if(prev == NULL){
 
         new->next = NULL;
@@ -356,6 +361,10 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
 void modifValue(ast_t ** ref , ast_t * new){
     
     ast_t * value = *ref;
+    
+    if(value->type == AST_OBJ){
+        freeScope(value->value.as.ObjectValue.self);
+    }
 
     if(new->type == AST_STRING){
 
@@ -368,8 +377,21 @@ void modifValue(ast_t ** ref , ast_t * new){
         }
 
     }else if(new->type == AST_OBJ){
-        value->value = ast_copy(new,new->scope)->value;
-        value->type = new->type;
+
+        value->type = AST_OBJ;
+
+
+
+        if(new->is_new_obj)
+            new->is_new_obj = false;
+        
+        // printf("new[  %p  ]\n",(void*)new->value.as.ObjectValue.self);
+        // // value->value = ast_copy(new,NULL)->value;
+        // printf("value[  %p  ]\n",(void*)value->value.as.ObjectValue.self);
+
+        value->ref_list->Item[value->ref_list_index] = ast_copy(new,NULL);
+
+
 
     }else{
         value->value = new->value;
@@ -511,6 +533,12 @@ void clearAst(){
     // printf("BEGIN \n");
     while (node != NULL){
         // printf("%s\n",AST_TO_STRING[node->type]);
+        // if(node->type == AST_OBJ){
+        //     printf("    %p\n",(void*)node->value.as.ObjectValue.self);
+        // }
+        // if(node->type == AST_VARIABLE_DEFINITION){
+        //     printf("    %s\n",node->variable_definition_name);
+        // }
         ast_t * sup = node;
         node = node->next;
         freeAst(sup);

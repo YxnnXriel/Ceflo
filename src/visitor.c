@@ -371,7 +371,10 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 exit(1);
             }
 
-            return List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
+            ast_t * res = List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
+            res->ref_list = variable->value.as.listValue;
+            res->ref_list_index = (int) index->value.as.numberValue;
+            return res;
         }
     }
 
@@ -424,7 +427,6 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
         binop->right = value;
         binop->op = node->op;
         value = visitor_visit(visitor,binop);
-
     }
         
     modifValue(&variable,value);
@@ -445,7 +447,7 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
     }
     
 
-    return variable;
+    return value;
 }
 
 

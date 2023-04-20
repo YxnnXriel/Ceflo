@@ -26,7 +26,7 @@
  * - Ajouter un dictionnaire(si c'est possible)
  * - Bien d'autre
  * - Fix Bug function call and List  - OK
- * - Fix Bug list access , new obj
+ * - Fix Bug list access , new obj   - OK
  */
 
 int main(int argc, char const *argv[]){

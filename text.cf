@@ -1,13 +1,13 @@
 
 struct pers{
-    var x = 0;
+    var x = "Yann Ariel";
+    func __str__(){
+        return x
+    }
 }
 
+var l = [new pers()];
 
-var l = [0,1];
+l[0] = 56;
 
-
-l[0] = new pers();
-
-
-println(l)
+println(l);

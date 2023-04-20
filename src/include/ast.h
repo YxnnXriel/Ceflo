@@ -231,6 +231,14 @@ typedef struct AST_STRUCT{
 
 
 
+
+
+    /* ======  LIST ====== */
+        list_t *ref_list;
+        int ref_list_index;
+
+
+
     /* ======  AST_COMPOUND ====== */
         list_t *list_compound;
         Return_Type type_compound;
