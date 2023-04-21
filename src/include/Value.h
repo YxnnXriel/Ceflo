@@ -11,6 +11,7 @@
     ast_t * value_List_get(visitor_t * visitor , list_t *list , ast_t * value);
     ast_t * value_List_deleted(visitor_t * visitor , list_t *list , ast_t * value);
     ast_t * value_List_print(visitor_t * visitor , list_t *list , ast_t * value);
+    ast_t * value_List_filter(visitor_t * visitor , list_t *list , ast_t * value);
 
     struct value_list{
         char *name;
@@ -19,13 +20,14 @@
     
     ast_t * value_list_switch_function(visitor_t * visitor,list_t *list , ast_t *value);
 
-    #define VALUE_LIST_ATTR 5
+    #define VALUE_LIST_ATTR 6
     static struct value_list attr_value_list[] = {
         {"get",&value_List_get},
-        {"delete",&value_List_deleted},
+        {"remove",&value_List_deleted},
         {"append",&value_List_append},
         {"lenght",&value_List_lenght},
         {"print",&value_List_print},
+        {"filter",&value_List_filter},
     };
 
 

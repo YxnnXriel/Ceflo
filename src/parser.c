@@ -474,7 +474,11 @@ ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
     function->countScope = GetScope();
     newList_Ast(&function->function_defintion_args); 
 
-    parser_eat(TOKEN_FUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
+    if(parser->current.type == TOKEN_LFUNC)
+        parser_eat(TOKEN_LFUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
+    else
+        parser_eat(TOKEN_FUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
+
     allowChar(&function->function_definition_name,parser->current.value);
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
 
@@ -856,6 +860,10 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
 
     if(parser->current.type == TOKEN_NONE){
         return parser_parse_none(parser,scope);
+    }
+
+    if(parser->current.type == TOKEN_LFUNC){
+        return parser_parse_function_definition(parser,scope);
     }
 
     if(parser->current.type == TOKEN_ID){

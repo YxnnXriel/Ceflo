@@ -1,6 +1,7 @@
 
 CC = gcc
 EXEC = Ceflo
+FILE = test.cf
 DEBUG = -DDEBUG_CEFLO
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
@@ -18,6 +19,6 @@ cls :
 
 test :
 	-make
-	./$(EXEC) text.cf
+	./$(EXEC) $(FILE)
 val :
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC) text.cf
+	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC) $(FILE)

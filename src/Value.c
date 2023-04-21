@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "include/Value.h"
-
+#include "include/debug.h"
 #include "include/error.h"
 
 
@@ -136,6 +136,23 @@ ast_t * value_list_switch_function(visitor_t * visitor,list_t *list , ast_t *val
     return NULL;
 }
 
+
+ast_t * value_List_filter(visitor_t * visitor , list_t *list , ast_t * value){
+
+    
+
+    ast_t * func = List_Ast_Get(&value->function_call_args,0);
+
+    return visitor_visit_function(
+        visitor,
+        func,
+        NULL
+    );
+
+
+    return RETURN_NONE;
+
+}
 
 
 
