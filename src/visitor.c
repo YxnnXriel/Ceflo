@@ -21,6 +21,10 @@
     #include "include/bulletin.h"
     #include "include/Value.h"
     #include "include/debug.h"
+    #include "include/clear.h"
+
+
+
 
 // this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{
@@ -31,6 +35,7 @@ typedef struct GARBAGE_FUNCTION_STRUCT{
 
 static Gb_t *gg;
 
+static bool visitor_error;
 static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
     
     ast_t * functionDef = scope_get_function_definition(
@@ -51,6 +56,7 @@ static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
 
 
 void newGb(){
+    visitor_error  = false;
     gg = NULL;
 }
 
@@ -180,8 +186,7 @@ void visitor_append_value(visitor_t * visitor , ast_t * value){
  */
 ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 
-
-    if(node == (void*)0){
+    if(node == (void*)0 || visitor_error == true){
         // printf("NODE NULL \n");
         return NULL;
     }
@@ -222,7 +227,8 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
             return node;
         default:
             printf("%s: pas implementer \n",AST_TO_STRING[node->type]);
-            exit(1);
+            Clear_Ceflo(visitor,NULL);
+            visitor_error = true;
             break;
     }
 
@@ -368,7 +374,8 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 variable->variable_name,
                 index->value.as.numberValue
                 );
-                exit(1);
+                Clear_Ceflo(visitor,NULL);
+                visitor_error = true;
             }
 
             ast_t * res = List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
@@ -389,7 +396,8 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 variable->variable_name,
                 index->value.as.numberValue
                 );
-                exit(1);
+                Clear_Ceflo(visitor,NULL);
+                visitor_error = true;
             }
             ast_t * value =  newAst(AST_CHAR);
             newValue(&value->value,CHAR);
@@ -518,7 +526,8 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             "struct %s n'est pas définit \n",
             node->function_call_name
         );
-        exit(1);   
+        Clear_Ceflo(visitor,NULL);
+        visitor_error = true;   
     }
 
 
@@ -737,8 +746,11 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
             "var %s n'est pas définit \n",
             node->variable_name
         );
-        exit(1);
+        Clear_Ceflo(visitor,NULL);
+        visitor_error = true;
     }
+
+    return NULL;
 
 }
 
@@ -872,6 +884,9 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             "func %s n'est pas définit \n",
             node->function_call_name
         );
+        Clear_Ceflo(visitor,NULL);
+        visitor_error = true;
+        return NULL;
     }
 
 
@@ -895,6 +910,9 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             node->function_call_name,
             functionDef->function_defintion_args.size
         );
+        
+        Clear_Ceflo(visitor,NULL);
+        visitor_error = true;
         
     }
 

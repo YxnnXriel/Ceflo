@@ -16,6 +16,7 @@
 #include "include/parser.h"
 #include "include/error.h"
 #include "include/common.h"
+#include "include/clear.h"
 
 
 
@@ -154,6 +155,8 @@ int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
             args
         );
         va_end(args);
+        freeToken(&parser->prev);
+        Clear_Ceflo_Parser(parser->lexer);
         exit(1);
     }
 

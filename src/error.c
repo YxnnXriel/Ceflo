@@ -69,5 +69,5 @@ void Print_visitor_error(int line, int colone,char *file_name,char *format,...){
         }
     }
        
-    exit(1);
+    // exit(1);
 }

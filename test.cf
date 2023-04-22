@@ -1,10 +1,5 @@
 
 
-struct List{
-    var l = []
-}
-
-var l = new List();
 
 
-println(l)
+var  t  = hh();

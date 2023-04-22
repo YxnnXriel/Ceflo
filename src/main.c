@@ -18,6 +18,7 @@
 #include "include/parser.h"
 #include "include/ast.h"
 #include "include/visitor.h"
+#include "include/clear.h"
 
 
 /**
@@ -40,17 +41,19 @@ int main(int argc, char const *argv[]){
 
 		visitor_t visitor;
 		newVisitor(&visitor);
-		// newGb();
+		newGb();
 		
 		visitor.global_scope->countScope = 0;
 
 		visitor_visit(&visitor,node);
 
 		// freeVsisitorGB();
-		clearAst();
-		freeScope(visitor.global_scope);
+		// clearAst();
+		// freeScope(visitor.global_scope);
 		
-		lexerFree(&lexer);
+		// lexerFree(&lexer);
+		Clear_Ceflo(&visitor,&lexer);
+
 
 	}else{
 		printf("[CEFLO]\n");

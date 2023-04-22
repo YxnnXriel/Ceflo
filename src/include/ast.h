@@ -301,8 +301,8 @@ void clearAstNode(ast_t * node);
 void freeAst(ast_t *node);
 void clearAst();
 void freeSingleAst(ast_t * ast);
-
 void PrintAst();
+
 
 // FUNCTION AST
 bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** res);

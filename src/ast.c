@@ -18,6 +18,7 @@
 #include "include/scope.h"
 #include "include/visitor.h"
 #include "include/debug.h"
+#include "include/lexer.h"
 
 
                                                 // FIRST AST
@@ -332,6 +333,9 @@ bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor){
  */
 void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
 
+    if(value == NULL)
+        return;
+
     switch (value->type){
             case AST_NONE : printf("none");break;
             case AST_CHAR : printf("%c",value->value.as.charValue);break;
@@ -592,6 +596,7 @@ void PrintAst(){
     }
     
 }
+
 
 
 
