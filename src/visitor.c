@@ -310,6 +310,7 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
     }
     
     // GbFree();
+    
     return node;
 }
 
@@ -662,7 +663,12 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 
     ast_t * value = visitor_visit(visitor,node->variable_definition_value);
 
+    if(value->type == AST_COMPOUND){
+        value = newAst(AST_NONE);
+    }
+
     value->variable_definition_static_type = node->variable_definition_static_type;
+
     value->countScope = visitor->global_scope->countScope;
 
     if(value->marked_count == 0)
@@ -829,11 +835,12 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
                 func->function_definition_name,
                 func->function_defintion_args.size
             );
-            
-            Clear_Ceflo(visitor,NULL);
-            visitor_error = true;
-            return NULL;
-            
+
+            freeScope(newscope);
+            freeSingleAst(newFunc);
+            clearAst();
+            exit(1);
+
         }
 
         for (int i = 0; i < (int) args->function_call_args.size; i++){
@@ -905,9 +912,9 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             "func %s n'est pas définit \n",
             node->function_call_name
         );
-        Clear_Ceflo(visitor,NULL);
-        visitor_error = true;
-        return NULL;
+
+            clearAst();
+            exit(1);
     }
 
 
@@ -932,8 +939,12 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             functionDef->function_defintion_args.size
         );
         
+
+        freeScope(newscope);
+        freeSingleAst(newFunction);
         Clear_Ceflo(visitor,NULL);
-        visitor_error = true;
+        clearAst();
+        exit(1);
         
     }
 

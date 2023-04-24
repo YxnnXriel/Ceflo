@@ -48,10 +48,11 @@ ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef){
     // if(scope->function_definition.Size == 0)
     //     return NULL;
 
+
     ast_t * value = Hash_Get(&scope->function_definition,funcdef);
     if(value == NULL){
         value = Hash_Get(&scope->variable_definition,funcdef);
-        return value->type == AST_LFUNC ? value->value.as.lfuncValue:NULL;
+        return value != NULL && value->type == AST_LFUNC? value->value.as.lfuncValue:NULL;
     }
 
 
