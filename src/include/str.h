@@ -37,7 +37,7 @@
         int String_cmp(string_t *string , const char *chaine);
         int String_free(String str);
 
-
+        char* readFile(const char *path);
 
 
 

@@ -226,6 +226,34 @@ void List_Ast_Shift_All(list_ast_t * list){
     }
 }
 
+list_ast_t List_Ast_Cpy(list_ast_t *list){
+    list_ast_t new;
+    newList_Ast(&new);
+
+    for (int i = 0; i < list->size; i++){
+        List_Ast_Append(
+            &new,List_Ast_Get(list,i)
+        );
+    }
+    
+    return new;
+}
+
+list_ast_t List_Ast_Cpy_Without_Index(list_ast_t * list , int index){
+    list_ast_t new;
+    newList_Ast(&new);
+
+    for (int i = 0; i < list->size; i++){
+        if(i != index){
+            List_Ast_Append(
+                &new, ast_copy(List_Ast_Get(list,i),NULL)
+            );
+        }
+    }
+    
+    return new;
+}
+
 
 /**
  * @brief NEW OBJECT
@@ -543,6 +571,9 @@ void clearAst(){
         // if(node->type == AST_VARIABLE_DEFINITION){
         //     printf("    %s\n",node->variable_definition_name);
         // }
+        // if(node->type == AST_STRING){
+        //     printf("    %p\n",node->value.as.stringValue);
+        // }
         ast_t * sup = node;
         node = node->next;
         freeAst(sup);
@@ -620,6 +651,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_STRUCT] = {&ast_cpy_function_call},
     [AST_FUNCTION_CALL] = {&ast_cpy_function_call},
     [AST_FUNCTION_DEFINITION] = {&ast_cpy_function_definition},
+    [AST_LFUNC] = {&ast_cpy_Value},
     [AST_OBJ_ACCESS] = {&ast_cpy_binop},
     [AST_BINOP] = {&ast_cpy_binop},
     [AST_RETURN] = {&ast_cpy_return},
@@ -661,6 +693,7 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
     if(ast->type == AST_NOOP)
         return ast;
 
+    // printf("CPY %s \n",AST_TO_STRING[ast->type]);
     ast_t *res = list_cpy_ast[ast->type].function(ast,scope);
 
     ast_r_scope(res,scope);
@@ -765,8 +798,11 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
                 ast_copy((ast_t*)List_Get(ast->value.as.listValue,i),scope)
             );
         }
-    }
-    else{
+    }else if(ast->type == AST_LFUNC){
+
+        newValue(&a->value,LFUNC);
+        a->value.as.lfuncValue = ast_copy(ast->value.as.lfuncValue,scope);
+    }else{
         a->value = ast->value;
     }
 
@@ -843,10 +879,11 @@ ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
 
     newList_Ast(&a->function_call_args);
 
+
     for (int i = 0; i < (int) ast->function_call_args.size; i++){
-        ast_t *arg = List_Ast_Get(&ast->function_call_args,i);
-        arg = ast_copy(arg,scope);
+        ast_t*  arg = ast_copy( List_Ast_Get(&ast->function_call_args,i),scope);
         List_Ast_Append(&a->function_call_args,arg);
+        // Debug_Print_Ast_Type(arg);
     }
 
     if(scope == NULL){
@@ -857,8 +894,12 @@ ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
 
 ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scope){
     
-    ast_t *a = newAst(AST_FUNCTION_DEFINITION);
-    allowChar(&a->function_definition_name,function->function_definition_name);
+    ast_t *a = newAst(function->type);
+
+    if(function->function_definition_name){
+        allowChar(&a->function_definition_name,function->function_definition_name);
+    }
+    
     a->function_definition_return_type = function->function_definition_return_type;
 
     newList_Ast(&a->function_defintion_args);

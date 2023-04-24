@@ -28,6 +28,7 @@
  * - Bien d'autre
  * - Fix Bug function call and List  - OK
  * - Fix Bug list access , new obj   - OK
+ * - Fix lfunc type right
  */
 
 int main(int argc, char const *argv[]){

@@ -17,7 +17,8 @@
                         #include "token.h"
 
     typedef struct{
-        string_t *fileCode;
+        char *fileCode;
+        size_t lenght_file_code;
         int index;
         char current_char;
         int line;

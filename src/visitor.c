@@ -25,6 +25,7 @@
 
 
 
+#define CEFLO_GB 0
 
 // this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{
@@ -164,13 +165,15 @@ void visitor_Sweep_value(visitor_t *visitor){
 
 void visitor_append_value(visitor_t * visitor , ast_t * value){
 
-    if(visitor->constants.size == 100)
-        visitor_Sweep_value(visitor);
-    
-    List_Ast_Append(
-        &visitor->constants,
-        value
-    );
+    if(CEFLO_GB == 1){
+        if(visitor->constants.size == 100)
+            visitor_Sweep_value(visitor);
+        
+        List_Ast_Append(
+            &visitor->constants,
+            value
+        );
+    }
 
 
 }
@@ -207,6 +210,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_OBJ:
         case AST_RETURN:
         case AST_BREAK:
+        case AST_LFUNC:
             return visitor_visit_data(visitor,node);break;
         case AST_COMPOUND: return visitor_visit_compound(visitor,node);break;
         case AST_STRUCT_DEFINITION: return visitor_visit_struct_definition(visitor,node);break;
@@ -815,7 +819,24 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     ast_t *newFunc = ast_copy(func,newscope);
 
     if(args != NULL){
-        for (int i = 0; i < (int) newFunc->function_call_args.size; i++){
+
+        if(args->function_call_args.size != func->function_defintion_args.size){
+            Print_visitor_error(
+                func->line,
+                func->colone,
+                "./Ceflo",
+                "func %s prends %d argument(s) \n",
+                func->function_definition_name,
+                func->function_defintion_args.size
+            );
+            
+            Clear_Ceflo(visitor,NULL);
+            visitor_error = true;
+            return NULL;
+            
+        }
+
+        for (int i = 0; i < (int) args->function_call_args.size; i++){
             char * variable_name = List_Ast_Get(&newFunc->function_defintion_args,i)->variable_name;
             ast_t * value = visitor_visit(visitor,List_Ast_Get(&args->function_call_args,i));
             scope_append_variable_definition(
@@ -1048,6 +1069,16 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         return value;
                         break;
 
+                    case AST_LFUNC:
+                        value = visitor_visit_recursive_binop(
+                            visitor,
+                            left,
+                            op,
+                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
+                        );
+                        Value_incref(value);
+                        return value;
+                        break;
 
                     case AST_STRING:
                         value->type = AST_STRING;
@@ -1128,6 +1159,16 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         return value;
                         break;
 
+                    case AST_LFUNC:
+                        value = visitor_visit_recursive_binop(
+                            visitor,
+                            left,
+                            op,
+                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
+                        );
+                        Value_incref(value);
+                        return value;
+                        break;
                     case AST_STRING:
                         value->type = AST_STRING;
                         switch (op->type){
@@ -1228,6 +1269,17 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         return value;
                         break;
 
+                    case AST_LFUNC:
+                        value = visitor_visit_recursive_binop(
+                            visitor,
+                            left,
+                            op,
+                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
+                        );
+                        Value_incref(value);
+                        return value;
+                        break;
+                    
                     case AST_STRING:
                         value->type = AST_STRING;
                         switch (op->type){
@@ -1283,6 +1335,18 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         Value_incref(value);
                         return value;
                         break;
+
+                    case AST_LFUNC:
+                        value = visitor_visit_recursive_binop(
+                            visitor,
+                            left,
+                            op,
+                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
+                        );
+                        Value_incref(value);
+                        return value;
+                        break;
+
                     case AST_STRING:
                         switch (op->type){
                             case TOKEN_PLUS : value->value.as.stringValue = String_cat("%s%s",left->value.as.stringValue->str,right->value.as.stringValue->str);break;
@@ -1302,7 +1366,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
             }
             break;
 
-            case AST_NONE:
+        case AST_NONE:
                 value = newAst(AST_BOOL);
                 value->countScope = visitor->global_scope->countScope;
                 switch (op->type){
@@ -1315,6 +1379,18 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                 Value_incref(value);
                 return value;
             break;
+
+
+        case AST_LFUNC:
+            value = visitor_visit_recursive_binop(
+                visitor,
+                visitor_visit_function(visitor,left->value.as.lfuncValue,NULL),
+                op,
+                right
+            );
+            Value_incref(value);
+            return value;
+        break;
 
     }
     

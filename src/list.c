@@ -187,7 +187,7 @@ hash_t *__init__hash(const char *key ,void * value ){
     }
 
 
-    ha->key = calloc((strlen(key)) , sizeof(char));
+    ha->key = calloc((strlen(key)) , sizeof(char*));
     strcpy(ha->key,key);
     ha->value = value;
 

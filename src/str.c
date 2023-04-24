@@ -16,7 +16,7 @@
  
 String new_String(const char *str){
 
-    String st = calloc(1,sizeof(string_t*));
+    String st = calloc(1,sizeof(*st));
 
     if(st == NULL){
         fprintf(stderr,"line :%d , files :%s , function : %s\n",
@@ -208,7 +208,7 @@ String String_cat(char *format , ...){
     return chaine;
 }
 
-static string_t * readFile(const char *path){
+char* readFile(const char *path){
 	FILE *file = fopen(path,"rb");
 
 	if(file == NULL){
@@ -236,12 +236,8 @@ static string_t * readFile(const char *path){
 	buffer[byteRead] = '\0';
 	fclose(file);
 
-    string_t * fmt = new_String(buffer);
 
-    free(buffer);
-
-    return fmt;
-
+    return buffer;
 }
 
 
@@ -252,7 +248,7 @@ static string_t * readFile(const char *path){
  */
 
 String String_Read_FIle(const char *args){
-    return readFile(args);
+    return new_String(readFile(args));
 }
 
 
@@ -468,6 +464,9 @@ listString ListString_Copy(listString list){
 
 
 int String_free(String str){
+    if(str == NULL)
+        return 0;
+        
     if(str->str != NULL)
         free(str->str);
     

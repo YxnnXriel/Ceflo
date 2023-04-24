@@ -473,17 +473,24 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
 
 ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 
+    bool is_lfunc = 0;
+
     ast_t *function = newAstWithLine(AST_FUNCTION_DEFINITION,parser->lexer->line,parser->lexer->colone);
     function->countScope = GetScope();
     newList_Ast(&function->function_defintion_args); 
 
-    if(parser->current.type == TOKEN_LFUNC)
+    if(parser->current.type == TOKEN_LFUNC){
         parser_eat(TOKEN_LFUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
+        is_lfunc = true;
+    }
     else
         parser_eat(TOKEN_FUNC,FUNCTION_DEFINITION_ERROR,"definition de function echouer \n");
 
-    allowChar(&function->function_definition_name,parser->current.value);
-    parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+
+    if(!is_lfunc){
+        allowChar(&function->function_definition_name,parser->current.value);
+        parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+    }
 
     parser_eat(TOKEN_LPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
     
@@ -523,6 +530,24 @@ ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 }
 
 
+ast_t *parser_parse_lfunc(parser_t *parser , scope_t * scope){
+
+    ast_t *a = newAstWithLine(AST_LFUNC,parser->lexer->line,parser->lexer->colone);
+    a->countScope = GetScope();
+    newValue(&a->value,LFUNC);
+
+    a->value.as.lfuncValue = parser_parse_function_definition(
+        parser,
+        scope
+    );
+
+
+    return a;
+}
+
+
+
+
 
 
 
@@ -556,8 +581,6 @@ ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
     function->scope = scope;
     return function;
 }
-
-
 
 
 
@@ -866,7 +889,7 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
     }
 
     if(parser->current.type == TOKEN_LFUNC){
-        return parser_parse_function_definition(parser,scope);
+        return parser_parse_lfunc(parser,scope);
     }
 
     if(parser->current.type == TOKEN_ID){

@@ -28,12 +28,13 @@
  */
 void newLexer(lexer_t *lexer,const char* source){
 
-    lexer->fileCode = String_Read_FIle(source);
+    lexer->fileCode = readFile(source);
+    lexer->lenght_file_code = strlen(lexer->fileCode);
     lexer->fileName = new_String(source);
     lexer->line = 1;
     lexer->colone = 1;
     lexer->index = 0;
-    lexer->current_char = String_index(lexer->fileCode,lexer->index);
+    lexer->current_char = lexer->fileCode[lexer->index];
 
 }
 
@@ -56,10 +57,10 @@ void lexer_advance(lexer_t *lexer){
         lexer->colone = 0;
     }
 
-    if(lexer->index < lexer->fileCode->lenght){
+    if(lexer->index < (int)lexer->lenght_file_code){
         lexer->colone +=1;
         lexer->index +=1;
-        lexer->current_char = String_index(lexer->fileCode,lexer->index);
+        lexer->current_char = lexer->fileCode[lexer->index];
     }
 }
 
@@ -145,9 +146,9 @@ static TokenEnum lexer_precise_id(char *chaine ){
  */
 static int lexer_peek(lexer_t *lexer, char c){
     
-    if(lexer->index + 1 < lexer->fileCode->lenght){
+    if(lexer->index + 1 < (int)lexer->lenght_file_code){
 
-        if(String_index(lexer->fileCode,lexer->index + 1) == c) 
+        if(lexer->fileCode[lexer->index + 1] == c) 
             return 1;
         return 0;
 
@@ -172,16 +173,12 @@ static int lexer_peek(lexer_t *lexer, char c){
  * @param value 
  * @return int 
  */
-static int lexer_get_value(int is,lexer_t *lexer ,  char **value ){
-    if(is){
-        char *s = lexer_make_as_string(lexer);
-        *value = realloc(*value , ( strlen(*value) + strlen(s)) * sizeof(char *) );
-        strcat(*value,s);
-        free(s);
-        return 1;
-    }else{
-        return 0;
-    }
+static char * lexer_get_value(lexer_t *lexer,int initiale ){
+    size_t lenght = lexer->index - initiale + 1;
+    char *value = calloc(lenght,sizeof(char));
+    memcpy(value,&lexer->fileCode[initiale],lenght);
+    value[lenght -1] = '\0';
+    return value;
 }
 
 
@@ -200,21 +197,15 @@ static int lexer_get_value(int is,lexer_t *lexer ,  char **value ){
  */
 token_t lexer_collect_id(lexer_t *lexer){
 
-    char *value = calloc(1,sizeof(char));
-    
-    value[0] = '\0';
+    int initiale = lexer->index;
 
-
-    while(lexer_get_value(isalnum(lexer->current_char) || lexer->current_char == '_',lexer,&value)){
+    while (isalnum(lexer->current_char)){
         lexer_advance(lexer);
     }
-    
-    token_t tok = AS_TOKEN(TOKEN_ID,value);     
-    tok.type = lexer_precise_id(value);
 
-
-
-    return tok;
+    char *value = lexer_get_value(lexer,initiale);
+    int type = lexer_precise_id(value);
+    return AS_TOKEN(type,value);
 }
 
 
@@ -231,25 +222,23 @@ token_t lexer_collect_id(lexer_t *lexer){
  * @return token_t 
  */
 token_t  lexer_collect_digit(lexer_t *lexer){
-    char *value = calloc(1,sizeof(char));
-    
-    value[0] = '\0';
 
     TokenEnum type = TOKEN_INTEGER;
-    while(lexer_get_value(isdigit(lexer->current_char),lexer,&value)){
-            lexer_advance(lexer);
+
+    int initial = lexer->index;
+    while (isdigit(lexer->current_char)){
+        lexer_advance(lexer);
     }
+    
 
     if(lexer->current_char == '.'){
         type = TOKEN_FLOAT;
-        
-        lexer_get_value(1,lexer,&value);
+        lexer_advance(lexer);
+        while (isdigit(lexer->current_char))
             lexer_advance(lexer);
-
-        while(lexer_get_value(isdigit(lexer->current_char),lexer,&value)){
-            lexer_advance(lexer);
-        }
     }
+
+    char *value = lexer_get_value(lexer,initial);
 
     return AS_TOKEN(type,value);
 }
@@ -270,13 +259,15 @@ token_t  lexer_collect_digit(lexer_t *lexer){
 token_t lexer_collect_string(lexer_t *lexer){
 
 
-    char  *value = calloc(1,sizeof(char*));
-    value[0] = '\0';
     lexer_advance(lexer);
 
-    while (lexer_get_value(lexer->current_char != '"', lexer,&value)){
+    int initial = lexer->index;
+
+    while (lexer->current_char != '"'){
         lexer_advance(lexer);
     }
+
+    char *value = lexer_get_value(lexer,initial);
     lexer_advance(lexer);
     
 
@@ -295,15 +286,17 @@ token_t lexer_collect_string(lexer_t *lexer){
  * @return token_t 
  */
 token_t lexer_collect_char(lexer_t *lexer){
-    char *value = calloc(1,sizeof(char));
-    
-    value[0] = '\0';
     lexer_advance(lexer);
-    while(lexer_get_value(lexer->current_char != '\'',lexer,&value)){
+
+    int initial = lexer->index;
+
+    while (lexer->current_char != '\''){
         lexer_advance(lexer);
     }
-    
+
+    char *value = lexer_get_value(lexer,initial);
     lexer_advance(lexer);
+    
 
     return AS_TOKEN(TOKEN_CHAR,value);
 }
@@ -339,7 +332,7 @@ void lexer_advance_skip_white_space(lexer_t *lexer){
 token_t lexer_get_next_token(lexer_t *lexer){
 
 
-    while(lexer->current_char != '\0' && lexer->index < lexer->fileCode->lenght){
+    while(lexer->current_char != '\0' && lexer->index < (int)lexer->lenght_file_code){
 
 
         if(lexer->current_char == 10  || lexer->current_char == ' ' || lexer->current_char == '\t')
@@ -485,7 +478,7 @@ token_t lexer_advance_return_token(lexer_t *lexer , token_t token){
  * @return char 
  */
 static char lexer_peek_retour(lexer_t *lex){
-    if( (lex->index + 1) < lex->fileCode->lenght){
+    if( (lex->index + 1) < (int)lex->lenght_file_code){
         if(lex->current_char == '\\' && lexer_peek(lex,'n')) return '\n';
         if(lex->current_char == '\\' && lexer_peek(lex,'a')) return '\a';
         if(lex->current_char == '\\' && lexer_peek(lex,'b')) return '\b';
@@ -535,7 +528,7 @@ char * lexer_make_as_string(lexer_t *lexer){
 int lexerFree(lexer_t *lex){
 
     if(lex->fileCode){
-        String_free(lex->fileCode);
+        free(lex->fileCode);
     }
     if(lex->fileName != NULL){
         String_free(lex->fileName);

@@ -1,5 +1,15 @@
 
 
 
+var t = "Yann " + lfunc(){
+    func yy(){
+        return 1;
+    }
+    var t = yy();
+    if t == 1{
+        return "Ariel"
+    }
+    return "Axel"
+} ;
 
-var  t  = hh();
+println(t);

@@ -33,6 +33,7 @@
         AST(AST_LIST)   \
         AST(AST_LIST_ACCESS)   \
         AST(AST_LIST_ASSIGNEMENT)   \
+        AST(AST_LFUNC)   \
         AST(AST_COMPOUND)  \
         AST(AST_BINOP)  \
         AST(AST_RETURN)  \
@@ -65,6 +66,7 @@ typedef enum{
     STRING,
     LIST,
     OBJECT,
+    LFUNC
 }type_ceflo;
 
 struct AST_STRUCT;
@@ -91,7 +93,8 @@ typedef struct AST_TYPE_VALUE{
         char charValue;
         string_t *stringValue;
         list_t *listValue;
-        Obj_t ObjectValue; 
+        Obj_t ObjectValue;
+        struct AST_STRUCT *lfuncValue;
     }as;
 }Value_t;
 
@@ -288,6 +291,8 @@ ast_t * List_Ast_Get(list_ast_t *list , int index);
 void List_Ast_Sup(list_ast_t *list , int index);
 void List_ast_Shift(list_ast_t *list , int index);
 void List_Ast_Shift_All(list_ast_t * list);
+list_ast_t List_Ast_Cpy(list_ast_t *list);
+list_ast_t List_Ast_Cpy_Without_Index(list_ast_t * list , int index);
 bool isValue(ast_t* self);
 
 

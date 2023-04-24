@@ -45,10 +45,15 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 }
 
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef){
-    if(scope->function_definition.Size == 0)
-        return NULL;
+    // if(scope->function_definition.Size == 0)
+    //     return NULL;
 
     ast_t * value = Hash_Get(&scope->function_definition,funcdef);
+    if(value == NULL){
+        value = Hash_Get(&scope->variable_definition,funcdef);
+        return value->type == AST_LFUNC ? value->value.as.lfuncValue:NULL;
+    }
+
 
     return value;
 }
@@ -119,6 +124,7 @@ void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *va
 int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
     if(ref != NULL){
+
 
         for (int i = 0; i < ref->function_definition.Size ; i++){
             
