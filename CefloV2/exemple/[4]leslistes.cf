@@ -1,0 +1,50 @@
+
+
+
+
+/*
+    la declaration d une liste est aussi simple
+*/
+
+
+var list = [] // une liste vide
+println(list) // ==> [ vide !]
+
+
+
+// declaration d une liste avec valeur
+
+var list1 = [1,2,"CeFlo"]
+println(list1) // ==> [ 1, 2, CeFlo]
+
+// println parcours toutes la liste et affiche les élements, il existe aussi une methode .print() pour afficher la liste
+
+
+// Ajouter un element à la liste
+
+list.append("Yann Ariel")
+println(list) // ==> [ Yann Ariel ]
+
+
+// on peut ajouter plusieur element à la liste
+
+list.append("Grace Carmen",16,'A')
+println(list) // ==> [ Yann Ariel , Grace Carmen , 16 , A ]
+
+
+
+// on peut modifier un élement de la liste
+
+list[0] = "Ariel"
+
+println(list) // ==> [ Ariel , Grace Carmen , 16 , A ]
+
+
+// avec plus de modification
+
+list[0][3] = 'E'
+println(list) // ==> [ AriEl , Grace Carmen , 16 , A ]
+
+
+
+

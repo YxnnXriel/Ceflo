@@ -1,0 +1,85 @@
+
+
+/*
+    la declaration d une structure se fait comme suite :
+*/
+
+
+struct maStructure {
+    var l
+}
+
+// simplement
+
+
+// avec la clé new, on peut crée une instance de structure
+var structure = new maStructure();
+
+
+/*
+    on peut crée un crée une fonction qui vas nous aider à initialiser les variables
+     de la structure un peu comme un constructeur 
+    ou
+    on peut directeement donner des valeurs par defaut. voici deux exemples de structure :
+*/
+
+// initialiser avec des valeur par default
+struct Personnage{
+    var Nom = "Tim"
+    var PointDeVie = 100
+    var Attack = 12
+    var Defense = 7
+}
+
+// avec "constructeur"
+
+struct Article{
+    var Nom_Article;
+    var Prix
+    var Qte
+
+
+    // la fonction __init__ sera appeler pour initialiser chaque variables
+    func __init__(nom,prix,qte){
+        Nom_Article = Nom_Article
+        Prix = prix
+        Qte = qte
+    }
+
+}
+
+
+var P1 = new Personnage(); // tous les champs de P1 seron par default tous les élement initialiser de base dans la structure Personnage
+
+var Art1 = new Article("Pomme de terre",1500,3); // le constructeur vas initialiser les valeurs avec les données passer en argument
+
+
+/*
+    Comment Afficher le tous ?
+    - vous pouvez definir une fonction qui sera appeler lors de l affichage
+    - vous pouvez afficher chaque valeur vous même en precisant sont attribut avec '.'
+    exemples :
+*/
+
+
+
+struct MaDeuxiemeStructure{
+    var T = "MaDeuxiemeStructure"
+
+    // elle sera appeler pour afficher la structure
+    func __str__(){
+        return T;
+    }
+}
+
+var t = new MaDeuxiemeStructure()
+
+
+println(t) // ==> MaDeuxiemeStructure
+
+
+println(Art1.Nom_Article) // ==> Pomme de terre
+
+
+
+

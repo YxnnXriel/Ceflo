@@ -18,6 +18,35 @@
 
 
 
+static void lexer_skip_comment(lexer_t *lex){
+    
+    while(1 && lex->current_char != '\0'){
+        if(lex->current_char == '\n'){
+            lexer_advance(lex);
+            break;
+        }
+        lexer_advance(lex);
+    }    
+}
+
+static void lexer_skip_block_comment(lexer_t *lex){
+    lexer_advance(lex);
+
+    while (1 && lex->current_char != '\0'){
+        if(lex->current_char == '*'){
+            lexer_advance(lex);
+            if(lex->current_char == '/'){
+                lexer_advance(lex);
+                break;
+            }
+
+        }
+            
+        lexer_advance(lex);
+    }
+}
+
+
 
 
 /**
@@ -333,6 +362,7 @@ void lexer_advance_skip_white_space(lexer_t *lexer){
 
 
 
+
 /**
  * @brief make sense of the current lexicon
  * 
@@ -347,6 +377,18 @@ token_t lexer_get_next_token(lexer_t *lexer){
 
         if(lexer->current_char == 10  || lexer->current_char == ' ' || lexer->current_char == '\t')
             lexer_advance_skip_white_space(lexer);
+
+
+        if(lexer->current_char == '/' && lexer_peek(lexer,'/'))
+            lexer_skip_comment(lexer);
+            
+
+        if(lexer->current_char == '/' && lexer_peek(lexer,'*')){
+            lexer_skip_block_comment(lexer);
+            lexer_advance(lexer);
+            continue;
+        }
+
 
         if(isdigit(lexer->current_char))    
             return lexer_collect_digit(lexer);

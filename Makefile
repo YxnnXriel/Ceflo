@@ -1,5 +1,6 @@
 
 CC = gcc
+CCC = i686-w64-mingw32-gcc
 EXEC = Ceflo
 FILE = test.cf
 DEBUG = -DDEBUG_CEFLO
@@ -16,6 +17,9 @@ $(EXEC):$(OBJ)
 cls :
 	-rm src/*.o
 	-rm $(EXEC)
+
+publish :
+	cp ./$(EXEC)  CefloV2/Linux
 
 test :
 	-make

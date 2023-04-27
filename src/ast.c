@@ -230,7 +230,7 @@ list_ast_t List_Ast_Cpy(list_ast_t *list){
     list_ast_t new;
     newList_Ast(&new);
 
-    for (int i = 0; i < list->size; i++){
+    for (int i = 0; i < (int)list->size; i++){
         List_Ast_Append(
             &new,List_Ast_Get(list,i)
         );
@@ -243,7 +243,7 @@ list_ast_t List_Ast_Cpy_Without_Index(list_ast_t * list , int index){
     list_ast_t new;
     newList_Ast(&new);
 
-    for (int i = 0; i < list->size; i++){
+    for (int i = 0; i < (int)list->size; i++){
         if(i != index){
             List_Ast_Append(
                 &new, ast_copy(List_Ast_Get(list,i),NULL)

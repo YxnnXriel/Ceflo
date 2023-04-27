@@ -1,0 +1,36 @@
+
+
+/*
+    pour a declaration des fonctions ou des procédure on utilises la clé func
+    NB : On ne peut retourner que une seul valeur
+
+*/
+
+
+// une procedure
+func hello(){
+    println("Hello !")
+}
+
+// appel de la procédure
+hello()
+
+
+// une fonction
+func return2(){
+    return '2';
+}
+
+
+println("la fonction return2 retourne : ",return2());
+
+
+func add(a,b){
+    return a+b;
+}
+
+println(add(1,2));
+
+// oui oui !!
+println(add("j'ai ",2) ," pains");
+

@@ -4,10 +4,12 @@
 
 
 
-void Clear_Ceflo(visitor_t * visitor , lexer_t * lexer){
+void Clear_Ceflo(struct VISITOR_STRUCT * visitor , lexer_t * lexer){
     
     while (visitor->global_scope->scope_parent != NULL){
-	    Clear_Ceflo(visitor->global_scope->scope_parent,NULL);
+        visitor_t vs;
+        vs.global_scope = visitor->global_scope->scope_parent;
+	    Clear_Ceflo(&vs,NULL);
     }
     if(visitor->global_scope->countScope != 0)
 	    freeScope(visitor->global_scope);
