@@ -33,6 +33,7 @@
  * - Fix Bug function call and List  - OK
  * - Fix Bug list access , new obj   - OK
  * - Fix lfunc type right            - OK
+ * - Fix Bug char from parser and lexer
  */
 
 
@@ -63,34 +64,6 @@ int main(int argc, char const *argv[]){
 		printf("./Ceflo [args]\n");
 		printf("file error\n");
 	}
-
-	// ResetFirstAst();
-	// ast_t * a = newAst(AST_NUMBER);
-	// a->value.as.numberValue = 1;
-
-	// ast_t * b = newAst(AST_NUMBER);
-	// b->value.as.numberValue = 2;
-	
-	// ast_t * c = newAst(AST_NUMBER);
-	// c->value.as.numberValue = 3;
-
-	// ast_t * d = newAst(AST_NUMBER);
-	// d->value.as.numberValue = 4;
-
-	// ast_t * e = newAst(AST_NUMBER);
-	// e->value.as.numberValue = 5;
-
-	// PrintAst();
-	// printf("_________________ \n");
-
-	// freeSingleAst(
-	// 	c
-	// );
-	// PrintAst();
-
-
-	// clearAst();
-
 
 
 
