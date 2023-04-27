@@ -38,6 +38,16 @@ void newLexer(lexer_t *lexer,const char* source){
 
 }
 
+void newLexerWithString(lexer_t * lexer,const char *source){
+    lexer->fileCode = calloc(strlen(source)+1,sizeof(char));
+    strcpy(lexer->fileCode,source);
+    lexer->lenght_file_code = strlen(lexer->fileCode);
+    lexer->fileName = new_String(source);
+    lexer->line = 1;
+    lexer->colone = 1;
+    lexer->index = 0;
+    lexer->current_char = lexer->fileCode[lexer->index];
+}
 
 
 
@@ -199,7 +209,7 @@ token_t lexer_collect_id(lexer_t *lexer){
 
     int initiale = lexer->index;
 
-    while (isalnum(lexer->current_char)){
+    while (isalnum(lexer->current_char) || lexer->current_char == '_'){
         lexer_advance(lexer);
     }
 

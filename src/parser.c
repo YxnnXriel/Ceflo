@@ -364,15 +364,12 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
 
     // current token :
-    
-    if(parser->current.type == TOKEN_LPARENT){
-        //.... maybe the declaration is a function call 
-        return parser_parse_function_call(parser,scope);
-    }
+    int is_lbrace_and_function_call = 0;
+
 
     if(parser->current.type == TOKEN_LBRACE){
         //...., maybe the declaration is a list : access or assignement
-
+        is_lbrace_and_function_call = 1;
         while (parser->current.type == TOKEN_LBRACE){
         
             ast_t * list_acces = newAstWithLine(AST_LIST_ACCESS,parser->lexer->line,parser->lexer->colone);
@@ -403,6 +400,15 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
             return list_assign;
         }
 
+    }
+
+    if(parser->current.type == TOKEN_LPARENT){
+        //.... maybe the declaration is a function call 
+        if(is_lbrace_and_function_call){
+            return parser_parse_function_call_With_Name(variable,parser,scope);
+        }
+        else
+            return parser_parse_function_call(parser,scope);
     }
 
     if(parser->current.type == TOKEN_DOT){
@@ -582,6 +588,30 @@ ast_t *parser_parse_function_call(parser_t *parser , scope_t * scope){
     return function;
 }
 
+ast_t *parser_parse_function_call_With_Name(ast_t * prev,parser_t *parser , scope_t * scope){
+
+    ast_t *function = newAstWithLine(AST_FUNCTION_CALL,parser->lexer->line,parser->lexer->colone);
+
+    function->countScope = GetScope();
+    function->left = prev;
+    parser_eat(TOKEN_LPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+    newList_Ast(&function->function_call_args);
+    if(parser->current.type != TOKEN_RPARENT){
+        ast_t * arg = parser_parse_expr(parser,scope);
+        List_Ast_Append(&function->function_call_args,arg);
+
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TOKEN_COMA,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+            arg = parser_parse_expr(parser,scope);
+            List_Ast_Append(&function->function_call_args,arg);
+        }
+    }
+
+    parser_eat(TOKEN_RPARENT,SYNTAX_ERROR," %s inconnue \n",parser->current.value);
+
+    function->scope = scope;
+    return function;
+}
 
 
 

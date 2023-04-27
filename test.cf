@@ -1,15 +1,19 @@
 
+struct structYann{
+    var List = [lfunc(){return "Yann Ariel"},lfunc(){return 21}]
 
-var t = lfunc(a){
-
-    if a == 1{
-        return "Ariel"
+    func __str__(){
+        return "Yann Ariel";
     }
-    
-    return "Axel"
-};
+    func getFunction(n){
+        return List[n];
+    }
+}
 
 
-var t = "Yann " + t(1) ;
+var variable = new structYann();
 
-println(t);
+var f = variable.getFunction(0)
+
+println(f())
+

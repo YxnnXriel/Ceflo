@@ -44,7 +44,7 @@ char * lexer_make_as_string(lexer_t *lexer);
 
 
 int lexerFree(lexer_t *lexer);
-
+void newLexerWithString(lexer_t * lexer,const char *source);
 
 
 

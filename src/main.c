@@ -12,6 +12,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 
 #include "include/lexer.h"
 #include "include/token.h"
@@ -19,6 +21,8 @@
 #include "include/ast.h"
 #include "include/visitor.h"
 #include "include/clear.h"
+
+#include <unistd.h>
 
 
 /**
@@ -28,33 +32,31 @@
  * - Bien d'autre
  * - Fix Bug function call and List  - OK
  * - Fix Bug list access , new obj   - OK
- * - Fix lfunc type right
+ * - Fix lfunc type right            - OK
  */
+
+
 
 int main(int argc, char const *argv[]){
 
 	if(argc >= 2){
-		lexer_t lexer;
 
-		newLexer(&lexer,argv[1]);
-
-		ast_t *node = parser_parse(&lexer);
-
-		visitor_t visitor;
-		newVisitor(&visitor);
-		newGb();
 		
-		visitor.global_scope->countScope = 0;
-
-		visitor_visit(&visitor,node);
-
-		// freeVsisitorGB();
-		// clearAst();
-		// freeScope(visitor.global_scope);
+			lexer_t lexer;
+			newLexer(&lexer,argv[1]);
+			ast_t *node = parser_parse(&lexer);
+			visitor_t visitor;
+			newVisitor(&visitor);
+			newGb();
+			visitor.global_scope->countScope = 0;
+			visitor_visit(&visitor,node);
+			// freeVsisitorGB();
+			// clearAst();
+			// freeScope(visitor.global_scope);
+			
+			// lexerFree(&lexer);
+			Clear_Ceflo(&visitor,&lexer);
 		
-		// lexerFree(&lexer);
-		Clear_Ceflo(&visitor,&lexer);
-
 
 	}else{
 		printf("[CEFLO]\n");

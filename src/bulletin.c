@@ -22,7 +22,8 @@ ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args )
 
 
 ast_t *bulletin_switch_function(visitor_t * visitor , ast_t *node , list_ast_t *args){
-
+    if(node->function_call_name == NULL)
+        return NULL;
     const char * function_name = node->function_call_name;
 
     for (int i = 0; i < BULLETIN_LIST_COUNT -1; i++)

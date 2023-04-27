@@ -881,21 +881,31 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
 ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     // printf("ICI %s\n",node->function_call_name);
-
-
     ast_t * res = bulletin_switch_function(
         visitor,node,
         &node->function_call_args
     );
 
+
     if(res != NULL){
         return res;
     }
 
-    ast_t * functionDef = scope_get_function_definition(
-        visitor->global_scope,
-        node->function_call_name
-    );
+    ast_t * functionDef = NULL;
+
+    if(node->left != NULL){
+        functionDef = visitor_visit(visitor,node->left);
+    } 
+
+    if(functionDef != NULL && functionDef->type == AST_LFUNC){
+        functionDef = functionDef->value.as.lfuncValue;
+    }
+
+    if(functionDef == NULL)
+        functionDef =  scope_get_function_definition(
+            visitor->global_scope,
+            node->function_call_name
+        );
     
 
     if(functionDef == NULL){

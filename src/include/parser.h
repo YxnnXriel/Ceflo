@@ -64,6 +64,7 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope);
 
 
 ast_t *parser_parse_lfunc(parser_t *parser , scope_t * scope);
+ast_t *parser_parse_function_call_With_Name(ast_t * prev,parser_t *parser , scope_t * scope);
 
 
 #endif
