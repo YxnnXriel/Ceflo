@@ -3,7 +3,7 @@
 
 
 /*
-    la declaration d une structure se fait comme suite :
+    La déclaration d une structure se fait comme suite :
 */
 
 
@@ -11,10 +11,10 @@ struct maStructure {
     var l
 }
 
-// simplement
+// simplement !!
 
 
-// avec la clé new, on peut crée une instance de structure
+// Avec la clé new, on peut créer une instance de structure
 var structure = new maStructure();
 
 
@@ -22,13 +22,12 @@ var structure = new maStructure();
 
 
 /*
-    on peut crée un crée une fonction qui vas nous aider à initialiser les variables
-     de la structure un peu comme un constructeur 
-    ou
-    on peut directeement donner des valeurs par defaut. voici deux exemples de structure :
+    On peut créer un crée une fonction qui va nous aider à initialiser les variables 
+    de la structure un peu comme un constructeur ou on peut directement donner des valeurs par défaut.
+    Voici deux exemples de structure :
 */
 
-// initialiser avec des valeur par default
+// Initialiser avec des valeurs par défaut
 struct Personnage{
     var Nom = "Tim"
     var PointDeVie = 100
@@ -44,7 +43,7 @@ struct Article{
     var Qte
 
 
-    // la fonction __init__ sera appeler pour initialiser chaque variables
+    // la fonction __init__ sera appeler pour initialiser chaque variable
     func __init__(nom,prix,qte){
         Nom_Article = Nom_Article
         Prix = prix
@@ -54,9 +53,9 @@ struct Article{
 }
 
 
-var P1 = new Personnage(); // tous les champs de P1 seron par default tous les élement initialiser de base dans la structure Personnage
+var P1 = new Personnage(); // Tous les champs de P1 seront par défaut tous les éléments initialisés de base dans la structure Personnage.
 
-var Art1 = new Article("Pomme de terre",1500,3); // le constructeur vas initialiser les valeurs avec les données passer en argument
+var Art1 = new Article("Pomme de terre",1500,3); // Le constructeur va initialiser les valeurs avec les données passées en argument.
 
 
 
@@ -66,9 +65,9 @@ var Art1 = new Article("Pomme de terre",1500,3); // le constructeur vas initiali
 
 
 /*
-    Comment Afficher le tous ?
-    - vous pouvez definir une fonction qui sera appeler lors de l affichage
-    - vous pouvez afficher chaque valeur vous même en precisant sont attribut avec '.'
+    Comment afficher le tous ?
+- vous pouvez définir une fonction qui sera appelée lors de l affichage
+- vous pouvez afficher chaque valeur vous-même en précisant son attribut avec '.'
     exemples :
 */
 
@@ -77,7 +76,7 @@ var Art1 = new Article("Pomme de terre",1500,3); // le constructeur vas initiali
 struct MaDeuxiemeStructure{
     var T = "MaDeuxiemeStructure"
 
-    // elle sera appeler pour afficher la structure
+    // Elle sera appelée pour afficher la structure
     func __str__(){
         return T;
     }

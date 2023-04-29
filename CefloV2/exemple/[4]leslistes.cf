@@ -4,9 +4,9 @@
 
 
 /*
-    Dans chaque langage de programation , les tableau nous offres la possibilité d avoir des valeurs enregistrer de maniiere contigue.
-    CeFloV2 n est pas equiper de cela, mais il a une autre structure de donner qui peut palier se probleme , je parles des 'listes'.
-    les listes peuvent enregistrer n importe quel type de donner, je vous laisse le voir par vous même :
+    Dans chaque langage de programmation , les tableaux nous offrent la possibilité d avoir des valeurs enregistrées de manière contiguë.
+    CeFloV2 n est pas équipé de cela, mais il a une autre structure de données qui peut pallier ce problème , je parle des « listes ».
+    Les listes peuvent enregistrer n importe quel type de données, je vous laisse le voir par vous-même :
     NB : une liste est un type dans Ceflov2.
 */
 
@@ -21,7 +21,7 @@ println(list) // ==> [ vide !]
 var list1 = [1,2,"CeFlo"]
 println(list1) // ==> [ 1, 2, CeFlo]
 
-// println parcours toutes la liste et affiche les élements, il existe aussi une methode .print() pour afficher la liste
+// println parcours toute la liste et affiche les éléments, il existe aussi une méthode .print() pour afficher la liste
 
 
 // Ajouter un element à la liste
@@ -30,7 +30,7 @@ list.append("Yann Ariel")
 println(list) // ==> [ Yann Ariel ]
 
 
-// on peut ajouter plusieur element à la liste
+// On peut ajouter plusieurs éléments à la liste.
 
 list.append("Grace Carmen",16,'A')
 println(list) // ==> [ Yann Ariel , Grace Carmen , 16 , A ]
@@ -44,7 +44,7 @@ list[0] = "Ariel"
 println(list) // ==> [ Ariel , Grace Carmen , 16 , A ]
 
 
-// avec plus de modification
+// avec plus de modifications
 
 list[0][3] = 'E'
 println(list) // ==> [ AriEl , Grace Carmen , 16 , A ]

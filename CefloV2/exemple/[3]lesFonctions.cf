@@ -3,8 +3,8 @@
 
 /*
 
-    comme pour les variables, les fonction peuvent retourner n importe qu elle valeur (des mise à jour seront disponible pour gerer les donners).
-    Voici des exemples de declaration de fonctions et d appel de fonction :
+    Comme pour les variables, les fonctions peuvent retourner n importe quelle valeur (des mises à jour seront disponibles pour gérer les données).
+    Voici des exemples de déclaration de fonctions et d appel de fonction :
 */
 
 
@@ -33,5 +33,5 @@ func add(a,b){
 println(add(1,2));
 
 // oui oui !!
-println(add("j'ai ",2) ," pains");
+println(add("j'ai ",2) ," pains"); //  ==>  j'ai 2 pains
 

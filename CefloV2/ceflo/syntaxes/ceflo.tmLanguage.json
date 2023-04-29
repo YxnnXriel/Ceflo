@@ -1,0 +1,108 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "CeFlo v2",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#reserved-words"
+		},{
+			"include": "#operators"
+		},
+		{
+			"include": "#Nombre"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+			{
+				"name": "keyword.control.untitled.ceflo",
+				"match": "\\b(if|else|while|for|return|break|continue|var|func)\\b"
+			},
+			{
+				"name" : "keyword.operator.new.ceflo",
+				"match": "\\b(new|bool|char|int|float|str|lfunc)\\b"
+			},
+			{
+				"name" : "keyword.operator.ceflo",
+				"match": "\\b(and|or)\\b"
+			},
+			{
+				"name" : "constant.language.ceflo",
+				"match": "\\b(true|false|none)\\b"
+			},
+			{
+				"name": "keyword.control.import.ceflo",
+				"match": "\\b(include|from)\\b"
+			},
+			{
+				"name": "keyword.ceflo",
+				"match": "\\b(struct)\\b"
+			}
+		]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.ceflo",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"name": "constant.character.escape.ceflo",
+							"match": "\\."
+						}
+					]
+				},
+				{
+					"name" : "string.quoted.single.ceflo",
+					"begin": "'",
+					"end": "'",
+					"patterns": [
+						{
+							"name": "constant.character.escape.ceflo",
+							"match": "\\."
+						}
+					]
+				}
+			]
+		},
+		"reserved-words" :{
+			"patterns": [
+			{
+				"name":"entity.name.function.member.ceflo",
+				"match": "\\b(println|print|getline|Append)\\b"
+			}
+		]
+		},
+		"operators":{
+			"patterns": [
+				{
+					"match": "%=|\\+=|-=|\\*=|(?<!\\()/=",
+					"name":"keyword.operator.ceflo"
+				},
+				{
+					"match": "!=|<=|>=|==|<|>",
+					"name":"keyword.operator.ceflo"
+				},{
+					"match": "&&|::|@",
+					"name":"keyword.operator.ceflo"
+				},{
+					"match": "%|\\*|/|-|\\+",
+					"name":"keyword.operator.ceflo"
+				}
+				
+			]
+		},
+		"Nombre": {
+			"name": "constant.numeric.ceflo",
+			"match": "\\b[\\d]+\\b"
+		}
+	},
+	"scopeName": "source.cf"
+}

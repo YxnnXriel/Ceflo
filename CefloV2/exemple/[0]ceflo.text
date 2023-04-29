@@ -3,13 +3,16 @@
 
                     ============================ CeFlo v2 ====================================
 
-Ceflo v2 est un langage de programation écrite en C. c'est un langage interpreter qui à un garbage collector et qui utilise des techniques d'interpretation rapide.
-Il est simple à apprendre et il reprend un peut la syntaxe du JavaScript. Il a peut de bibliotheque puisque CeFloV2 est
-encore en developpement, des mises à jour serons publié chaque semaine.
+Ceflo v2 est un langage de programmation écrite en C., C'est un langage interprété qui à un garbage collector et qui utilise des techniques d'interprétation rapide.
 
-ils resident encore quelque beug mais il seront traiter au fil du temps. Avant de pouvoir l'essayer je vous prie de vouloir regarder des exemples rapides à savoir.
+Il est simple à apprendre et il reprend un peu la syntaxe du JavaScript. Il a peu de bibliothèques puisque CeFloV2 est encore en developpement, des mises à jour serons publié chaque semaine.
 
-les exemples proposé serons des exemples de base que chaque langage de programation dispose. les élements avancé seront étaler (il sont déja présent pour certain)
-quand nous allons juger bon de leurs fiabilité.
 
-Merci. 
+Ils résident encore dans quelques bugs, mais ils seront traités au fil du temps. Avant de pouvoir l'essayer, je vous prie de vouloir regarder des exemples rapides à savoir.
+
+Les exemples proposés seront des exemples de base que chaque langage de programmation dispose. Les éléments avancés seront étalés. (il sont déja présent pour certain)
+
+Quand nous allons juger bon de leurs fiabilités.
+
+
+Merci.
