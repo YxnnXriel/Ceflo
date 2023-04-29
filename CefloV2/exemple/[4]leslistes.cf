@@ -1,9 +1,13 @@
 
+//                                                                  CEFLOv2
 
 
 
 /*
-    la declaration d une liste est aussi simple
+    Dans chaque langage de programation , les tableau nous offres la possibilité d avoir des valeurs enregistrer de maniiere contigue.
+    CeFloV2 n est pas equiper de cela, mais il a une autre structure de donner qui peut palier se probleme , je parles des 'listes'.
+    les listes peuvent enregistrer n importe quel type de donner, je vous laisse le voir par vous même :
+    NB : une liste est un type dans Ceflov2.
 */
 
 

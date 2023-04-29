@@ -1,9 +1,10 @@
+//                                                                  CEFLOv2
 
 
 /*
-    pour a declaration des fonctions ou des procédure on utilises la clé func
-    NB : On ne peut retourner que une seul valeur
 
+    comme pour les variables, les fonction peuvent retourner n importe qu elle valeur (des mise à jour seront disponible pour gerer les donners).
+    Voici des exemples de declaration de fonctions et d appel de fonction :
 */
 
 

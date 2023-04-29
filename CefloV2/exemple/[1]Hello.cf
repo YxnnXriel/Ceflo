@@ -1,6 +1,9 @@
 
 /*
-    trqll
+    Tranquille, la fonction main sera proposé en alternative mais il n est pas disponible pour cette version de CeFlo. 
 */ 
+
+
+// NB : vous pouvez ajouter des ';' à la fin des declarations, ça marche vu que sont créateur fait partie de la sainte paroisse du langage C.
 
 println("Hi Mom !")

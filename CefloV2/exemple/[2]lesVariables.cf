@@ -1,9 +1,11 @@
 
+//                                                                  CEFLOv2
+
 
 /*
-    Pour declarer les variables on utilise la clé var suivie du nom de la variable
-    NB: Ceflo est fortement typé c-a-d le variable peut prendre tous les types supporter
-    par CeFlo.
+    Petit rappel , CeFlo est fortement typé donc chaque variable ne se soucis pas du type qu il 
+    peut prendre. voici des exemples de declaration de variable :
+
 */
 
 

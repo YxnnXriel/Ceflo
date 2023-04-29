@@ -20,6 +20,8 @@ cls :
 
 publish :
 	cp ./$(EXEC)  CefloV2/Linux
+	cp ./$(EXEC).exe  CefloV2/Win
+
 
 test :
 	-make

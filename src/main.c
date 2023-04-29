@@ -30,10 +30,10 @@
  * - Faire les attributs et les fonction d'une liste   - OK
  * - Ajouter un dictionnaire(si c'est possible)
  * - Bien d'autre
- * - Fix Bug function call and List  - OK
- * - Fix Bug list access , new obj   - OK
- * - Fix lfunc type right            - OK
- * - Fix Bug char from parser and lexer
+ * - Fix Bug function call and List  		- OK
+ * - Fix Bug list access , new obj   		- OK
+ * - Fix lfunc type right            		- OK
+ * - Fix Bug char from parser and lexer		- OK
  */
 
 

@@ -327,13 +327,17 @@ token_t lexer_collect_string(lexer_t *lexer){
 token_t lexer_collect_char(lexer_t *lexer){
     lexer_advance(lexer);
 
-    int initial = lexer->index;
+    char *value = calloc(1,sizeof(char));
+    value[0] = '\0';
 
     while (lexer->current_char != '\''){
+        char *s = lexer_make_as_string(lexer);
+        value = realloc(value , (strlen(s) + strlen(value) + 1) * sizeof(char));
+        strcat(value,s);
+        free(s);    
         lexer_advance(lexer);
     }
 
-    char *value = lexer_get_value(lexer,initial);
     lexer_advance(lexer);
     
 

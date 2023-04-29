@@ -1,4 +1,6 @@
 
+//                                                                  CEFLOv2
+
 
 /*
     la declaration d une structure se fait comme suite :
@@ -14,6 +16,9 @@ struct maStructure {
 
 // avec la clé new, on peut crée une instance de structure
 var structure = new maStructure();
+
+
+
 
 
 /*
@@ -52,6 +57,12 @@ struct Article{
 var P1 = new Personnage(); // tous les champs de P1 seron par default tous les élement initialiser de base dans la structure Personnage
 
 var Art1 = new Article("Pomme de terre",1500,3); // le constructeur vas initialiser les valeurs avec les données passer en argument
+
+
+
+
+
+
 
 
 /*
