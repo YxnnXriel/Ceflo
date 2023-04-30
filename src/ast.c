@@ -262,6 +262,7 @@ list_ast_t List_Ast_Cpy_Without_Index(list_ast_t * list , int index){
  */
 void newObject(Obj_t * object){
     object->self = NULL;
+    object->obj_name = NULL;
 }
 
 
@@ -373,7 +374,10 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
             case AST_LIST: printlist(value,visitor);break;
             case AST_OBJ:{
                 if(printObj(value) == false){
-                    printf("obj:<%p>",(void *)value);
+                    printf("obj");
+                    if(value->value.as.ObjectValue.obj_name != NULL)
+                        printf("(%s)",value->value.as.ObjectValue.obj_name);
+                    printf(":<%p>",(void *)value);
                 }
             }break;
             default:
@@ -535,6 +539,10 @@ void freeAst(ast_t *node){
         freeScope(
             node->value.as.ObjectValue.self
         );
+
+        if( node->value.as.ObjectValue.obj_name != NULL){
+            free(node->value.as.ObjectValue.obj_name);
+        }
     }
 
     if(node->type == AST_LIST){
@@ -782,6 +790,10 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
         newObject(&a->value.as.ObjectValue);
         Obj_t *obj = &a->value.as.ObjectValue;
         obj->self = newScope();
+        
+        if(ast->value.as.ObjectValue.obj_name != NULL){
+            allowChar(&a->value.as.ObjectValue.obj_name,ast->value.as.ObjectValue.obj_name);
+        }
         
         scope_cpy_with_scope(
             obj->self,

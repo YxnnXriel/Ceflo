@@ -81,6 +81,7 @@ typedef struct LIST_AST_STRUCT{
 }list_ast_t;
 
 typedef struct OBJECT_STRUCT {
+    char *obj_name;
     struct SCOPE_STRUCT *self;
 }Obj_t;
 

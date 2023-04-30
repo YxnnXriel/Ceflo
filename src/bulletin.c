@@ -21,6 +21,20 @@ ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args )
 }
 
 
+ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args ){
+
+    for (int i = 0; i < (int) args->size; i++){
+        ast_t * child = List_Ast_Get(args,i);
+        child = visitor_visit(visitor,child);
+        printf("%p",(void*)child);
+    }
+
+    printf("\n");
+
+    return node;
+
+}
+
 ast_t *bulletin_switch_function(visitor_t * visitor , ast_t *node , list_ast_t *args){
     if(node->function_call_name == NULL)
         return NULL;

@@ -542,6 +542,7 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     Obj_t * newObj = &obj->value.as.ObjectValue;
     newObj->self = newScope();
     newObj->self->countScope = node->countScope;
+    allowChar(&newObj->obj_name,node->function_call_name);
     obj->countScope = node->countScope;
 
 

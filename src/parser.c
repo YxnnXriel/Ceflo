@@ -1141,6 +1141,55 @@ ast_t *parser_parse_list(parser_t *parser , scope_t *scope){
 
 
 
+static ast_t * parser_parse_struct_definition_inline(ast_t * ast_struct , parser_t * parser , scope_t *scope){
+
+    if(parser->current.type != TOKEN_SEMI){
+
+        ast_t *item = parser_parse_statment(parser,scope);
+        if(item->type != AST_NOOP){
+            if(!isInClassDefinition(item) ){
+                Print_error(
+                    parser->lexer,
+                    "StructDefError: %s n'est pas permis dans la definition d'une structure\n",
+                    AST_TO_STRING[item->type]
+                );
+                exit(1);
+            }
+            List_Append(
+                ast_struct->struct_definition_item,
+                item
+            );
+        }
+
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TOKEN_COMA,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+            item = parser_parse_statment(parser,scope);
+
+            if(item->type != AST_NOOP){
+                if(!isInClassDefinition(item)){
+                    Print_error(
+                        parser->lexer,
+                        "StructDefError: %s n'est pas permis dans la definition d'une structure\n",
+                        AST_TO_STRING[item->type]
+                    );
+                    exit(1);
+                }
+                List_Append(
+                    ast_struct->struct_definition_item,
+                    item
+                );
+            }
+        }
+
+    }
+
+    parser_eat(TOKEN_SEMI,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+
+    return ast_struct;
+}
+
+
+
 /**
  * @brief for definition structure KEYWORD, I try to analyze it
  * 
@@ -1156,6 +1205,12 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
     parser_eat(TOKEN_ID,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
 
     ast_struct->struct_definition_item = __init__list__(sizeof(ast_t*));
+
+    if(parser->current.type == TOKEN_ARROW){
+        parser_eat(TOKEN_ARROW,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        return parser_parse_struct_definition_inline(ast_struct,parser,scope);
+    }
+
     parser_eat(TOKEN_LBRACKET,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
 
     
@@ -1204,3 +1259,4 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
     return ast_struct;
 
 }
+
