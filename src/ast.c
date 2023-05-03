@@ -417,7 +417,6 @@ void modifValue(ast_t ** ref , ast_t * new){
         value->type = AST_OBJ;
 
 
-
         if(new->is_new_obj)
             new->is_new_obj = false;
         

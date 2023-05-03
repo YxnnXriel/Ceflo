@@ -2,18 +2,13 @@
 
 
 // NEW !!
-struct Personne -> var Nom = "Yann",
-var Prenom = "Ariel";
 
-struct Policier {
-    var ident
-    var grade;
-    func __init__(){
-        ident = new Personne();
-        grade = 1;
-    }
 
-}
+struct Personne -> 
+    var Nom = "Yann",
+    var Prenom = "Ariel";
+
+
 
 var p1 = new Personne();
 

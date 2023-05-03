@@ -25,7 +25,7 @@
 
 
 
-#define CEFLO_GB 0
+#define CEFLO_GB 1
 
 // this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{

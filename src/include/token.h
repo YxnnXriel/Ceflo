@@ -14,6 +14,8 @@
                 #ifndef __TOKEN_H__
                 #define __TOKEN_H__
 
+                #include "common.h"
+
 
 typedef enum{
         TOKEN_ID, // value
@@ -79,8 +81,8 @@ typedef struct{
     char * value;
 }token_t;
 
+#define AS_TOKEN(ty,val) ((token_t){.type = ty,.value = val})
 
-#define AS_TOKEN(ty,val) ((token_t){.type = ty,.value = val })
 
 
 static const char *TOKEN_TO_STRING[]={

@@ -383,8 +383,10 @@ token_t lexer_get_next_token(lexer_t *lexer){
             lexer_advance_skip_white_space(lexer);
 
 
-        if(lexer->current_char == '/' && lexer_peek(lexer,'/'))
+        if(lexer->current_char == '/' && lexer_peek(lexer,'/')){
             lexer_skip_comment(lexer);
+            continue;
+        }
             
 
         if(lexer->current_char == '/' && lexer_peek(lexer,'*')){

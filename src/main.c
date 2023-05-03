@@ -39,6 +39,7 @@
 
 
 int main(int argc, char const *argv[]){
+	
 
 	if(argc >= 2){
 
@@ -66,6 +67,12 @@ int main(int argc, char const *argv[]){
 	}
 
 
+    // memcpy(value,&lexer->fileCode[initiale],lenght);
+
+
+	// char *chaine = "yann Ariel";
+
+	// printf("%d \n",memcmp("Areel",&chaine[5],5) == 0);
 
 	return 0;
 }
