@@ -156,6 +156,7 @@ int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
         );
         va_end(args);
         freeToken(&parser->prev);
+        freeToken(&parser->current);
         Clear_Ceflo_Parser(parser->lexer);
         exit(1);
     }

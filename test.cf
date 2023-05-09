@@ -1,16 +1,14 @@
 
 
 
-// NEW !!
-
-
-struct Personne -> 
-    var Nom = "Yann",
-    var Prenom = "Ariel";
-
+struct Personne -> func __init__(nom,prenom){
+    Nom = nom
+    Prenom = prenom
+},var Nom , var Prenom;
 
 
 var p1 = new Personne();
 
 
 println(p1);
+

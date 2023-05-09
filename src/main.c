@@ -34,9 +34,11 @@
  * - Fix Bug list access , new obj   		- OK
  * - Fix lfunc type right            		- OK
  * - Fix Bug char from parser and lexer		- OK
- */
+ * - Rewrite clean all
+ */ 
 
 
+lexer_t lexer;
 
 int main(int argc, char const *argv[]){
 	
@@ -44,7 +46,6 @@ int main(int argc, char const *argv[]){
 	if(argc >= 2){
 
 		
-			lexer_t lexer;
 			newLexer(&lexer,argv[1]);
 			ast_t *node = parser_parse(&lexer);
 			visitor_t visitor;

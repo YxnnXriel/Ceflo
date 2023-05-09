@@ -27,6 +27,7 @@
 
 #define CEFLO_GB 1
 
+
 // this structure is for cleanning function call statement(coumpound)
 typedef struct GARBAGE_FUNCTION_STRUCT{
     scope_t *sScope;
@@ -35,6 +36,7 @@ typedef struct GARBAGE_FUNCTION_STRUCT{
 }Gb_t;
 
 static Gb_t *gg;
+extern lexer_t lexer;
 
 static bool visitor_error;
 static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
@@ -550,7 +552,6 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     newObj->self->scope_parent = visitor->global_scope;
     newVisitorWithScope(&vs,newObj->self);
 
-
     ast_t * init = NULL;
     
     for (int i = 0; i < structDef->struct_definition_item->Size; i++){
@@ -573,10 +574,15 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
         free(node->function_call_name);
         allowChar(&node->function_call_name,"__init__");
         node->type = AST_FUNCTION_CALL;
-        visitor_visit(
+        ast_t *val = visitor_visit(
             &vs,
             node
         );
+
+
+        if(val == NULL)
+            return val;
+        
 
     }
 
@@ -954,9 +960,9 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         freeScope(newscope);
         freeSingleAst(newFunction);
         Clear_Ceflo(visitor,NULL);
+        lexerFree(&lexer);
         clearAst();
         exit(1);
-        
     }
 
     for (int i = 0; i < (int) node->function_call_args.size; i++){
