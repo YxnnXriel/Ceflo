@@ -659,8 +659,8 @@ ast_t *parser_parse_number(parser_t *parser , scope_t * scope){
 ast_t *parser_parse_char(parser_t *parser , scope_t * scope){
     ast_t * ast_char = newAstWithLine(AST_CHAR,parser->lexer->line,parser->lexer->colone);
     
-    if(strlen(parser->current.value) != 1){
-        parser_eat(TOKEN_EOF,CHAR_ERROR," %s.lenght >= 1 \n",parser->current.value);
+    if(strlen(parser->current.value) > 1){
+        parser_eat(TOKEN_EOF,CHAR_ERROR," %s.lenght > 1 \n",parser->current.value);
     }
 
     newValue(&ast_char->value,CHAR);

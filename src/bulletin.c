@@ -21,6 +21,23 @@ ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args )
 }
 
 
+ast_t * bulletin_input(visitor_t * visitor , ast_t * node , list_ast_t *args ){
+    bulletin_println(visitor,node,args);
+
+    char buffer[BUFSIZ];
+    fgets(buffer,BUFSIZ-1,stdin);
+
+    buffer[strlen(buffer)-1] = '\0';
+    fflush(stdin);
+
+    ast_t *string = newAst(AST_STRING);
+    string->value.as.stringValue = new_String(buffer);
+
+    return string;
+
+}
+
+
 ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
     for (int i = 0; i < (int) args->size; i++){

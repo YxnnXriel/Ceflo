@@ -1312,12 +1312,24 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                         switch (op->type){
                             case TOKEN_PLUS :value->value.as.stringValue = String_cat("%s%g",left->value.as.stringValue->str,right->value.as.numberValue);break;
                             case TOKEN_MULT :{
-                                listString_t * list = new_ListString();
-                                for (int i = 0; i < right->value.as.numberValue; i++){
-                                    ListString_Append(list,left->value.as.stringValue->str);
+                                if(right->value.as.numberValue <= 0){
+                                    Print_visitor_error(
+                                        right->line,
+                                        right->colone,
+                                        "./Ceflo",
+                                        " ...* %g pas pris en charge \n",
+                                        right->value.as.numberValue
+                                    );
+                                    Clear_Ceflo(&lexer);
+                                    visitor_error = true;
+                                    exit(visitor_error);
                                 }
-                                value->value.as.stringValue = String_Remont(list,NULL);
-                                ListString_Clear(list);
+                                char *chaine = calloc(strlen(left->value.as.stringValue->str)*right->value.as.numberValue,sizeof(char*));
+                                for (int i = 0; i < right->value.as.numberValue; i++)
+                                    strcat(chaine,left->value.as.stringValue->str);
+
+                                value->value.as.stringValue = new_String(chaine);
+                                free(chaine);
                             }
                                 break;
                         }

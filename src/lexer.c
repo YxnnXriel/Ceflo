@@ -338,6 +338,7 @@ token_t lexer_collect_char(lexer_t *lexer){
         lexer_advance(lexer);
     }
 
+
     lexer_advance(lexer);
     
 
@@ -542,9 +543,9 @@ static char lexer_peek_retour(lexer_t *lex){
         if(lex->current_char == '\\' && lexer_peek(lex,'b')) return '\b';
         if(lex->current_char == '\\' && lexer_peek(lex,'t')) return '\t';
         if(lex->current_char == '\\' && lexer_peek(lex,'t')) return '\\';
+        if(lex->current_char == '\\' && lexer_peek(lex,'0')) return '\0';
         if(lex->current_char == '\\' && lexer_peek(lex,'"')) return '\"';
         if(lex->current_char == '\\' && lexer_peek(lex,'\'')) return '\'';
-
 
     }
 
@@ -562,11 +563,13 @@ static char lexer_peek_retour(lexer_t *lex){
  * @return char* 
  */
 char * lexer_make_as_string(lexer_t *lexer){
+
     char *chaine = calloc(2 ,sizeof(char*));
 
     char l = lexer_peek_retour(lexer);
-    if(l != -1)
+    if(l != -1){
         lexer_advance(lexer);
+    }
 
     chaine[0] = l != -1 ? l:lexer->current_char;
     chaine[1] = '\0';

@@ -1,19 +1,15 @@
 
 
 
+struct Personne ->
+    var Nom = input("Ton Nom : "),
+    var Prenom = input("Ton Prenom : "),
+    func __str__(){
+        return Nom + " " + Prenom
+    };
 
-struct Personne {
-
-    var Nom
-    var Prenom
-
-    func __init__(nom,prenom){
-        Nom = nom
-        Prenom = prenom
-    }
-
-}
+var  p = new Personne();
+var a = new Personne();
 
 
-
-var  p = new Personne("Yann","Ariel",21);
+println(p," et ",a);
