@@ -22,6 +22,8 @@ typedef struct VISITOR_STRUCT{
 }visitor_t;
 
 void newVisitor(visitor_t * visitor);
+void freeVisitor(visitor_t *visitor);
+void freeLvisitor(void *x);
 
 void visitor_Sweep_value(visitor_t *visitor);
 void visitor_append_value(visitor_t * visitor , ast_t * value);
@@ -53,6 +55,6 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node);
 
 void newGb();
 ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args);
-void freeVsisitorGB();
+// void freeVsisitorGB();
 
 #endif

@@ -34,7 +34,7 @@
  * - Fix Bug list access , new obj   		- OK
  * - Fix lfunc type right            		- OK
  * - Fix Bug char from parser and lexer		- OK
- * - Rewrite clean all
+ * - Rewrite clean all						- OK
  */ 
 
 
@@ -52,13 +52,16 @@ int main(int argc, char const *argv[]){
 			newVisitor(&visitor);
 			newGb();
 			visitor.global_scope->countScope = 0;
+			clear_ceflo_push(
+				&visitor
+			);
 			visitor_visit(&visitor,node);
 			// freeVsisitorGB();
 			// clearAst();
 			// freeScope(visitor.global_scope);
 			
 			// lexerFree(&lexer);
-			Clear_Ceflo(&visitor,&lexer);
+			Clear_Ceflo(&lexer);
 		
 
 	}else{

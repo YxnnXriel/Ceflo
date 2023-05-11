@@ -21,6 +21,7 @@ typedef struct SCOPE_STRUCT{
 
 scope_t* newScope();
 void freeScope(scope_t * scope);
+void freeLscope(void *x);
 
 ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef);
 void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value);

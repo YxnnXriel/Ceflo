@@ -121,10 +121,11 @@ int List_Del(list_t *list , int index,void (*free_method)(void *x)){
 
 int List_Del_all(list_t *list ,void (*free_method)(void *x)){
 
-    if(list->Size <= 0)
+    if(list->Size <= 0){
         return 1; 
+    }
 
-    for (int i = list->Size -1; i > 0; i--){
+    for (int i = list->Size -1; i >= 0; i--){
         List_Del(list,i,free_method);
     }
 

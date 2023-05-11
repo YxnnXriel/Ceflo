@@ -28,17 +28,11 @@
 #define CEFLO_GB 1
 
 
-// this structure is for cleanning function call statement(coumpound)
-typedef struct GARBAGE_FUNCTION_STRUCT{
-    scope_t *sScope;
-    ast_t *sAst;
-    struct GARBAGE_FUNCTION_STRUCT *next;
-}Gb_t;
 
-static Gb_t *gg;
+
 extern lexer_t lexer;
-
 static bool visitor_error;
+
 static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
     
     ast_t * functionDef = scope_get_function_definition(
@@ -60,34 +54,10 @@ static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
 
 void newGb(){
     visitor_error  = false;
-    gg = NULL;
-}
-
-static void GbPush(scope_t *scope , ast_t * node){
-    Gb_t * g = calloc(1,sizeof(*g));
-    g->sAst = node;
-    g->sScope = scope;
-    g->next = gg;
-    gg = g;
-}
-
-static void GbFree(){
-
-    Debug_value_is_null(gg);
-    while (gg != NULL){
-        printf("Yeah \n");
-        
-        Gb_t * del = gg;
-        gg = gg->next;
-        freeScope(del->sScope);
-        clearAst(del->sAst);
-        free(del);
-    }
 
 }
-void freeVsisitorGB(){
-    GbFree();
-}
+
+
 
 static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
     
@@ -113,6 +83,15 @@ static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
     newList_Ast(&visitor->constants);
 }
 
+
+void freeLvisitor(void *x){
+    visitor_t *visitor = (visitor_t*)x;
+    freeVisitor(visitor);
+}
+
+void freeVisitor(visitor_t *visitor){
+    freeScope(visitor->global_scope);
+}
 
 
 
@@ -233,8 +212,9 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
             return node;
         default:
             printf("%s: pas implementer \n",AST_TO_STRING[node->type]);
-            Clear_Ceflo(visitor,NULL);
+            Clear_Ceflo(&lexer);
             visitor_error = true;
+            exit(visitor_error);
             break;
     }
 
@@ -381,8 +361,9 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 variable->variable_name,
                 index->value.as.numberValue
                 );
-                Clear_Ceflo(visitor,NULL);
+                Clear_Ceflo(&lexer);
                 visitor_error = true;
+                exit(visitor_error);
             }
 
             ast_t * res = List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
@@ -403,8 +384,9 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 variable->variable_name,
                 index->value.as.numberValue
                 );
-                Clear_Ceflo(visitor,NULL);
+                Clear_Ceflo(&lexer);
                 visitor_error = true;
+                exit(visitor_error);
             }
             ast_t * value =  newAst(AST_CHAR);
             newValue(&value->value,CHAR);
@@ -533,8 +515,10 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             "struct %s n'est pas définit \n",
             node->function_call_name
         );
-        Clear_Ceflo(visitor,NULL);
+        Clear_Ceflo(&lexer);
         visitor_error = true;   
+        exit(visitor_error);
+        
     }
 
 
@@ -763,8 +747,10 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
             "var %s n'est pas définit \n",
             node->variable_name
         );
-        Clear_Ceflo(visitor,NULL);
+        Clear_Ceflo(&lexer);
         visitor_error = true;
+        exit(visitor_error);
+
     }
 
     return NULL;
@@ -958,10 +944,9 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         
 
         freeScope(newscope);
-        freeSingleAst(newFunction);
-        Clear_Ceflo(visitor,NULL);
-        lexerFree(&lexer);
-        clearAst();
+        // freeSingleAst(newFunction);
+        Clear_Ceflo(&lexer);
+        exit(visitor_error);
         exit(1);
     }
 

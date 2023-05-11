@@ -1,14 +1,19 @@
 
 
 
-struct Personne -> func __init__(nom,prenom){
-    Nom = nom
-    Prenom = prenom
-},var Nom , var Prenom;
+
+struct Personne {
+
+    var Nom
+    var Prenom
+
+    func __init__(nom,prenom){
+        Nom = nom
+        Prenom = prenom
+    }
+
+}
 
 
-var p1 = new Personne();
 
-
-println(p1);
-
+var  p = new Personne("Yann","Ariel",21);

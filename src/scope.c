@@ -175,6 +175,13 @@ int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
 }
 
+void freeLscope(void *x){
+
+    scope_t *scope = (scope_t*)x;
+    freeScope(scope);
+
+}
+
 void freeScope(scope_t * scope){
     if(scope != NULL){
         if(scope->function_definition.Size != 0)

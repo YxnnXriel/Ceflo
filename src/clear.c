@@ -5,28 +5,39 @@
 
 
 
+static struct clear_ceflo myclear;
 
-void Clear_Ceflo(struct VISITOR_STRUCT * visitor , lexer_t * lexer){
+void Clear_Ceflo(lexer_t * lexer){
+
+    List_Del_all(
+        myclear.visitor_list,
+        freeLvisitor
+    );
     
-    if (visitor->global_scope->scope_parent != NULL){
-        visitor_t vs;
-        vs.global_scope = visitor->global_scope->scope_parent;
-	    Clear_Ceflo(&vs,NULL);
-    }
+    // if(myclear.visitor_list != NULL)
+    //     free(myclear.visitor_list);
 
-
-    if(visitor->global_scope->countScope != 0)
-	    freeScope(visitor->global_scope);
-
-
-    if(lexer != NULL){
-        clearAst();
-	    freeScope(visitor->global_scope);
-	    lexerFree(lexer);
-    }
+    Clear_Ceflo_Parser(lexer);    
 }
 
 void Clear_Ceflo_Parser(lexer_t * lexer){
     clearAst();
 	lexerFree(lexer);
+}
+
+void clear_ceflo_push(visitor_t *visitor){
+    
+    if(myclear.visitor_list == NULL){
+        myclear.visitor_list = __init__list__(sizeof(visitor_t));
+        // printf("%s \n",myclear.visitor_list == NULL ? "OUI":"NON");
+    }
+
+    List_Append(
+        myclear.visitor_list,
+        visitor
+    );
+}
+
+void clear_ceflo_clean(){
+
 }
