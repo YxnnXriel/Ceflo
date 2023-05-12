@@ -35,6 +35,7 @@
  * - Fix lfunc type right            		- OK
  * - Fix Bug char from parser and lexer		- OK
  * - Rewrite clean all						- OK
+ * - Fix Bug typé							- ?
  */ 
 
 

@@ -28,12 +28,12 @@
         AST(AST_CHAR)  \
         AST(AST_NUMBER)    \
         AST(AST_STRING)    \
-        AST(AST_OBJ)   \
-        AST(AST_OBJ_ACCESS)   \
         AST(AST_LIST)   \
+        AST(AST_OBJ)   \
+        AST(AST_LFUNC)   \
+        AST(AST_OBJ_ACCESS)   \
         AST(AST_LIST_ACCESS)   \
         AST(AST_LIST_ASSIGNEMENT)   \
-        AST(AST_LFUNC)   \
         AST(AST_COMPOUND)  \
         AST(AST_BINOP)  \
         AST(AST_RETURN)  \
@@ -90,8 +90,8 @@ typedef struct AST_TYPE_VALUE{
     type_ceflo type;
     union {
         bool booleanValue;
-        double numberValue;
         char charValue;
+        double numberValue;
         string_t *stringValue;
         list_t *listValue;
         Obj_t ObjectValue;

@@ -569,9 +569,9 @@ void freeAst(ast_t *node){
 void clearAst(){
     ast_t *node = GetFirstAst();
 
-    // printf("BEGIN \n");
+    printf("BEGIN \n");
     while (node != NULL){
-        // printf("%s\n",AST_TO_STRING[node->type]);
+        printf("%s\n",AST_TO_STRING[node->type]);
         // if(node->type == AST_OBJ){
         //     printf("    %p\n",(void*)node->value.as.ObjectValue.self);
         // }
@@ -586,7 +586,7 @@ void clearAst(){
         freeAst(sup);
         free(sup);
     }
-    // printf("END \n");
+    printf("END \n");
     
 
 }

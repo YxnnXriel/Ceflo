@@ -13,6 +13,7 @@ void Clear_Ceflo(lexer_t * lexer){
         myclear.visitor_list,
         freeLvisitor
     );
+
     
     // if(myclear.visitor_list != NULL)
     //     free(myclear.visitor_list);
@@ -22,6 +23,7 @@ void Clear_Ceflo(lexer_t * lexer){
 
 void Clear_Ceflo_Parser(lexer_t * lexer){
     clearAst();
+
 	lexerFree(lexer);
 }
 

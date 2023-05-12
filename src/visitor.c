@@ -22,10 +22,10 @@
     #include "include/Value.h"
     #include "include/debug.h"
     #include "include/clear.h"
+    #include "include/typer.h"
 
 
-
-#define CEFLO_GB 1
+#define CEFLO_GB 0
 
 
 
@@ -658,7 +658,24 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
         value = newAst(AST_NONE);
     }
 
-    value->variable_definition_static_type = node->variable_definition_static_type;
+
+    if(node->variable_definition_static_type != NONE){
+        ast_t *res = typer_caste_value(node->variable_definition_static_type + 4,value);
+
+        if(res == NULL){
+            Print_visitor_error(
+                node->variable_definition_value->line,
+                node->variable_definition_value->colone,
+                "./Ceflo",
+                "casting du type impossible !\n"
+            );
+            Clear_Ceflo(&lexer);
+            visitor_error = true;
+            exit(visitor_error);
+        }
+        value->variable_definition_static_type = node->variable_definition_static_type;
+        value->value = res->value;
+    }
 
     value->countScope = visitor->global_scope->countScope;
 
@@ -1591,6 +1608,8 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
     ast_t * value = visitor_visit(visitor,node->assignement_value);
 
+
+
     if(node->op.type != TOKEN_ID){
         ast_t * binop = newAst(AST_BINOP);
         binop->left = variable;
@@ -1598,6 +1617,26 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         binop->op = node->op;
         value =  visitor_visit(visitor,binop);
 
+    }
+
+    if(variable->variable_definition_static_type != NONE){
+        ast_t * res = typer_caste_value(variable->variable_definition_static_type + 4,value);
+
+        if(res == NULL){
+            Print_visitor_error(
+                node->line,
+                node->colone,
+                "./Ceflo",
+                "casting du type impossible !\n"
+            );
+            // printf("ICI ICI  \n");
+            Clear_Ceflo(&lexer);
+            visitor_error = true;
+            exit(visitor_error);
+        }
+
+        value->variable_definition_static_type = variable->variable_definition_static_type;
+        value->value = res->value;
     }
 
     if(value->type == AST_OBJ ){
@@ -1608,6 +1647,8 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         else
             value->is_new_obj = false;    
     }
+
+
 
 
     scope_append_variable_definition(

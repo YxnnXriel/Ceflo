@@ -117,3 +117,50 @@ func Interpreter(){
 }
 
 Interpreter();
+
+
+
+
+struct Article{
+    var Name
+    var Prix
+    var Qte
+
+    func __init__(n,p,q){
+        Name = n
+        Prix = p
+        Qte = q
+    }
+
+    func __str__(){
+        return Name + " " + Prix + " Qte: " + Qte 
+    }
+}
+
+func Ajouter(Tab){
+    println("Entrer le :")
+    Tab.append(
+        new Article(
+            input("Nom de l'article : "),
+            input("Son Prix : "),
+            input("La quantité : ")
+        )
+    )
+}
+
+var tab = []
+
+var n = "-1"
+
+while n != "3"{
+
+    println("1 - Ajouter un Article")
+    println("2 - Afficher les Articles")
+    println("3 - Sortir")
+    n = input("choix> ");
+    if n == "1"{
+        Ajouter(tab)
+    }else if n == "2"{
+        println(tab);
+    }
+}

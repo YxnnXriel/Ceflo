@@ -1,15 +1,6 @@
 
 
 
-struct Personne ->
-    var Nom = input("Ton Nom : "),
-    var Prenom = input("Ton Prenom : "),
-    func __str__(){
-        return Nom + " " + Prenom
-    };
+var k::int = "Yann Ariel";
 
-var  p = new Personne();
-var a = new Personne();
-
-
-println(p," et ",a);
+k = [];
