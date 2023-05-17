@@ -105,6 +105,7 @@ typedef struct AST_TYPE_VALUE{
     #define AS_CHAR(value) ((value).as.charValue)
     #define AS_STRING(value) ((value).as.stringValue->str)
     #define AS_LIST(value) ((value).as.listValue)
+    #define AS_OBJ(Value) ((value).as.ObjectValue)
 
 
     #define OBJECT_SELF(ast) ((ast->value.as.ObjectValue.self))

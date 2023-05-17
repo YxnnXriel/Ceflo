@@ -41,9 +41,9 @@
 
 lexer_t lexer;
 
-int main(int argc, char const *argv[]){
-	
 
+
+int main(int argc, char const *argv[]){
 
 	if(argc >= 2){
 

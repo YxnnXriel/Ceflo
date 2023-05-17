@@ -659,8 +659,11 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     }
 
 
+    value->variable_definition_static_type = node->variable_definition_static_type;
+    value->countScope = visitor->global_scope->countScope;
+
     if(node->variable_definition_static_type != NONE){
-        ast_t *res = typer_caste_value(node->variable_definition_static_type + 4,value);
+        ast_t *res = typer_caste_value(node->variable_definition_static_type + 4,&value);
 
         if(res == NULL){
             Print_visitor_error(
@@ -673,11 +676,8 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
             visitor_error = true;
             exit(visitor_error);
         }
-        value->variable_definition_static_type = node->variable_definition_static_type;
-        value->value = res->value;
     }
 
-    value->countScope = visitor->global_scope->countScope;
 
     if(value->marked_count == 0)
         Value_incref(value);
@@ -1620,7 +1620,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     }
 
     if(variable->variable_definition_static_type != NONE){
-        ast_t * res = typer_caste_value(variable->variable_definition_static_type + 4,value);
+        ast_t * res = typer_caste_value(variable->variable_definition_static_type + 4,&value);
 
         if(res == NULL){
             Print_visitor_error(
@@ -1629,14 +1629,12 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
                 "./Ceflo",
                 "casting du type impossible !\n"
             );
-            // printf("ICI ICI  \n");
             Clear_Ceflo(&lexer);
             visitor_error = true;
             exit(visitor_error);
         }
 
         value->variable_definition_static_type = variable->variable_definition_static_type;
-        value->value = res->value;
     }
 
     if(value->type == AST_OBJ ){

@@ -34,6 +34,7 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
     ast_t * stk_val = scope_get_variable_definition(scope,key);
 
 
+
     if(stk_val != NULL){
         // update
         Hash_Modif(&scope->variable_definition,key,value);
