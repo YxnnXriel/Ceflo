@@ -57,6 +57,21 @@ static void save_free(){
 }
 
 
+
+
+ast_t * typer_caste_value_try_obj( uint8_t to , ast_t **value , ast_t *obj){
+
+    if(to == AST_OBJ){
+        if((*value)->type == AST_OBJ){
+            if(strcmp((*value)->value.as.ObjectValue.obj_name , obj->variable_definition_static_type_name) == 0){
+                return *value;
+            }
+        }
+    }
+    return NULL;
+}
+
+
 ast_t * typer_caste_value( uint8_t to , ast_t **value){
 
 
@@ -264,7 +279,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
     else{
         ast_t *func = newAst(AST_STRUCT);
         allowChar(&func->function_call_name,typer_name);
-        func->function_call_args = *args;
+        func->function_call_args = List_Ast_Cpy(args);
 
         return visitor_visit(
             visitor,

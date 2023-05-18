@@ -423,6 +423,7 @@ token_t lexer_get_next_token(lexer_t *lexer){
             case '.': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_DOT,"."));
             case ',': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_COMA,","));
             case ';': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_SEMI,";"));
+            case '@': return lexer_advance_return_token(lexer,AS_TOKEN(TOKEN_AT_SIGN,"@"));
 
             case ':':
                 if(lexer_peek(lexer,':')){

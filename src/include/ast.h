@@ -249,6 +249,8 @@ typedef struct AST_STRUCT{
         Return_Type type_compound;
 
 
+    /* ======  AST_COMPOUND ====== */
+        bool is_func_typer;
 
 
     /* ======== NEXT AST ======== */

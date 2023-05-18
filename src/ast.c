@@ -119,6 +119,8 @@ ast_t *newAst(uint8_t type){
     new->list_ptr = NULL;
     new->prev = NULL;
 
+    new->is_func_typer = false;
+
 
     // LIST
     new->ref_list = NULL;
@@ -827,6 +829,7 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
 ast_t * ast_cpy_variable(ast_t * ast,struct SCOPE_STRUCT * scope){
     ast_t * a = newAst(AST_VARIABLE);
     a->variable_forGlobal = ast->variable_forGlobal; 
+    a->is_func_typer = ast->is_func_typer;
     allowChar(&a->variable_name,ast->variable_name);
 
     if(scope == NULL){
@@ -887,6 +890,7 @@ ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
 
 
     allowChar(&a->function_call_name,ast->function_call_name);
+    a->is_func_typer = ast->is_func_typer;
 
     newList_Ast(&a->function_call_args);
 

@@ -367,6 +367,12 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
     // current token :
     int is_lbrace_and_function_call = 0;
 
+    if(parser->current.type == TOKEN_DOUBLE_COLON){
+        parser_eat(TOKEN_DOUBLE_COLON,SYNTAX_ERROR,"definition de varaible echouer \n");
+        variable->variable_definition_static_type = GetType(parser->current.value);
+        allowChar(&variable->variable_definition_static_type_name,parser->current.value);
+        parser_eat(TOKEN_ID,SYNTAX_ERROR,"definition de varaible echouer \n");        
+    }
 
     if(parser->current.type == TOKEN_LBRACE){
         //...., maybe the declaration is a list : access or assignement
@@ -913,6 +919,14 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
         func->type = AST_STRUCT;
         
         return func;
+    }
+
+    if(parser->current.type == TOKEN_AT_SIGN){
+        parser_eat(TOKEN_AT_SIGN,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        parser_eat(TOKEN_ID,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        ast_t *func_typer =  parser_parse_function_call(parser,scope);
+        func_typer->is_func_typer = true;
+        return func_typer; 
     }
 
     if(parser->current.type == TOKEN_NONE){

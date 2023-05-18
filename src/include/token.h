@@ -43,6 +43,7 @@ typedef enum{
         TOKEN_STRING, // "string value"
         TOKEN_INTEGER, // 123
         TOKEN_FLOAT, // 123.0
+        TOKEN_AT_SIGN, // @
         TOKEN_NOT, // !
         TOKEN_DIF,// !=
         TOKEN_MODULO,// %
@@ -111,6 +112,7 @@ static const char *TOKEN_TO_STRING[]={
     "string_value",
     "integer_value",
     "float_value",
+    "@",
     "!",
     "!=",
     "%%",

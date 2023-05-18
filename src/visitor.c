@@ -736,9 +736,15 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
         node->variable_name
     );
 
+
+
     if(value != NULL){
         // Debug_Print_Ast_Type(value);
         value->is_for_variable = true;
+
+        if(value->variable_definition_static_type_name != NULL){
+            printf("%s \n",value->variable_definition_static_type_name);
+        }
         return value;
     }
 
@@ -854,8 +860,32 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
         }
 
         for (int i = 0; i < (int) args->function_call_args.size; i++){
-            char * variable_name = List_Ast_Get(&newFunc->function_defintion_args,i)->variable_name;
+            ast_t *args1 = List_Ast_Get(&newFunc->function_defintion_args,i);
+            char * variable_name = args1->variable_name;
             ast_t * value = visitor_visit(visitor,List_Ast_Get(&args->function_call_args,i));
+            
+            if(args1->variable_definition_static_type != NONE){
+                ast_t *res = typer_caste_value(args1->variable_definition_static_type + 4,&value);
+
+                if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
+                    res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
+                }
+
+                if(res == NULL){
+                    Print_visitor_error(
+                    args1->line,
+                    args1->colone,
+                    "./Ceflo",
+                    "casting du type impossible !\n"
+                );
+                Clear_Ceflo(&lexer);
+                visitor_error = true;
+                exit(visitor_error);
+            }
+        }
+
+
+            
             scope_append_variable_definition(
                 newscope,
                 variable_name,
@@ -896,8 +926,12 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         &node->function_call_args
     );
 
-
     if(res != NULL){
+        return res;
+    }
+
+    if(node->is_func_typer){
+        res = typer_typer(visitor,node->function_call_name,&node->function_call_args);
         return res;
     }
 
@@ -923,6 +957,8 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             functionDef = visitor_visit_get_function(visitor->global_scope->scope_parent,node);
         }
     }    
+
+    
 
     if(functionDef == NULL){
         Print_visitor_error(
@@ -968,8 +1004,32 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     }
 
     for (int i = 0; i < (int) node->function_call_args.size; i++){
-        char * variable_name = List_Ast_Get(&functionDef->function_defintion_args,i)->variable_name;
-            ast_t * value = visitor_visit(visitor,List_Ast_Get(&node->function_call_args,i));
+        
+        ast_t *args = List_Ast_Get(&functionDef->function_defintion_args,i);
+        char * variable_name = args->variable_name;
+        ast_t * value = visitor_visit(visitor,List_Ast_Get(&node->function_call_args,i));
+
+
+        if(args->variable_definition_static_type != NONE){
+
+            ast_t *res = typer_caste_value(args->variable_definition_static_type + 4,&value);
+            if(res == NULL && args->variable_definition_static_type + 4 == AST_OBJ ){
+                res = typer_caste_value_try_obj(AST_OBJ,&value,args);
+            }
+            if(res == NULL){
+                Print_visitor_error(
+                    args->line,
+                    args->colone,
+                    "./Ceflo",
+                    "casting du type impossible !\n"
+                );
+                Clear_Ceflo(&lexer);
+                visitor_error = true;
+                exit(visitor_error);
+            }
+        }
+
+
 
         scope_append_variable_definition(
             newscope,
