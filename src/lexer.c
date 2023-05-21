@@ -358,7 +358,7 @@ token_t lexer_collect_char(lexer_t *lexer){
  * @param lexer 
  */
 void lexer_advance_skip_white_space(lexer_t *lexer){
-    while(lexer->current_char == 10 || lexer->current_char == ' ' || lexer->current_char == '\t')
+    while(lexer->current_char == 10 || lexer->current_char == ' ' || lexer->current_char == '\t' || lexer->current_char == 13)
         lexer_advance(lexer);
 }
 
@@ -380,7 +380,7 @@ token_t lexer_get_next_token(lexer_t *lexer){
     while(lexer->current_char != '\0' && lexer->index < (int)lexer->lenght_file_code){
 
 
-        if(lexer->current_char == 10  || lexer->current_char == ' ' || lexer->current_char == '\t')
+        if(lexer->current_char == 10  || lexer->current_char == ' ' || lexer->current_char == '\t' || lexer->current_char == 13)
             lexer_advance_skip_white_space(lexer);
 
 

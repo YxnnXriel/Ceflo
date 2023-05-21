@@ -4,7 +4,7 @@
 #include "include/Value.h"
 #include "include/debug.h"
 #include "include/error.h"
-
+#include "include/typer.h"
 
 
 #define RETURN_NONE newAst(AST_NONE)
@@ -192,4 +192,33 @@ ast_t *Value_String_lenght(visitor_t *visitor , string_t * str , ast_t * value){
     val->value.as.numberValue = str->lenght;
 
     return val;
+}
+
+ast_t *Value_String_format(visitor_t *visitor , string_t * str , ast_t * value){
+
+
+    char buffer[BUFSIZ];
+
+    int n = 0;
+
+    for (int i = 0; i < str->lenght; i++){
+        if(String_index(str,i) == '{'){
+            if(i+1 != str->lenght && String_index(str,i+1) == '}'){
+                ast_t * item = visitor_visit(visitor,List_Ast_Get(&value->function_call_args,n));
+                typer_caste_value(AST_STRING,&item);
+                strcat(buffer,AS_STRING(item->value));
+                i++;
+                n++;
+            }else{
+                strcat(buffer,"{");
+            }
+        }else{
+            sprintf(buffer + strlen(buffer), "%c", String_index(str,i));
+        }
+    }
+
+    ast_t * string = newAst(AST_STRING);
+    string->value.as.stringValue = new_String(buffer);
+    return string;
+
 }

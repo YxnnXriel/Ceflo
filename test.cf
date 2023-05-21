@@ -1,5 +1,6 @@
 
-
-var a = @int();
-
-println(a);
+var y = "Je suis{} j'ai {}"
+    .format("Yann",21)
+    .lenght();
+    
+println(y);

@@ -39,16 +39,20 @@
     // STRING
 
     ast_t *Value_String_lenght(visitor_t *visitor , string_t * str , ast_t * value);
+    ast_t *Value_String_format(visitor_t *visitor , string_t * str , ast_t * value);
+
     struct value_str{
         char *name;
         ast_t * (*func)(visitor_t *visitor , string_t * str , ast_t * value);
     };
 
-    #define VALUE_STRING_ATTR 1
+    #define VALUE_STRING_ATTR 2
     
     ast_t * value_str_switch_function(visitor_t * visitor,string_t * str, ast_t *value);
     static struct value_str attr_value_str[] = {
-        {"lenght",&Value_String_lenght}
+        {"lenght",&Value_String_lenght},
+        {"format",&Value_String_format},
+
     };
 
     // OBJECT

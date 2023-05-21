@@ -13,7 +13,7 @@
     }
     
     void Debug_Print_Ast_Type(ast_t *node){
-        printf("%s \n",AST_TO_STRING[node->type]);
+        printf("DEBUG : %s \n",AST_TO_STRING[node->type]);
     }
 
     void Debug_value_is_null(void *x){

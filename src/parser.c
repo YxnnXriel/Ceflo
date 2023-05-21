@@ -17,7 +17,7 @@
 #include "include/error.h"
 #include "include/common.h"
 #include "include/clear.h"
-
+#include "include/debug.h"
 
 
                                     // FOR CEFLO TYPE
@@ -414,8 +414,10 @@ ast_t *parser_parse_variable(parser_t *parser , scope_t * scope){
         if(is_lbrace_and_function_call){
             return parser_parse_function_call_With_Name(variable,parser,scope);
         }
-        else
+        else{
+
             return parser_parse_function_call(parser,scope);
+        }
     }
 
     if(parser->current.type == TOKEN_DOT){
@@ -942,22 +944,35 @@ ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
     }
 
 
+    ast_t * value = (void*)0;
+
     switch (parser->current.type){
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
-            return parser_parse_number(parser,scope);break;
+            value = parser_parse_number(parser,scope);break;
         case TOKEN_CHAR:
-            return parser_parse_char(parser,scope);break;
+            value = parser_parse_char(parser,scope);break;
         case TOKEN_STRING:
-            return parser_parse_string(parser,scope);break;
+            value = parser_parse_string(parser,scope);break;
         case TOKEN_TRUE:
         case TOKEN_FALSE:
-            return parser_parse_bool(parser,scope);break;
+            value = parser_parse_bool(parser,scope);break;
         case TOKEN_LBRACE:
-            return parser_parse_list(parser,scope);
+            value = parser_parse_list(parser,scope);
     }
 
-    return newAst(AST_NONE);
+    if(value != NULL && parser->current.type == TOKEN_DOT){
+        while (parser->current.type == TOKEN_DOT){
+            parser_eat(TOKEN_DOT,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+            ast_t * obj_acces = newAstWithLine(AST_OBJ_ACCESS,parser->lexer->line,parser->lexer->colone);
+            obj_acces->left = value;
+            obj_acces->right = parser_parse_expr(parser,scope);
+            value = obj_acces;
+        }
+    }
+
+
+    return value != NULL ? value : newAst(AST_NONE);
 }
 
 
@@ -1221,8 +1236,8 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
 
     ast_struct->struct_definition_item = __init__list__(sizeof(ast_t*));
 
-    if(parser->current.type == TOKEN_ARROW){
-        parser_eat(TOKEN_ARROW,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+    if(parser->current.type == TOKEN_ARROW || parser->current.type == TOKEN_DOUBLE_COLON){
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
         return parser_parse_struct_definition_inline(ast_struct,parser,scope);
     }
 
