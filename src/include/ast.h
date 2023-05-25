@@ -142,6 +142,7 @@ typedef struct AST_STRUCT{
         list_ast_t function_defintion_args;
         struct AST_STRUCT* function_definition_body;
         type_ceflo function_definition_return_type;
+        char *function_definition_return_type_name;
 
 
 
@@ -280,6 +281,7 @@ void newValue(Value_t * value , uint8_t type);
 void modifValue(ast_t ** ref  , ast_t * new);
 void newList_Ast(list_ast_t *list);
 void newObject(Obj_t * object);
+bool ObjectIsSame(Obj_t *self , const char *name);
 void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor);
 bool printObj(ast_t * value);
 bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor);

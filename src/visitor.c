@@ -58,6 +58,22 @@ void newGb(){
 }
 
 
+static ast_t *getStruct(scope_t *scope, const char *struct_name){
+    ast_t * structdef = scope_get_struct_definition(
+        scope,
+        struct_name
+    );
+    
+    if(structdef != NULL)
+        return structdef;
+
+    if(structdef == NULL){
+        if(scope->scope_parent != NULL ){
+            return getStruct(scope->scope_parent,struct_name);
+        }
+    }   
+    return NULL; 
+}
 
 static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
     
@@ -709,6 +725,13 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
         value
     );
 
+    if(node->left != NULL){
+        visitor_visit_variable_definition(
+            visitor,
+            node->left
+        );
+    }
+
 
     return node;
 }
@@ -805,6 +828,23 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 //                          ===================================== $FUNCTION ==============================================
 
 
+
+static ast_t *is_function_return_type(visitor_t *visitor, ast_t *function , ast_t *value){
+    if(function->function_definition_return_type != NONE){
+        if(function->function_definition_return_type != OBJECT){
+            return typer_caste_value(function->function_definition_return_type + 4, &value);
+        }else{
+            if(value->type != AST_OBJ) return NULL;
+            const char *name = function->function_definition_return_type_name;
+            ast_t *structt = getStruct(visitor->global_scope,name);
+            return 
+            ObjectIsSame(&value->value.as.ObjectValue,name) == 1 ? value : NULL;
+        }
+    }
+
+    return value;
+}
+
 /**
  * @brief save function defintion in the current scope
  * 
@@ -878,6 +918,7 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
                     "./Ceflo",
                     "casting du type impossible !\n"
                 );
+                
                 Clear_Ceflo(&lexer);
                 visitor_error = true;
                 exit(visitor_error);
@@ -905,7 +946,6 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     freeSingleAst(newFunc);
     // GbPush(newscope,GetFirstAst());
     // ModifFirstAst(first);   
-
 
     return returnValue;
 }
@@ -1054,6 +1094,22 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     freeSingleAst(newFunction);
 
     // ModifFirstAst(first);   
+
+    returnValue = is_function_return_type(visitor,functionDef,returnValue);
+
+    if(returnValue == NULL){
+        Print_visitor_error(
+            node->line,
+            node->colone,
+            "./Ceflo",
+            "func %s : retourne une value precise !\n",
+            functionDef->function_definition_name
+        );
+        Clear_Ceflo(&lexer);
+        visitor_error = true;
+        exit(visitor_error);
+    }
+
 
 
     return returnValue;

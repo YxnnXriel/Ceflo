@@ -317,7 +317,9 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
     ast_t *variable = newAstWithLine(AST_VARIABLE_DEFINITION,parser->lexer->line,parser->lexer->colone);
     variable->countScope = GetScope();
     variable->scope = scope;
-    parser_eat(TOKEN_VAR,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+    
+    if(parser->current.type == TOKEN_VAR)
+        parser_eat(TOKEN_VAR,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
 
     allowChar(&variable->variable_definition_name,parser->current.value);
     parser_eat(TOKEN_ID,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
@@ -335,7 +337,11 @@ ast_t *parser_parse_variable_definition(parser_t *parser , scope_t * scope){
     }else{
         variable->variable_definition_value = newAst(AST_NONE);
     }
-
+    
+    if(parser->current.type == TOKEN_COMA){
+        parser_eat(TOKEN_COMA,VARIABLE_DEFINITION_ERROR,"definition de varaible echouer \n");
+        variable->left = parser_parse_variable_definition(parser,scope);
+    }
 
 
     return variable;
@@ -523,6 +529,7 @@ ast_t *parser_parse_function_definition(parser_t *parser , scope_t * scope){
 
     if(parser->current.type == TOKEN_ID){
         function->function_definition_return_type = GetType(parser->current.value);
+        allowChar(&function->function_definition_return_type_name,parser->current.value);
         parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
     }
     ScopePlus();

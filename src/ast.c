@@ -14,6 +14,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "include/ast.h"
 #include "include/scope.h"
 #include "include/visitor.h"
@@ -73,6 +75,7 @@ ast_t *newAst(uint8_t type){
     // new->function_defintion_args = NULL;
     new->function_definition_return_type = NONE;
     new->function_definition_body = NULL;
+    new->function_definition_return_type_name = NULL;
 
     new->function_call_name = NULL;
     // new->function_call_args = NULL;
@@ -266,6 +269,11 @@ void newObject(Obj_t * object){
     object->self = NULL;
     object->obj_name = NULL;
 }
+
+bool ObjectIsSame(Obj_t *self , const char *name){
+    return (self->obj_name != NULL && strcmp(name,self->obj_name) == 0);
+}
+
 
 
 
@@ -525,6 +533,10 @@ void freeAst(ast_t *node){
     if(node->function_definition_name != NULL)
         free(node->function_definition_name);
     
+    if(node->function_definition_return_type_name != NULL){
+        free(node->function_definition_return_type_name);
+    }
+
     if(node->function_call_name != NULL)
         free(node->function_call_name);
 
@@ -911,10 +923,17 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
     
     ast_t *a = newAst(function->type);
 
+    a->function_definition_return_type = function->function_definition_return_type;
+
     if(function->function_definition_name){
         allowChar(&a->function_definition_name,function->function_definition_name);
     }
     
+    if(function->function_definition_return_type_name){
+        
+        allowChar(&a->function_definition_return_type_name,function->function_definition_return_type_name);
+    }
+
     a->function_definition_return_type = function->function_definition_return_type;
 
     newList_Ast(&a->function_defintion_args);
@@ -924,6 +943,7 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
         List_Ast_Append(&a->function_defintion_args,arg);
     }
     
+
 
     a->function_definition_body = ast_copy(function->function_definition_body,scope);
     cpy_line(a,function);
@@ -954,6 +974,10 @@ ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
 
     if(scope == NULL){
         cpy_line(a,ast);
+    }
+
+    if(ast->left != NULL){
+        a->left = ast_cpy_variable_definition(ast->left,scope);
     }
 
         
