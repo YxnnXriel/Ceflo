@@ -236,6 +236,10 @@ int Hash_Append(stk_t * stk ,const char *key ,void * value){
     return 1;
 }
 
+
+
+
+
 void *Hash_Get(stk_t *stk , const char *key){
 
     int index = Hash(key) % TAB_SIZE;
@@ -251,32 +255,52 @@ void *Hash_Get(stk_t *stk , const char *key){
 
 // a reevoir
 
-void *Hash_Get_by_index(stk_t *stk ,int index){
+// void *Hash_Get_by_index(stk_t *stk ,int index){
+//     if(index > stk->Size)
+//         return NULL;
+    
+//     int n = 0;
+//     for (int i = 0; i < TAB_SIZE; i++){
+//         if(stk->TabHash[i] != (void*)0){
+//             hash_t *l = stk->TabHash[i];
+//             if(l != NULL){
+//                 if(n == index){
+//                     return l->value;
+//                 }   
+//                 while (l != (void*)0){
+//                     l = l->next;
+//                     n++;
+//                     if(n == index){
+//                         if(l != NULL)
+//                         return l->value;
+//                     }  
+//                 }
+//             }
+//         }
+//     }   
+
+// }
+
+hash_t *Hash_Get_by_index(stk_t *stk ,int index){
     if(index > stk->Size)
         return NULL;
-    
+
     int n = 0;
     for (int i = 0; i < TAB_SIZE; i++){
         if(stk->TabHash[i] != (void*)0){
             hash_t *l = stk->TabHash[i];
-            if(l != NULL){
+            while (l != NULL){
                 if(n == index){
-                    return l->value;
-                }   
-                while (l != (void*)0){
-                    l = l->next;
-                    n++;
-                    if(n == index){
-                        if(l != NULL)
-                        return l->value;
-                    }  
+                    return l;    
                 }
+                l = l->next;
+                n++;
             }
         }
-    }   
 
+    }
+    return NULL;
 }
-
 
 int Hash_Modif(stk_t *stk , const char *key,void *value){
 

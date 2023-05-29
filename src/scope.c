@@ -8,9 +8,6 @@ scope_t* newScope(){
     scope_t *scope = calloc(1,sizeof(*scope));
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
-    scope->function_names = new_ListString();
-    scope->struct_names = new_ListString();
-    scope->variable_names = new_ListString();
     scope->scope_parent = NULL;
     scope->countScope = -1;
     return scope;
@@ -40,7 +37,6 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
         Hash_Modif(&scope->variable_definition,key,value);
         stk_val->is_for_variable = false;
     }else{
-        ListString_Append(scope->variable_names,key);
         Hash_Append(&scope->variable_definition,key,value);
     }
 }
@@ -81,7 +77,6 @@ void scope_append_function_definition(scope_t *scope , const char *key , ast_t *
         );
         exit(1);
     }else{
-        ListString_Append(scope->function_names,value->function_definition_name);
         Hash_Append(&scope->function_definition,value->function_definition_name,value);   
     }
 
@@ -118,54 +113,78 @@ void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *va
         );
         exit(1);
     }else{
-        ListString_Append(scope->struct_names,key);
         Hash_Append(&scope->struct_definition,value->struct_definition_name,value);   
     }
 }
+
+static void Scope_intern_cpy(stk_t *Table , scope_t *end, void (*func)(scope_t *scope , const char *key , ast_t *value)){
+    for (int i = 0; i < Table->Size; i++){
+        hash_t* item = Hash_Get_by_index(Table,i);
+        func(
+            end,
+            item->key,
+            ast_copy((ast_t*)item->value,end)
+        );
+    }
+} 
 
 int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
     if(ref != NULL){
 
+        Scope_intern_cpy(&ref->function_definition,end,scope_append_function_definition);
+        Scope_intern_cpy(&ref->variable_definition,end,scope_append_variable_definition);
+        Scope_intern_cpy(&ref->struct_definition,end,scope_append_struct_definition);
 
-        for (int i = 0; i < ref->function_definition.Size ; i++){
-            
-            ast_t * func = scope_get_function_definition(
-                ref,
-                ListString_Get(ref->function_names,i)
-            );
-            scope_append_function_definition(
-                end,
-                func->function_definition_name,
-                ast_copy(func,end)
-            );
-        }
 
-        for (int i = 0; i < ref->variable_definition.Size ; i++){
+        // for (int i = 0; i < ref->function_definition.Size ; i++){
             
-            ast_t * var = scope_get_variable_definition(
-                ref,
-                ListString_Get(ref->variable_names,i)
-            );
-            scope_append_variable_definition(
-                end,
-                ListString_Get(ref->variable_names,i),
-                ast_copy(var,end)
-            );
-        }
+        //     ast_t * func = scope_get_function_definition(
+        //         ref,
+        //         ListString_Get(ref->function_names,i)
+        //     );
+        //     scope_append_function_definition(
+        //         end,
+        //         func->function_definition_name,
+        //         ast_copy(func,end)
+        //     );
+        // }
 
-        for (int i = 0; i < ref->struct_definition.Size ; i++){
+        // // for (int i = 0; i < ref->variable_definition.Size ; i++){
             
-            ast_t * structt = scope_get_struct_definition(
-                ref,
-                ListString_Get(ref->struct_names,i)
-            );
-            scope_append_struct_definition(
-                end,
-                ListString_Get(ref->struct_names,i),
-                ast_copy(structt,end)
-            );
-        }
+        // //     ast_t * var = scope_get_variable_definition(
+        // //         ref,
+        // //         ListString_Get(ref->variable_names,i)
+        // //     );
+        // //     scope_append_variable_definition(
+        // //         end,
+        // //         ListString_Get(ref->variable_names,i),
+        // //         ast_copy(var,end)
+        // //     );
+        // // }
+
+        // for (int i = 0; i < ref->variable_definition.Size; i++){
+        //     hash_t* item = Hash_Get_by_index(&ref->variable_definition,i);
+
+        //     scope_append_variable_definition(
+        //         end,
+        //         item->key,
+        //         ast_copy((ast_t*)item->value,end)
+        //     );            
+        // }
+
+        // for (int i = 0; i < ref->struct_definition.Size ; i++){
+            
+        //     ast_t * structt = scope_get_struct_definition(
+        //         ref,
+        //         ListString_Get(ref->struct_names,i)
+        //     );
+        //     scope_append_struct_definition(
+        //         end,
+        //         ListString_Get(ref->struct_names,i),
+        //         ast_copy(structt,end)
+        //     );
+        // }
 
         end->countScope = ref->countScope;
         end->scope_parent = ref->scope_parent;
@@ -189,15 +208,6 @@ void freeScope(scope_t * scope){
             Hash_Del(&scope->function_definition);
         if(scope->variable_definition.Size != 0){
             Hash_Del(&scope->variable_definition);
-        }
-        if(scope->function_names){
-            ListString_Clear(scope->function_names);
-        }
-        if(scope->variable_names){
-            ListString_Clear(scope->variable_names);
-        }
-        if(scope->struct_names){
-            ListString_Clear(scope->struct_names);
         }
         if(scope->struct_definition.Size != 0){
             Hash_Del(&scope->struct_definition);

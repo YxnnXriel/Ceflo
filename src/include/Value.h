@@ -59,7 +59,8 @@
     
     
     // SOME VALUE
-
+        ast_t *Value_Add(ast_t *left , ast_t *right);
+        ast_t *Value_Minus(ast_t *left , ast_t *right);
 
 
 

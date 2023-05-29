@@ -599,3 +599,11 @@ int lexerFree(lexer_t *lex){
 
     return 1;
 }
+
+
+// void PrintLexer(lexer_t * lexer){
+//     printf("FileName : `%s`\n",lexer->fileName->str);
+//     printf("Line : %d   Colone : %d \n",lexer->line,lexer->colone);
+//     printf("Current Char : `%c` \n",lexer->current_char);
+//     printf("Current index : %d \n",lexer->index);
+// }

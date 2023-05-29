@@ -43,8 +43,9 @@
     hash_t *__init__hash(const char *key ,void * value );
     stk_t *__init__stk_hash(stk_t *stk);
     int Hash_Append(stk_t * stk ,const char *key ,void * value);
+
     void *Hash_Get(stk_t *stk , const char *key);
-    void *Hash_Get_by_index(stk_t *stk ,int index);
+    hash_t *Hash_Get_by_index(stk_t *stk ,int index);
     
     int Hash_Modif(stk_t *stk , const char *key,void *value);
 

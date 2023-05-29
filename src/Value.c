@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "include/str.h"
 #include "include/Value.h"
 #include "include/debug.h"
 #include "include/error.h"
@@ -222,3 +223,122 @@ ast_t *Value_String_format(visitor_t *visitor , string_t * str , ast_t * value){
     return string;
 
 }
+
+// ======================================= expr
+
+
+
+
+
+// BOOL
+
+static ast_t *Value_New_Bool(bool x){
+    ast_t *new = newAst(AST_BOOL);
+    new->value.type = BOOL;
+    new->value.as.booleanValue = x;
+    return new;
+}
+
+// CHAR
+
+static ast_t *Value_New_Char(char x){
+    ast_t *new = newAst(AST_CHAR);
+    new->value.type = CHAR;
+    new->value.as.charValue = x;
+    return new;
+}
+
+
+// NUMBER
+
+static ast_t *Value_New_Number(double x){
+    ast_t *new = newAst(AST_NUMBER);
+    new->value.type = NUMBER;
+    new->value.as.numberValue = x;
+    return new;
+}
+
+
+// STR
+
+static ast_t *Value_New_str(string_t * x){
+    ast_t *new = newAst(AST_STRING);
+    new->value.type = STRING;
+    new->value.as.stringValue = new_String(x->str);
+    return new;
+}
+
+
+// #define MAKE_VALUE(func,op)   \
+//     func(left->value) op func(right->value)
+
+
+// #define RESULT(res,type,op) \
+//     do{ \
+//         switch (type){    \
+//             case AST_BOOL: res = Value_New_Bool(MAKE_VALUE(AS_BOOL,op));    \
+//             case AST_CHAR: res = Value_New_Char(MAKE_VALUE(AS_CHAR,op));    \
+//             case AST_NUMBER: res = Value_New_Number(MAKE_VALUE(AS_NUMBER,op));    \
+//         }   \
+//     }while(false);
+
+
+
+
+
+// ast_t *Value_Add(ast_t *left , ast_t *right){
+//     ast_t *res = NULL;
+
+//     RESULT(res,left->type,+)
+
+//     if(res == NULL){
+
+//         if(left->type == AST_STRING){
+//             res = newAst(AST_STRING);
+//             res->value.type = STRING;
+//             res->value.as.stringValue = String_cat("%s%s",AS_STRING(left->value),AS_STRING(right->value));
+//         }
+//     }
+
+//     return res;
+
+// }
+
+// ast_t *Value_Minus(ast_t *left , ast_t *right){
+//     ast_t *res = NULL;
+    
+//     RESULT(res,left->type,-)
+
+//     if(res == NULL){
+
+//         if(left->type == AST_STRING){
+//             return NULL;
+//         }
+//     }
+
+//     return res;
+
+// }
+
+
+// // LIST
+
+// ast_t *Value_New_List(string_t * x){
+//     ast_t *new = newAst(AST_LIST);
+//     new->value.type = LIST;
+//     new->value.as.listValue = x;
+//     return new;
+// }
+
+
+// // OBJECT
+
+// ast_t *Value_New_List(Obj_t * x){
+//     ast_t *new = newAst(AST_OBJ);
+//     new->value.type = OBJECT;
+//     new->value.as.ObjectValue = ;
+//     return new;
+// }
+
+
+// LFUNC

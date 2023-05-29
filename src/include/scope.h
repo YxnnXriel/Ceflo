@@ -9,11 +9,6 @@ typedef struct SCOPE_STRUCT{
     stk_t  variable_definition;
     stk_t function_definition;
     stk_t struct_definition;
-
-    listString_t * variable_names;
-    listString_t * function_names;
-    listString_t * struct_names;
-
     int countScope;
     struct SCOPE_STRUCT *scope_parent;
 }scope_t;

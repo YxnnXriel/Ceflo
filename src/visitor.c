@@ -878,7 +878,7 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     // ResetFirstAst();
 
     scope_t * newscope = newScope();
-    ast_t *newFunc = ast_copy(func,newscope);
+    // ast_t *newFunc = ast_copy(func,newscope);
 
     if(args != NULL){
 
@@ -893,14 +893,14 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
             );
 
             freeScope(newscope);
-            freeSingleAst(newFunc);
+            // freeSingleAst(newFunc);
             clearAst();
             exit(1);
 
         }
 
         for (int i = 0; i < (int) args->function_call_args.size; i++){
-            ast_t *args1 = List_Ast_Get(&newFunc->function_defintion_args,i);
+            ast_t *args1 = List_Ast_Get(&func->function_defintion_args,i);
             char * variable_name = args1->variable_name;
             ast_t * value = visitor_visit(visitor,List_Ast_Get(&args->function_call_args,i));
             
@@ -937,13 +937,13 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
     
     visitor_t visit;
     newVisitorWithScope(&visit,newscope);
-    visit.global_scope->countScope = newFunc->function_definition_body->countScope; 
+    visit.global_scope->countScope = func->function_definition_body->countScope; 
     visit.global_scope->scope_parent = visitor->global_scope;
 
-    ast_t *returnValue =  visitor_visit(&visit,newFunc->function_definition_body);   
+    ast_t *returnValue =  visitor_visit(&visit,func->function_definition_body);   
 
     freeScope(newscope);
-    freeSingleAst(newFunc);
+    // freeSingleAst(newFunc);
     // GbPush(newscope,GetFirstAst());
     // ModifFirstAst(first);   
 
@@ -1014,16 +1014,14 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     }
 
 
-    // ast_t *first = GetFirstAst();
-    // ResetFirstAst();
-
     scope_t * newscope = newScope();
     int visitorScopeCount = visitor->global_scope->countScope;
     if(visitorScopeCount <= 1){
         newscope->countScope = functionDef->function_definition_body->countScope + visitorScopeCount;
     }
-    ast_t *newFunction = ast_copy(functionDef,newscope);
-    // printf("            [ %d ] \n",visitor->global_scope->countScope);
+    
+    // je faisait une copie , c'est plus valid
+    // ast_t *newFunction = ast_copy(functionDef,newscope);
     
     if(node->function_call_args.size != functionDef->function_defintion_args.size){
         Print_visitor_error(
@@ -1037,7 +1035,6 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         
 
         freeScope(newscope);
-        // freeSingleAst(newFunction);
         Clear_Ceflo(&lexer);
         exit(visitor_error);
         exit(1);
@@ -1078,22 +1075,18 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         );
     }
 
-    // printf("visitor : %d \n",visitor->global_scope->countScope);
-
     visitor_t visit;
     newVisitorWithScope(&visit,newscope);
-    visit.global_scope->countScope = newFunction->function_definition_body->countScope; 
+    // je faisait une copie or je pouvais parcourir cette fonction avec une nouvelle porter de definition de varaible
+    // visit.global_scope->countScope = newFunction->function_definition_body->countScope; 
+    visit.global_scope->countScope = newscope->countScope;
     
     visit.global_scope->scope_parent = visitor->global_scope;
 
-    ast_t *returnValue =  visitor_visit(&visit,newFunction->function_definition_body);   
+    ast_t *returnValue =  visitor_visit(&visit,functionDef->function_definition_body);   
     
-    // GbPush(newscope,newFunction);
-
     freeScope(newscope);
-    freeSingleAst(newFunction);
-
-    // ModifFirstAst(first);   
+    // freeSingleAst(newFunction);
 
     returnValue = is_function_return_type(visitor,functionDef,returnValue);
 
@@ -1123,14 +1116,6 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
 
 
-
-
-
-
-
-
-
-
 //                          ===================================== $VALUE ==============================================
 
 
@@ -1146,6 +1131,8 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
  * @return ast_t* 
  */
 ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t *op , ast_t *right){
+
+
 
     #define BINOP(l,o,r)    l(left->value) o r(right->value)
 
@@ -1558,6 +1545,7 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
 
     return value;
 
+
 }
 
 /**
@@ -1582,13 +1570,13 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
         right
     );
 
-    // for marked
+    // // for marked
 
-    // printf("            %d\n ",visitor->constants.size);
-    visitor_append_value(
-        visitor,
-        value
-    );
+    // // printf("            %d\n ",visitor->constants.size);
+    // visitor_append_value(
+    //     visitor,
+    //     value
+    // );
 
 
     return value;
