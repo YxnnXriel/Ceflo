@@ -1,18 +1,10 @@
 
 
 
-struct Personne{
-    var Nom , Prenom;
-    func __init__(nom,prenom){
-        Nom = nom
-        Prenom = prenom
-    }
+
+
+var n = 0;
+while n != 1000{
+    println(n)
+    n +=1;
 }
-
-var k = new Personne("Yann","Ariel");
-
-var p = 0;
-
-p = k;
-
-println(p,"  ",k);

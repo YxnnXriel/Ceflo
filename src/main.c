@@ -24,6 +24,22 @@
 
 #include <unistd.h>
 
+/*
+	L'interpréteur est terminé !
+	Tout ce qui suivra comme mise à jour n'est qu'optimisation
+	Du code et précision des erreurs soulevées par l'interpréteur.
+	Il n'est pas le premier interpréteur que j'ai écrit, juste le premier qui est complet ,
+	qui m'a été demander par une amie (à qui j'ai dédié le nom de l'interpréteur), 
+	et c'est aussi le premier qui a un traçage de l'AST.
+
+	L'interpréteur suit un parcours simple et basique :
+		- lexème du fichier source pour avoir une liste de jetons
+		- scanner les jetons pour donner un sens pour la génération de l'AST
+		- Visiter l'arbre et exécuter chaque instruction des nœuds
+
+			[Lexer] ==> [Parser] ==> [AST] ==> [Visitor]
+*/
+
 
 /**
  * TODO: secure lexer entry,and try free current ast if we meet a problem
