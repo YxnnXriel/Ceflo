@@ -2,9 +2,4 @@
 
 
 
-
-var n = 0;
-while n != 1000{
-    println(n)
-    n +=1;
-}
+println("Hi CeFlo !")
