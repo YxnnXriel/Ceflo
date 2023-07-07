@@ -217,6 +217,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor,node);break;
         case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor,node);break;
         case AST_BINOP: return visitor_visit_binop(visitor,node);break;
+        case AST_UNOP: return visitor_visit_unop(visitor,node);break;
         case AST_IF: return visitor_visit_if(visitor,node);break;
         case AST_WHILE: return visitor_visit_while(visitor,node);break;
         case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);break;
@@ -263,51 +264,32 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
                 return noeud;
             if(noeud ->type == AST_RETURN){
                 if(noeud ->return_expr != NULL){
-                    
-
                     ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
-                    ast_t *value =  ast_copy(return_value,node->scope);  
-                    value->is_return_value = true; 
-                    // if(value->countScope <= -1)
-                    //     value->countScope = visitor->global_scope->countScope -1;
-                    // Debug_Print_Ast_Type(value);
-                    // GbFree();
-                    // printf("========= ");
-                    // printValueAst(value,visitor);;
-                    // printf("========= \n");
-
-                    return value;
+                    // ast_t *value =  ast_copy(return_value,node->scope);  
+                    // value->is_return_value = true; 
+                    // return value;
+                    return_value->is_return_value = true;
+                    return return_value;
                 }
             }
 
-
-            // if(noeud->is_return_value)
-            //     printf("noued : %d    visitor : %d (%.2p) \n",noeud->countScope-1,visitor->global_scope->countScope , visitor->global_scope );
 
             if((noeud->is_return_value == true) 
                 &&
                 noeud->countScope - 1 != visitor->global_scope->countScope
 
             ){
-                if(visitor->global_scope->countScope == 0){
-                    // printf("Yes Yes \n");
+                if(visitor->global_scope->countScope == 0)
                     noeud->is_return_value =  false;
-
-                }else{
-                    // printf("No \n");
-                    // Debug_Print_Ast_Type(noeud);
+                else
                     return noeud ;
-                }
             }else{
                 if(noeud->is_return_value)
-                    // printf("Yes \n");
-                noeud->is_return_value =  false;
+                    noeud->is_return_value =  false;
             }
 
         }
     }
-    
-    // GbFree();
     
     return node;
 }
@@ -765,9 +747,9 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
         // Debug_Print_Ast_Type(value);
         value->is_for_variable = true;
 
-        if(value->variable_definition_static_type_name != NULL){
-            printf("%s \n",value->variable_definition_static_type_name);
-        }
+        // if(value->variable_definition_static_type_name != NULL){
+        //     printf("%s \n",value->variable_definition_static_type_name);
+        // }
         return value;
     }
 
@@ -1581,6 +1563,40 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
 
     return value;
 }
+
+
+ast_t * visitor_visit_unop(visitor_t * visitor , ast_t * node){
+
+
+    ast_t * left = visitor_visit(visitor,node->right);
+
+    if(node->op.type == TOKEN_PLUS){
+        return left;
+    }else if(node->op.type == TOKEN_MINUS){
+
+        if(left->type == AST_NUMBER){
+            left->value.as.numberValue *= -1; 
+        }else if(left->type == AST_CHAR){
+            left->value.as.charValue *= -1; 
+        }else{
+            Print_visitor_error(
+                node->line,
+                node->colone,
+                "./Ceflo",
+                " operator '-' n'est pas compatible avec l'expression qui suit \n"
+            );
+            Clear_Ceflo(&lexer);
+            visitor_error = true;   
+            exit(visitor_error);
+        }
+    }
+
+    return left;
+
+}
+
+
+
 
 /**
  * @brief evalue value

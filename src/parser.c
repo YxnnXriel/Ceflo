@@ -912,6 +912,16 @@ ast_t *parser_parse_term(parser_t *parser , scope_t *scope){
  */
 ast_t *parser_parse_factor(parser_t *parser , scope_t *scope){
 
+
+    if(parser->current.type == TOKEN_MINUS){
+        ast_t * unop = newAstWithLine(AST_UNOP,parser->lexer->line,parser->lexer->colone);
+        unop->op = parser->current;
+        parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+        unop->right = parser_parse_term(parser,scope);
+        return unop;
+    }
+
+
     if(parser->current.type == TOKEN_LPARENT){
 
         parser_eat(parser->current.type,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);

@@ -40,6 +40,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node);
 
 ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t *op , ast_t *right);
 ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node);
+ast_t * visitor_visit_unop(visitor_t * visitor , ast_t * node);
 
 ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node);

@@ -675,6 +675,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_LFUNC] = {&ast_cpy_Value},
     [AST_OBJ_ACCESS] = {&ast_cpy_binop},
     [AST_BINOP] = {&ast_cpy_binop},
+    [AST_UNOP] = {&ast_cpy_binop},
     [AST_RETURN] = {&ast_cpy_return},
     [AST_IF] = {&ast_cpy_if},
     [AST_WHILE] = {&ast_cpy_while},
@@ -682,6 +683,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_LIST_ACCESS] = {&ast_cpy_list_access},
     [AST_LIST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
     [AST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
+
     [AST_NOOP] = {NULL }
 };
 

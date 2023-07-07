@@ -1,5 +1,7 @@
 
 
 
+var p = -7 + -3
 
-println("Hi CeFlo !")
+
+println(p)
