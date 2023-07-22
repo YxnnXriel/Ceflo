@@ -175,6 +175,24 @@ void visitor_append_value(visitor_t * visitor , ast_t * value){
 
 }
 
+
+int  visitor_visit_code(ast_t* node){
+    ResetFirstScope();
+
+    visitor_t visitor;
+	newVisitor(&visitor);
+	visitor.global_scope->countScope = 0;
+	visitor_visit(&visitor,node);
+
+    clear_ceflo_clean();
+
+    return 0;
+
+}
+
+
+
+
 //                          ===================================== $COMPOUND ==============================================
 
 /**
@@ -229,9 +247,8 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
             return node;
         default:
             printf("%s: pas implementer \n",AST_TO_STRING[node->type]);
-            Clear_Ceflo(&lexer);
-            visitor_error = true;
-            exit(visitor_error);
+            clear_ceflo_clean();
+            exit(1);
             break;
     }
 
@@ -359,9 +376,8 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 variable->variable_name,
                 index->value.as.numberValue
                 );
-                Clear_Ceflo(&lexer);
-                visitor_error = true;
-                exit(visitor_error);
+                clear_ceflo_clean();
+                exit(1);
             }
 
             ast_t * res = List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
@@ -382,9 +398,8 @@ ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
                 variable->variable_name,
                 index->value.as.numberValue
                 );
-                Clear_Ceflo(&lexer);
-                visitor_error = true;
-                exit(visitor_error);
+                clear_ceflo_clean();
+                exit(1);
             }
             ast_t * value =  newAst(AST_CHAR);
             newValue(&value->value,CHAR);
@@ -513,9 +528,8 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             "struct %s n'est pas définit \n",
             node->function_call_name
         );
-        Clear_Ceflo(&lexer);
-        visitor_error = true;   
-        exit(visitor_error);
+        clear_ceflo_clean();
+        exit(1);
         
     }
 
@@ -670,9 +684,8 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
                 "./Ceflo",
                 "casting du type impossible !\n"
             );
-            Clear_Ceflo(&lexer);
-            visitor_error = true;
-            exit(visitor_error);
+            clear_ceflo_clean();
+            exit(1);
         }
     }
 
@@ -775,9 +788,9 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
             "var %s n'est pas définit \n",
             node->variable_name
         );
-        Clear_Ceflo(&lexer);
-        visitor_error = true;
-        exit(visitor_error);
+
+        clear_ceflo_clean();
+        exit(1);
 
     }
 
@@ -874,11 +887,8 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
                 func->function_defintion_args.size
             );
 
-            freeScope(newscope);
-            // freeSingleAst(newFunc);
-            clearAst();
+            clear_ceflo_clean();
             exit(1);
-
         }
 
         for (int i = 0; i < (int) args->function_call_args.size; i++){
@@ -901,9 +911,8 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
                     "casting du type impossible !\n"
                 );
                 
-                Clear_Ceflo(&lexer);
-                visitor_error = true;
-                exit(visitor_error);
+                clear_ceflo_clean();
+                exit(1);
             }
         }
 
@@ -991,8 +1000,8 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             node->function_call_name
         );
 
-            clearAst();
-            exit(1);
+        clear_ceflo_clean();
+        exit(1);
     }
 
 
@@ -1016,9 +1025,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         );
         
 
-        freeScope(newscope);
-        Clear_Ceflo(&lexer);
-        exit(visitor_error);
+        clear_ceflo_clean();
         exit(1);
     }
 
@@ -1042,9 +1049,9 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
                     "./Ceflo",
                     "casting du type impossible !\n"
                 );
-                Clear_Ceflo(&lexer);
-                visitor_error = true;
-                exit(visitor_error);
+
+                clear_ceflo_clean();
+                exit(1);
             }
         }
 
@@ -1080,9 +1087,8 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
             "func %s : retourne une value precise !\n",
             functionDef->function_definition_name
         );
-        Clear_Ceflo(&lexer);
-        visitor_error = true;
-        exit(visitor_error);
+        clear_ceflo_clean();
+        exit(1);
     }
 
 
@@ -1422,9 +1428,8 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
                                         " ...* %g pas pris en charge \n",
                                         right->value.as.numberValue
                                     );
-                                    Clear_Ceflo(&lexer);
-                                    visitor_error = true;
-                                    exit(visitor_error);
+                                    clear_ceflo_clean();
+                                    exit(1);
                                 }
                                 char *chaine = calloc(strlen(left->value.as.stringValue->str)*right->value.as.numberValue,sizeof(char*));
                                 for (int i = 0; i < right->value.as.numberValue; i++)
@@ -1585,9 +1590,8 @@ ast_t * visitor_visit_unop(visitor_t * visitor , ast_t * node){
                 "./Ceflo",
                 " operator '-' n'est pas compatible avec l'expression qui suit \n"
             );
-            Clear_Ceflo(&lexer);
-            visitor_error = true;   
-            exit(visitor_error);
+            clear_ceflo_clean();
+            exit(1);
         }
     }
 
@@ -1749,9 +1753,8 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
                 "./Ceflo",
                 "casting du type impossible !\n"
             );
-            Clear_Ceflo(&lexer);
-            visitor_error = true;
-            exit(visitor_error);
+            clear_ceflo_clean();
+            exit(1);
         }
 
         value->variable_definition_static_type = variable->variable_definition_static_type;

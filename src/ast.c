@@ -548,10 +548,11 @@ void freeAst(ast_t *node){
             String_free(node->value.as.stringValue);
         // }
     }
+
     if(node->type == AST_OBJ){
-        freeScope(
-            node->value.as.ObjectValue.self
-        );
+        // freeScope(
+        //     node->value.as.ObjectValue.self
+        // );
 
         if( node->value.as.ObjectValue.obj_name != NULL){
             free(node->value.as.ObjectValue.obj_name);

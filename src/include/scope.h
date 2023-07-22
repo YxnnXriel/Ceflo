@@ -11,12 +11,26 @@ typedef struct SCOPE_STRUCT{
     stk_t struct_definition;
     int countScope;
     struct SCOPE_STRUCT *scope_parent;
+
+
+    /* ======== NEXT SCOPE ======== */
+        // utiliser pour gerer la memoire actu
+        struct SCOPE_STRUCT *next;
+        struct SCOPE_STRUCT *prev;
+ 
 }scope_t;
 
 
 scope_t* newScope();
 void freeScope(scope_t * scope);
 void freeLscope(void *x);
+
+
+scope_t * GetFirstScope();
+void ResetFirstScope();
+
+void clearScope();
+void freeSingleScope(scope_t *scope);
 
 ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef);
 void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value);

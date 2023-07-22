@@ -4,12 +4,49 @@
 #include "include/ast.h"
 #include "include/error.h"
 
+
+static scope_t *current_scope;
+static scope_t *prev_scope;
+
+static scope_t *initScope(){
+    return current_scope;
+}
+
+scope_t * GetFirstScope(){
+    return initScope();
+}
+
+void ResetFirstScope(){
+    current_scope = NULL;
+    prev_scope = NULL;
+}
+
+
+
+
+
 scope_t* newScope(){
     scope_t *scope = calloc(1,sizeof(*scope));
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
     scope->scope_parent = NULL;
     scope->countScope = -1;
+
+
+
+    if(prev_scope == NULL){
+
+        scope->next = NULL;
+        current_scope = scope;
+        prev_scope = scope;
+
+    }else{
+
+        current_scope->prev = scope;
+        scope->next = current_scope;
+        current_scope = scope;
+    }
+
     return scope;
 
 }
@@ -212,6 +249,35 @@ void freeScope(scope_t * scope){
         if(scope->struct_definition.Size != 0){
             Hash_Del(&scope->struct_definition);
         }
+    }
+}
+
+
+void clearScope(){
+    scope_t * scope = GetFirstScope();
+    while (scope != NULL){
+        scope_t *sup = scope;
+        scope = scope->next;
+        freeScope(sup);
+        free(sup);
+    }
+    
+}
+
+void freeSingleScope(scope_t *scope){
+
+    if(scope != NULL){
+        if(scope->next == NULL){
+            prev_scope = scope->prev;
+            prev_scope->next = NULL;
+        }else if(scope->prev == NULL){
+            current_scope = scope->next;
+            current_scope->prev = NULL;
+        }else{
+            scope->next->prev = scope->prev;
+            scope->prev->next = scope->next;
+        }
+        freeScope(scope);
         free(scope);
     }
 }

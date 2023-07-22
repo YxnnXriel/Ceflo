@@ -52,6 +52,8 @@
  * - Fix Bug char from parser and lexer		- OK
  * - Rewrite clean all						- OK
  * - Fix Bug typé							- OK
+ * - Mise à jour du simple garbage			- OK
+ * - Ajouter des fonctions pour chaque valeur - ?
  */ 
 
 
@@ -63,38 +65,18 @@ int main(int argc, char const *argv[]){
 
 	if(argc >= 2){
 
-		
-			newLexer(&lexer,argv[1]);
-			ast_t *node = parser_parse(&lexer);
-			visitor_t visitor;
-			newVisitor(&visitor);
-			newGb();
-			visitor.global_scope->countScope = 0;
-			clear_ceflo_push(
-				&visitor
-			);
-			visitor_visit(&visitor,node);
-			// freeVsisitorGB();
-			// clearAst();
-			// freeScope(visitor.global_scope);
-			
-			// lexerFree(&lexer);
-			Clear_Ceflo(&lexer);
-		
+		newLexer(&lexer,argv[1]);
+		ast_t *node = parser_parse(&lexer);
+		visitor_visit_code(node);
 
+
+
+		
 	}else{
 		printf("[CEFLO]\n");
 		printf("./Ceflo [args]\n");
 		printf("file error\n");
 	}
-
-
-    // memcpy(value,&lexer->fileCode[initiale],lenght);
-
-
-	// char *chaine = "yann Ariel";
-
-	// printf("%d \n",memcmp("Areel",&chaine[5],5) == 0);
 
 	return 0;
 }

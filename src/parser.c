@@ -127,6 +127,19 @@ void newParser(parser_t *parser,lexer_t *lexer){
 
 
 
+static void Ceflo_Error(){
+    parser_t *parser = GetCurrentParser();
+
+    freeToken(&parser->prev);
+    freeToken(&parser->current);
+    lexerFree(parser->lexer);
+    clearAst();
+    exit(1);
+}
+
+
+
+
 
 /**
  * @brief eat current token and get next token, if error catch panic
@@ -155,10 +168,7 @@ int parser_eat(TokenEnum type,errorE errorType,char *fmt , ...){
             args
         );
         va_end(args);
-        freeToken(&parser->prev);
-        freeToken(&parser->current);
-        Clear_Ceflo_Parser(parser->lexer);
-        exit(1);
+        Ceflo_Error();
     }
 
     freeToken(&parser->prev);
@@ -185,10 +195,10 @@ ast_t *parser_parse(lexer_t *lexer){
     newParser(parser,lexer);
 
     __init_first_ast();
-    Rt = R_FUNCTION_CALL_TYPE;
     ScopeReset();
-    
     ast_t *node =  parser_parse_statments(parser,NULL);
+
+    lexerFree(lexer);
 
     return node;
 }
@@ -1023,6 +1033,8 @@ ast_t *parser_parse_return(parser_t *parser , scope_t *scope){
 
     if(parser->current.type != TOKEN_SEMI){
         ast_return->return_expr = parser_parse_expr(parser,scope);
+    }else{
+        ast_return->return_expr = newAst(AST_NONE);
     }
 
     return ast_return;
