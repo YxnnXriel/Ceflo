@@ -69,7 +69,7 @@ int main(int argc, char const *argv[]){
 		ast_t *node = parser_parse(&lexer);
 		visitor_visit_code(node);
 
-
+		
 
 		
 	}else{

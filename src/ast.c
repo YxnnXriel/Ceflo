@@ -574,10 +574,6 @@ void freeAst(ast_t *node){
         free(node->struct_definition_item);
     }    
 
-    // if(node->scope){
-    //     if(node->type != AST_COMPOUND)
-    //         freeScope(node->scope);
-    // }
 }
 
 

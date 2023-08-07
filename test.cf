@@ -1,16 +1,28 @@
 
 
 
+struct Zoo{
+    var List::list;
+    func __init__(){
+        List = [];
+    }
 
+    func Append(x){
+        List.append(x)
+    }
 
-
-
-
-struct P{
-    var o = "Yann"
+    func __str__(){
+        return List
+    }
 }
 
+var zoo = new Zoo();
 
-var l = new P();
 
-println(l)
+zoo.Append("Mousse")
+zoo.Append("Pig")
+
+
+println(zoo.List.lenght())
+
+

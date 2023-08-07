@@ -728,7 +728,7 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     }
 
 
-    return node;
+    return value;
 }
 
 
@@ -933,7 +933,7 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , ast_t * args){
 
     ast_t *returnValue =  visitor_visit(&visit,func->function_definition_body);   
 
-    freeScope(newscope);
+    freeSingleScope(newscope);
     // freeSingleAst(newFunc);
     // GbPush(newscope,GetFirstAst());
     // ModifFirstAst(first);   
@@ -1074,7 +1074,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
     ast_t *returnValue =  visitor_visit(&visit,functionDef->function_definition_body);   
     
-    freeScope(newscope);
+    freeSingleScope(newscope);
     // freeSingleAst(newFunction);
 
     returnValue = is_function_return_type(visitor,functionDef,returnValue);
