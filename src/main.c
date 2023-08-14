@@ -54,6 +54,7 @@
  * - Fix Bug typé							- OK
  * - Mise à jour du simple garbage			- OK
  * - Ajouter des fonctions pour chaque valeur - ?
+ * - Inroduire les constantes				-   ?
  */ 
 
 
@@ -69,7 +70,7 @@ int main(int argc, char const *argv[]){
 		ast_t *node = parser_parse(&lexer);
 		visitor_visit_code(node);
 
-		
+
 
 		
 	}else{

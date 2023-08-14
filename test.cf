@@ -1,28 +1,6 @@
 
 
 
-struct Zoo{
-    var List::list;
-    func __init__(){
-        List = [];
-    }
-
-    func Append(x){
-        List.append(x)
-    }
-
-    func __str__(){
-        return List
-    }
-}
-
-var zoo = new Zoo();
 
 
-zoo.Append("Mousse")
-zoo.Append("Pig")
-
-
-println(zoo.List.lenght())
-
-
+println(5 - "a");

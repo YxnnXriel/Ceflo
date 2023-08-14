@@ -111,6 +111,9 @@ typedef struct AST_TYPE_VALUE{
     #define OBJECT_SELF(ast) ((ast->value.as.ObjectValue.self))
 
 
+    bool Value_verif_is_none(Value_t *value);
+
+    
 typedef struct AST_STRUCT{
 
     enum{

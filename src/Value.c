@@ -342,3 +342,155 @@ static ast_t *Value_New_str(string_t * x){
 
 
 // LFUNC
+
+
+Value_t convert_to_type(Value_t *convert , uint8_t type){
+
+
+    if(type == BOOL){
+        switch (convert->type){
+            case BOOL : return (Value_t){.type = BOOL , .as.booleanValue = convert->as.booleanValue};
+            case CHAR : return (Value_t){.type = BOOL , .as.booleanValue = convert->as.charValue ? true:false};
+            case NUMBER : return (Value_t){.type = BOOL , .as.booleanValue = convert->as.numberValue ? true:false};
+            case STRING : return (Value_t){.type = BOOL , .as.booleanValue = (convert->as.stringValue != NULL && convert->as.stringValue->str != NULL)? true:false};
+        }
+    }
+
+
+    if(type == CHAR){
+        switch (convert->type){
+            case BOOL : return (Value_t){.type = CHAR , .as.charValue = convert->as.booleanValue};
+            case CHAR : return (Value_t){.type = CHAR , .as.charValue = convert->as.charValue};
+            case NUMBER : return (Value_t){.type = CHAR , .as.charValue = (char)convert->as.numberValue};
+            case STRING : return (Value_t){.type = CHAR , .as.charValue = convert->as.stringValue->lenght }; // a revoir , soit entre calculer la longuer de la chaine 
+        }
+    }
+    
+    if(type == NUMBER){
+        switch (convert->type){
+            case BOOL : return (Value_t){.type = NUMBER , .as.numberValue = convert->as.booleanValue};
+            case CHAR : return (Value_t){.type = NUMBER , .as.numberValue = convert->as.charValue};
+            case NUMBER : return (Value_t){.type = NUMBER , .as.numberValue = convert->as.numberValue};
+            case STRING : return (Value_t){.type = NUMBER , .as.numberValue = convert->as.stringValue->lenght }; // a revoir , soit entre calculer la longuer de la chaine 
+        }
+    }
+
+
+    if(type == STRING){
+        switch (convert->type){
+            case BOOL : return (Value_t){.type = STRING , .as.stringValue = new_String(convert->as.booleanValue ? "true":"false")};
+            case CHAR : return (Value_t){.type = STRING , .as.stringValue = String_cat("%c",convert->as.charValue)};
+            case NUMBER : return (Value_t){.type = STRING , .as.stringValue = String_cat("%g",convert->as.numberValue)};
+            case STRING : return (Value_t){.type = STRING , .as.stringValue = new_String(convert->as.stringValue != NULL ? convert->as.stringValue->str:"")}; // a revoir , soit entre calculer la longuer de la chaine 
+        }
+    }
+
+}
+
+
+Value_t add_value(Value_t * a ,Value_t * b, Value_t * res){
+
+    if(Value_verif_is_none(a) == false || Value_verif_is_none(b) == false ){
+        Value_t none;
+        newValue(&none,NONE);
+        return none;
+    }
+
+    Value_t *priority = a->type >= b->type? a:b;
+    Value_t *unpriority = a->type >= b->type? b:a;
+
+    
+    Value_t value = convert_to_type(unpriority,priority->type);
+
+    if(!Value_verif_is_none(&value)){
+        *res = value;
+        return value;
+    }
+
+    switch (priority->type)
+    {
+        case BOOL:
+            *res = (Value_t){.type = BOOL , 
+                .as.booleanValue = priority->as.booleanValue + value.as.booleanValue 
+            };
+            break;
+        
+        case CHAR : 
+            *res = (Value_t){.type = CHAR ,
+                .as.charValue = priority->as.charValue + value.as.charValue
+            };
+            break;
+
+        case NUMBER :
+            *res = (Value_t){.type = NUMBER ,
+                .as.numberValue = priority->as.numberValue + value.as.numberValue
+            };
+            break;
+
+        case STRING:
+            *res = (Value_t){.type = STRING ,
+                .as.stringValue = String_cat("%s%s",priority->as.stringValue->str,value.as.stringValue->str)
+            };
+
+            String_free(value.as.stringValue);
+            break;
+    
+    }
+    
+    return (Value_t){.type = NONE};
+}
+
+
+
+
+
+
+Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res){
+
+    if(Value_verif_is_none(a) == false || Value_verif_is_none(b) == false ){
+        Value_t none;
+        newValue(&none,NONE);
+        return none;
+    }
+
+    Value_t *priority = a->type >= b->type? a:b;
+    Value_t *unpriority = a->type >= b->type? b:a;
+
+    
+    Value_t value = convert_to_type(unpriority,priority->type);
+
+    if(!Value_verif_is_none(&value)){
+        *res = value;
+        return value;
+    }
+
+
+    switch (priority->type)
+    {
+        case BOOL:
+            *res = (Value_t){.type = BOOL , 
+                .as.booleanValue = priority->as.booleanValue - value.as.booleanValue 
+            };
+            break;
+        
+        case CHAR : 
+            *res = (Value_t){.type = CHAR ,
+                .as.charValue = priority->as.charValue - value.as.charValue
+            };
+            break;
+
+        case NUMBER :
+            *res = (Value_t){.type = NUMBER ,
+                .as.numberValue = priority->as.numberValue - value.as.numberValue
+            };
+            break;
+
+        case STRING:
+            String_free(value.as.stringValue);
+            return (Value_t){.type = NONE};
+            break;
+    
+    }
+    
+    return (Value_t){.type = NONE};
+}

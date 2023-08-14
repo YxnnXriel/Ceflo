@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "include/Value.h"
 #include "include/typer.h"
 #include "include/ast.h"
 
@@ -13,6 +14,13 @@ struct typer {
     string_t *str;
     ast_t * lfunc;
 };
+
+
+#define TYPE_TABLE_PRIORITY_COUNT 7
+
+static int type_table_priority[TYPE_TABLE_PRIORITY_COUNT] = 
+                    {AST_BOOL, AST_CHAR , AST_NUMBER,AST_STRING,
+                    AST_LIST,AST_OBJ,AST_NONE};
 
 struct typer type;
 
@@ -288,3 +296,50 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
     }
 
 }
+
+/*
+    bool - > char -> number -> string -> list -> obj  
+*/
+
+
+static int getpriority(uint8_t type){
+    for (int i = 0; i < TYPE_TABLE_PRIORITY_COUNT; i++){
+        if(type_table_priority[i] == type)
+            return i;
+    }
+    return -1;
+}
+
+
+ast_t * typer_value_expr(ast_t * left , token_t * op , ast_t * right){
+    // cette fonction vas permettre de verifer qui à la priorité et faire un caste 
+    // sur la valeur à le faire
+
+
+    // ast_t ** priority_at = getpriority(left->type) >= getpriority(right->type) ? &left:&right;
+    // // ast_t ** unpriority_at = getpriority(left) >= getpriority(right) ? &right:&left;
+    
+    // ast_t * value = newAst((*priority_at)->type);
+
+    // switch (op->type){
+    //     case TOKEN_PLUS:
+    //         add_value(&left->value,&right->value,&value->value);
+    //         return value;
+    //     break;
+        
+    //     case TOKEN_MINUS:
+    //         minus_value(&left->value,&right->value,&value->value);
+
+    //         if(!Value_verif_is_none(&value->value))
+    //             value->type = AST_NONE; // appeler les erreurs ici , MinusExprErreur
+
+
+    //         return value;
+    //     break;
+    
+    // }
+
+
+    // return left;
+}
+

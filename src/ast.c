@@ -398,6 +398,14 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
 }
 
 
+
+
+bool Value_verif_is_none(Value_t *value){
+    return value->type != NONE ? true:false;
+}
+
+
+
 /**
  * @brief Modif Value
  * 

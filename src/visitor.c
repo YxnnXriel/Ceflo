@@ -1120,9 +1120,7 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
  */
 ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t *op , ast_t *right){
 
-
-
-    #define BINOP(l,o,r)    l(left->value) o r(right->value)
+ #define BINOP(l,o,r)    l(left->value) o r(right->value)
 
     ast_t * value = NULL;
     
@@ -1533,6 +1531,13 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
     return value;
 
 
+
+
+
+    // return typer_value_expr(
+    //     left,op,right
+    // );
+   
 }
 
 /**

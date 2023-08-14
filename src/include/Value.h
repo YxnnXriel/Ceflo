@@ -5,6 +5,14 @@
     #include "visitor.h"
 
 
+
+    Value_t add_value(Value_t * a ,Value_t * b, Value_t * res);
+    Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res);
+
+
+
+
+
     // LIST
     ast_t * value_List_lenght(visitor_t * visitor , list_t *list , ast_t * value);
     ast_t * value_List_append(visitor_t * visitor , list_t *list , ast_t * value);
