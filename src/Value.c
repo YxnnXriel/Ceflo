@@ -388,8 +388,7 @@ Value_t convert_to_type(Value_t *convert , uint8_t type){
 }
 
 
-Value_t add_value(Value_t * a ,Value_t * b, Value_t * res){
-
+Value_t value_expr(Value_t * a , Value_t *b , Value_t *res , token_t *token){
     if(Value_verif_is_none(a) == false || Value_verif_is_none(b) == false ){
         Value_t none;
         newValue(&none,NONE);
@@ -400,6 +399,22 @@ Value_t add_value(Value_t * a ,Value_t * b, Value_t * res){
     Value_t *unpriority = a->type >= b->type? b:a;
 
     
+    Value_t value = convert_to_type(unpriority,priority->type);
+
+    if(!Value_verif_is_none(&value)){
+        *res = value;
+        return value;
+    }
+
+    switch (token->type){
+        case TOKEN_PLUS : return add_value(a,b,res,priority,unpriority);
+        case TOKEN_MINUS : return minus_value(a,b,res,priority,unpriority);
+
+    }
+}
+
+Value_t add_value(Value_t * a ,Value_t * b, Value_t * res , Value_t *priority , Value_t * unpriority){
+
     Value_t value = convert_to_type(unpriority,priority->type);
 
     if(!Value_verif_is_none(&value)){
@@ -444,17 +459,7 @@ Value_t add_value(Value_t * a ,Value_t * b, Value_t * res){
 
 
 
-
-Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res){
-
-    if(Value_verif_is_none(a) == false || Value_verif_is_none(b) == false ){
-        Value_t none;
-        newValue(&none,NONE);
-        return none;
-    }
-
-    Value_t *priority = a->type >= b->type? a:b;
-    Value_t *unpriority = a->type >= b->type? b:a;
+Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res, Value_t *priority, Value_t * unpriority){
 
     
     Value_t value = convert_to_type(unpriority,priority->type);
@@ -463,7 +468,6 @@ Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res){
         *res = value;
         return value;
     }
-
 
     switch (priority->type)
     {

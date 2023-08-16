@@ -6,8 +6,8 @@
 
 
 
-    Value_t add_value(Value_t * a ,Value_t * b, Value_t * res);
-    Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res);
+    Value_t add_value(Value_t * a ,Value_t * b, Value_t * res ,  Value_t *priority, Value_t * unpriority);
+    Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res ,  Value_t *priority, Value_t * unpriority);
 
 
 
