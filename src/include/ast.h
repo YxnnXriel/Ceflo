@@ -354,6 +354,4 @@ ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
 
 
 
-
-
 #endif

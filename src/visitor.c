@@ -25,7 +25,7 @@
     #include "include/typer.h"
 
 
-#define CEFLO_GB 0
+#define CEFLO_GB 1
 
 
 

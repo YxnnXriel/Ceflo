@@ -67,6 +67,9 @@ void newLexer(lexer_t *lexer,const char* source){
 
 }
 
+/*
+    copy
+*/
 void newLexerWithString(lexer_t * lexer,const char *source){
     lexer->fileCode = calloc(strlen(source)+1,sizeof(char));
     strcpy(lexer->fileCode,source);
@@ -78,6 +81,38 @@ void newLexerWithString(lexer_t * lexer,const char *source){
     lexer->current_char = lexer->fileCode[lexer->index];
 }
 
+
+char * lexer_get_line_for_file(lexer_t * lexer , int line){
+    FILE * fic = fopen(lexer->fileName->str,"r");
+    
+    if(fic != NULL){
+
+    }else{
+        fprintf(stderr,"%s : impossible d'ouvrire le fichier %s\n",
+            __func__,
+            lexer->fileName->str
+        );
+
+        char buffer[512];
+        int i = 0;
+        
+        while (fgets(buffer,511,fic) != NULL){
+            if(i == line){
+                fclose(fic);
+                char *s = buffer;
+                return s;
+            }
+            i++;
+        }
+
+    }
+        
+    fclose(fic);
+
+
+    return NULL;
+
+}
 
 
 
@@ -214,7 +249,7 @@ static int lexer_peek(lexer_t *lexer, char c){
  */
 static char * lexer_get_value(lexer_t *lexer,int initiale ){
     size_t lenght = lexer->index - initiale + 1;
-    char *value = calloc(lenght,sizeof(char));
+    char *value = calloc(lenght,sizeof(char*));
     memcpy(value,&lexer->fileCode[initiale],lenght);
     value[lenght -1] = '\0';
     return value;

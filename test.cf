@@ -1,6 +1,8 @@
 
 
+var t::int = lfunc a::int,b::int -> return a + n;
 
 
+func k -> i::int , o::str {
 
-println(5 - "a");
+}

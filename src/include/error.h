@@ -34,7 +34,6 @@ static const char *ERROR_TO_STRING[]={
 
 void Print_error(lexer_t * lexer , char *fmt, ...);
 
-void Print_parser_error(int line , int colone ,char *fileName, errorE err , char *fmt , va_list args );
 
 void Print_visitor_error(int line, int colone,char *file_name,char *format,...);
 

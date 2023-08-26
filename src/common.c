@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "include/common.h"
 
-
+#define PRINTLN(fmt,...) printf(fmt,__VA_ARGS__)
 
 void allowChar(char ** chaine , const char *value){
     *chaine = calloc(strlen(value), sizeof(char*));
@@ -30,3 +31,5 @@ string_t * GetStringForStr(char *source  , int start, int end){
     free(chaine);
     return res;
 }
+
+

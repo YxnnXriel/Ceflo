@@ -41,20 +41,27 @@
 */
 
 
+
+// TODO : Corriger le parser.c   
+
+
 /**
  * TODO: secure lexer entry,and try free current ast if we meet a problem
  * - Faire les attributs et les fonction d'une liste   - OK
  * - Ajouter un dictionnaire(si c'est possible)
  * - Bien d'autre
- * - Fix Bug function call and List  		- OK
- * - Fix Bug list access , new obj   		- OK
- * - Fix lfunc type right            		- OK
- * - Fix Bug char from parser and lexer		- OK
- * - Rewrite clean all						- OK
- * - Fix Bug typé							- OK
- * - Mise à jour du simple garbage			- OK
- * - Ajouter des fonctions pour chaque valeur - ?
- * - Inroduire les constantes				-   ?
+ * - Fix Bug function call and List  			- OK
+ * - Fix Bug list access , new obj   			- OK
+ * - Fix lfunc type right            			- OK
+ * - Fix Bug char from parser and lexer			- OK
+ * - Rewrite clean all							- OK
+ * - Fix Bug typé								- OK
+ * - Mise à jour du simple garbage				- OK
+ * - Ajouter des fonctions pour chaque valeur 	- ?
+ * - Inroduire les constantes				  	- ?
+ * - Modifier les modif value dans scope.c		- ?
+ * - Modifier le parser.c						- ?
+ * 
  */ 
 
 

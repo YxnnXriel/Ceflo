@@ -5,20 +5,6 @@
 #include "include/error.h"
 
 
-void Print_parser_error(int line , int colone ,char *fileName, errorE err , char *fmt , va_list args ){
-
-
-    printf("%s:%d:%d: %s: ",fileName,line,colone,ERROR_TO_STRING[err]);
-    
-    char buffer;
-    vprintf(
-        fmt,
-        args
-    );
-    va_end(args);
-
-}
-
 void Print_error(lexer_t * lexer , char *fmt, ...){
     printf("%s:%d:%d: ","./Ceflo",lexer->line,lexer->colone);
     va_list args;
