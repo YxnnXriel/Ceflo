@@ -30,18 +30,69 @@
 #define TYPE(parser) parser->current.type
 #define VALUE(parser) parser->current.value
 
+static int *ScopeCount(){
+    static int l;
+    return &l;
+}
+static void ScopeReset(){
+    int *l = ScopeCount();
+    *l = 0;
+}
+
+static void ScopeSet(int value){
+    int * l = ScopeCount();
+    *l = value;
+}
+
+static void ScopePlus(){
+    int *p = ScopeCount();
+    *p += 1;
+}
+
+static void ScopeMinus(){
+    int *p = ScopeCount();
+    *p -= 1;
+}
+
+static int GetScope(){
+    int * val = ScopeCount();
+    return *val;
+}
+
+static bool isInClassDefinition(ast_t * item){
+    switch (item->type){
+        case AST_FUNCTION_DEFINITION:
+        case AST_VARIABLE_DEFINITION:
+        return true;
+        default:
+            return false;
+    }
+}
+
 
 
 
 #define NEW_OBJECT(type,parser) newAstWithLine(type,parser->lexer->line,parser->lexer->colone)
 
-
+/**
+ * @brief init parser
+ * 
+ * @param parser 
+ * @param lexer 
+ */
 void newParser(parser_t *parser,lexer_t *lexer){
     parser->lexer = lexer;
     parser->current = lexer_get_next_token(parser->lexer);
     parser->prev = (token_t){.type = TOKEN_NONE,.value = NULL};
 }
 
+
+
+/**
+ * @brief panic for parser
+ * 
+ * @param parser 
+ */
 void parser_error(parser_t * parser ){    
     freeToken(&parser->prev);
     freeToken(&parser->current);
@@ -50,6 +101,12 @@ void parser_error(parser_t * parser ){
     exit(1);
 }
 
+
+/**
+ * @brief clear parser if all its ok
+ * 
+ * @param parser 
+ */
 void freeParser(parser_t * parser){
     freeToken(&parser->prev);
     freeToken(&parser->current);
@@ -57,27 +114,46 @@ void freeParser(parser_t * parser){
 }
 
 
+/**
+ * @brief this function is like an incrementation to get next elements 
+ * 
+ * @param type 
+ * @param parser 
+ * @param fmt 
+ * @param ... 
+ * @return int 
+ */
 int parser_eat(TokenEnum type, parser_t * parser, char *fmt , ...){
     va_list args;
     va_start(args,fmt);
 
     if(TYPE(parser) != type){
-        Print_error(parser->lexer,fmt,args);
+        printf("%s:%d:%d: ","./Ceflo",parser->lexer->line,parser->lexer->colone);
+        vprintf(fmt,args);
         va_end(args);
         parser_error(parser);
         return 1;
     }else{
-        // logic
-
+        freeToken(&parser->prev);
+        parser->prev = parser->current;
+        parser->current = lexer_get_next_token(parser->lexer);
+        va_end(args);
         return 0;
     }
-    va_end(args);
 
 }
 
+
+
+/**
+ * @brief here we start the parser
+ * 
+ * @param lexer 
+ * @return ast_t* 
+ */
 ast_t *parser_parse(lexer_t *lexer){
     parser_t parser;
-    __init_first_ast();
+    __init_first_ast(); // la tête de l'ast
     newParser(&parser,lexer);
     ast_t *node = parser_parse_statments(&parser);
     freeParser(&parser);
@@ -85,10 +161,16 @@ ast_t *parser_parse(lexer_t *lexer){
 }
 
 
+
+/**
+ * @brief now , parser parse something like block or body 
+ * 
+ * @param parser 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_statments(parser_t *parser){
+
     if(TYPE(parser) == TOKEN_LBRACKET ){
-        int line = LINE(parser);
-        int colone = COLONE(parser);
         parser_eat(TYPE(parser),parser,"");
         ast_t * block = parser_parse_compound(parser);
 
@@ -99,12 +181,21 @@ ast_t *parser_parse_statments(parser_t *parser){
                 lexer_get_line_for_file(parser->lexer,LINE(parser))
             );
         }
-    }else
-    return parser_parse_compound(parser);
+        // Parse statements until a closing bracket is found
+
+        return block;
+    }else{
+        return parser_parse_compound(parser);
+    }
 
 }
 
-
+/**
+ * @brief parse body 
+ * 
+ * @param parser 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_compound(parser_t *parser){
     // is Block of something
     // TODO: ajouter un champ NAME pour chaque block si le block est une fonction
@@ -127,30 +218,79 @@ ast_t *parser_parse_compound(parser_t *parser){
 }
 
 
+
+/**
+ * @brief parse declaration , expression , ...
+ * 
+ * @param parser 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_statment(parser_t *parser){
 
+
+
     switch(TYPE(parser)){
-        case TOKEN_VAR: return parser_parse_variable(parser);
+        case TOKEN_VAR : return parser_parse_variable_definition(parser);
+        case TOKEN_FUNC : return parser_parse_function_definition(parser);
+        case TOKEN_STRUCT : return parser_parse_struct_definition(parser);
+        case TOKEN_ID : return parser_parse_variable(parser);
+        case TOKEN_RETURN : return parser_parse_return(parser);
+        case TOKEN_IF : return parser_parse_if(parser);
+        case TOKEN_WHILE : return parser_parse_while(parser);
+        case TOKEN_BREAK : return parser_parse_break(parser);
+        case TOKEN_INTEGER:
+        case TOKEN_FLOAT:
+        case TOKEN_CHAR:
+        case TOKEN_STRING:
+        case TOKEN_TRUE:
+        case TOKEN_FALSE:
+            return parser_parse_expr(parser);
+        default:
+            return newAst(AST_NOOP);break;
+
     }
 
+    return newAst(AST_NOOP);
 }
 
 
 
+/**
+ * @brief we start to parse variable definition
+ * 
+ * @param parser 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_variable_definition(parser_t *parser){
 
     ast_t * var = NEW_OBJECT(AST_VARIABLE_DEFINITION,parser);
+
+    var->countScope = GetScope();
     
     parser_eat(TOKEN_VAR,parser,NULL);
 
-    allowChar(&var->variable_definition_name,VALUE(parser));
     parser_eat(TOKEN_ID,parser,"%s : declaration variable with name `%s` is not valid\n",
         ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR],
         VALUE(parser)
     );
 
+    allowChar(&var->variable_definition_name,parser->prev.value);
+
     if(TYPE(parser) == TOKEN_DOUBLE_COLON){
-        // implemente la logique pour les variables typé
+        parser_eat(TYPE(parser),parser,"");    
+        int get_type = type_ceflo_convert_to_type(VALUE(parser));
+        
+        if(get_type == -2){
+            parser_eat(TOKEN_EOF,parser,"%s : we cannot use 'none' to define type variable\n",
+                ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR],
+                VALUE(parser)
+            );
+        }
+
+        var->variable_definition_static_type = get_type;
+        allowChar(&var->variable_definition_static_type_name,parser->current.value);
+
+        parser_eat(TOKEN_ID,parser,"");
     }
 
     if(TYPE(parser) == TOKEN_EQUAL){
@@ -164,27 +304,50 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
     return var;
 }
 
+
+/**
+ * @brief here you can have variable access like variable, variable[], variable.property etc
+ * 
+ * @param parser 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_variable(parser_t *parser){
 
     ast_t * variable = NEW_OBJECT(AST_VARIABLE,parser);
-    // variable->countScope = GetScope();
-    allowChar(&variable->variable_name,parser->current.value);
-    parser_eat(TOKEN_ID,parser,"%s : `%s` is not valid for referencies something",
+    variable->countScope = GetScope();
+
+    if(type_ceflo_convert_to_type(VALUE(parser)) != -1){
+        parser_eat(TOKEN_EOF,parser,"%s : `%s` name id or variable cannot be a type",
+            ERROR_TO_STRING[SYNTAX_ERROR],
+            VALUE(parser)
+       );        
+    }
+
+    parser_eat(TOKEN_ID,parser,"%s : `%s` is not valid for referencies something\n",
         ERROR_TO_STRING[SYNTAX_ERROR],
         VALUE(parser)
     );
+    allowChar(&variable->variable_name,parser->prev.value);
 
     // current token :
     int is_lbrace_and_function_call = 0;
 
-    // if(parser->current.type == TOKEN_DOUBLE_COLON){
+    if(parser->current.type == TOKEN_DOUBLE_COLON){
 
-    //     // syntaxe definition type static
-    //     // parser_eat(TOKEN_DOUBLE_COLON,SYNTAX_ERROR,"definition de varaible echouer \n");
-    //     // variable->variable_definition_static_type = GetType(parser->current.value);
-    //     // allowChar(&variable->variable_definition_static_type_name,parser->current.value);
-    //     // parser_eat(TOKEN_ID,SYNTAX_ERROR,"definition de varaible echouer \n");        
-    // }
+        // syntaxe definition type static
+        parser_eat(TYPE(parser),parser,"");    
+        if(TYPE(parser) == TOKEN_ID){
+            int get_type = type_ceflo_convert_to_type(parser->current.value);
+            variable->variable_definition_static_type = get_type == -2 ? NONE : get_type;
+            allowChar(&variable->variable_definition_static_type_name,VALUE(parser));
+            parser_eat(TYPE(parser),parser,NULL);
+
+        }else{
+            parser_eat(TOKEN_EOF,parser,"%s : variable type name must be expected\n",ERROR_TO_STRING[SYNTAX_ERROR]);
+        }
+
+        return variable;
+    }
 
     if(parser->current.type == TOKEN_LBRACE){
         //...., maybe the declaration is a list : access or assignement
@@ -193,7 +356,7 @@ ast_t *parser_parse_variable(parser_t *parser){
         
             ast_t * list_acces = NEW_OBJECT(AST_LIST_ACCESS,parser);
             list_acces->left = variable;
-            // list_acces->countScope = GetScope();
+            list_acces->countScope = GetScope();
             parser_eat(TOKEN_LBRACE,parser,NULL);
             list_acces->list_ptr = parser_parse_expr(parser);
             parser_eat(TOKEN_RBRACE,parser,"%s : we have forgot to close `%s` here\n",
@@ -210,7 +373,7 @@ ast_t *parser_parse_variable(parser_t *parser){
             parser->current.type == TOKEN_MULT_EQUAL
         ){
             ast_t * list_assign = NEW_OBJECT(AST_LIST_ASSIGNEMENT,parser);
-            // list_assign->countScope = GetScope();
+            list_assign->countScope = GetScope();
             list_assign->op = parser->current;
             parser_eat(TYPE(parser),parser,NULL);
             list_assign->assignement_left = variable;
@@ -239,6 +402,7 @@ ast_t *parser_parse_variable(parser_t *parser){
         ast_t * obj_acces = NEW_OBJECT(AST_OBJ_ACCESS,parser);
         obj_acces->left = variable;
         obj_acces->right = parser_parse_expr(parser);
+        obj_acces->countScope = GetScope();
 
         variable = obj_acces;
     }
@@ -250,7 +414,7 @@ ast_t *parser_parse_variable(parser_t *parser){
         ast_t * assign = NEW_OBJECT(AST_ASSIGNEMENT,parser);
         assign->assignement_left = variable;
         assign->assignement_value = parser_parse_expr(parser);
-        // assign->countScope = GetScope();
+        assign->countScope = GetScope();
         return assign;     
     }
 
@@ -264,7 +428,7 @@ ast_t *parser_parse_variable(parser_t *parser){
         //...., maybe the declaration is a modifier variable
 
         ast_t * modifier = NEW_OBJECT(AST_ASSIGNEMENT,parser);
-        // modifier->countScope = GetScope();
+        modifier->countScope = GetScope();
         modifier->assignement_left = variable;
         modifier->op = parser->current;
         parser_eat(TYPE(parser),parser,NULL);
@@ -279,6 +443,24 @@ ast_t *parser_parse_variable(parser_t *parser){
     return variable;
 }
 
+
+
+static void get_function_definition_args(parser_t *parser, ast_t *function){
+    ast_t *arg = parser_parse_variable(parser);
+    List_Ast_Append(&function->function_defintion_args,arg);
+    while (parser->current.type == TOKEN_COMA){
+        parser_eat(TYPE(parser),parser,NULL);
+        arg = parser_parse_variable(parser);
+        List_Ast_Append(&function->function_defintion_args,arg);
+    }
+}
+
+/**
+ * @brief Parses a function definition from the parser context
+ * 
+ * @param parser 
+ * @return ast_t* 
+ */
 ast_t *parser_parse_function_definition(parser_t *parser){
 
     // introduce `call` for method of obj value
@@ -288,59 +470,103 @@ ast_t *parser_parse_function_definition(parser_t *parser){
     newList_Ast(&function->function_defintion_args); 
     parser_eat(TYPE(parser),parser,NULL);
 
-    bool isfunctionfleche = false;
-
-    if(TYPE(parser) == TOKEN_ARROW){
-        isfunctionfleche = true;
+    if(TYPE(parser) == TOKEN_ID){
+        allowChar(&function->function_definition_name,VALUE(parser));
         parser_eat(TYPE(parser),parser,NULL);
     }else{
-        parser_eat(TOKEN_LPARENT,parser,NULL);
+        parser_eat(TOKEN_EOF,parser,"%s : function name expected\n",ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR]);
+    }
+
+    bool isarrow = false;
+
+    if(TYPE(parser) == TOKEN_ARROW){
+        isarrow = true;
+        parser_eat(TYPE(parser),parser,NULL);
     }
 
 
-    if(parser->current.type != TOKEN_RPARENT){
-        ast_t *arg = parser_parse_variable(parser);
-        List_Ast_Append(&function->function_defintion_args,arg);
-        while (parser->current.type == TOKEN_COMA){
-            parser_eat(TYPE(parser),parser,NULL);
-            arg = parser_parse_variable(parser);
-            List_Ast_Append(&function->function_defintion_args,arg);
+    if(TYPE(parser) != TOKEN_LBRACKET){
+        if(isarrow){
+            get_function_definition_args(parser,function);
+        }else{
+            parser_eat(TOKEN_LPARENT,parser,"%s : `%s` :  you are missing `%s`\n",  
+                ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
+                function->function_definition_name,
+                TOKEN_TO_STRING[TOKEN_LPARENT]
+            );
+            get_function_definition_args(parser,function);
+
+            parser_eat(TOKEN_RPARENT,parser,"%s : `%s` :  you are missing `%s`\n",  
+                ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
+                function->function_definition_name,
+                TOKEN_TO_STRING[TOKEN_RPARENT]
+            );
         }
-        
-    }
-    if(!isfunctionfleche){
-        parser_eat(TOKEN_RPARENT,parser,"%s : you are missing `%s`\n",  
-            ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
-            TOKEN_TO_STRING[TOKEN_RPARENT]
-        );
     }
 
-    if(parser->current.type == TOKEN_ID){
-        // function typer , TODO:
 
-        // function->function_definition_return_type = GetType(parser->current.value);
-        // allowChar(&function->function_definition_return_type_name,parser->current.value);
-        // parser_eat(TOKEN_ID,SYNTAX_ERROR,"ID %s inconnue \n",parser->current.value);
+    if(TYPE(parser) == TOKEN_COLON){
+        parser_eat(TYPE(parser),parser,NULL);
+        int get_type = type_ceflo_convert_to_type(parser->current.value);
+        function->function_definition_return_type = get_type == -2 ? NONE : get_type;
+        parser_eat(TOKEN_ID,parser,"ID %s inconnue \n",parser->current.value);
+        allowChar(&function->function_definition_return_type_name,parser->prev.value);
     }
 
-    // ScopePlus();
+
+    ScopePlus();
 
 
     // TODO : make inline function
+    
     parser_eat(TOKEN_LBRACKET,parser,"%s : unexpected `%s` for begin bodyfunction\n",
         ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
         TOKEN_TO_STRING[TOKEN_LBRACKET]
     );
 
+
     if(parser->current.type != TOKEN_RBRACKET){
         function->function_definition_body = parser_parse_statments(parser);
     }
 
-    // ScopeMinus();
+    ScopeMinus();
     parser_eat(TOKEN_RBRACKET,parser,"%s : unexpected `%s` for end bodyfunction\n",
         ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
         TOKEN_TO_STRING[TOKEN_RBRACKET]
     );
+
+    return function;
+
+}
+
+/**
+ * @brief je parse une fonction qui est en faite une fonction dans un tableau , exemple : table[0]()
+ * 
+ * @param prev 
+ * @param parser 
+ * @return ast_t* 
+ */
+ast_t *parser_parse_function_call_With_Name(ast_t * prev,parser_t *parser){
+
+    ast_t *function = NEW_OBJECT(AST_FUNCTION_CALL, parser);
+
+    function->countScope = GetScope();
+    function->left = prev;
+    parser_eat(TOKEN_LPARENT, parser,"unexpected `(` here");
+    newList_Ast(&function->function_call_args);
+    if(parser->current.type != TOKEN_RPARENT){
+        ast_t * arg = parser_parse_expr(parser);
+        List_Ast_Append(&function->function_call_args,arg);
+
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TOKEN_LPARENT, parser,"unexpected `,` here");
+            
+            arg = parser_parse_expr(parser);
+            List_Ast_Append(&function->function_call_args,arg);
+        }
+    }
+
+    parser_eat(TOKEN_LPARENT, parser,"unexpected `)` here");
 
     return function;
 }
@@ -348,7 +574,7 @@ ast_t *parser_parse_function_definition(parser_t *parser){
 
 ast_t *parser_parse_function_call(parser_t *parser){
     ast_t *function = NEW_OBJECT(AST_FUNCTION_CALL,parser);
-    // function->countScope = GetScope();
+    function->countScope = GetScope();
 
     // TODO: transform () in statement , for ViL interpreter
 
@@ -361,22 +587,23 @@ ast_t *parser_parse_function_call(parser_t *parser){
         List_Ast_Append(&function->function_call_args,arg);
 
         while (parser->current.type == TOKEN_COMA){
-            parser_eat(TYPE(parser),parser,NULL);
+            parser_eat(TOKEN_COMA, parser,"unexpected `,` here");
             arg = parser_parse_expr(parser);
             List_Ast_Append(&function->function_call_args,arg);
         }
     }
+    
 
-    parser_eat(TOKEN_LPARENT,parser,"%s : unexpected `%s` for end funcCall\n",
+    parser_eat(TOKEN_RPARENT,parser,"%s : unexpected `%s` for end funcCall\n",
         ERROR_TO_STRING[FUNCTION_CALL_ERROR],
-        TOKEN_TO_STRING[TOKEN_LPARENT]
+        TOKEN_TO_STRING[TOKEN_RPARENT]
     );
 
     return function;
 }
 
 ast_t *parser_parse_lfunc(parser_t *parser){
-
+    return NULL;
 }
 
 ast_t *parser_parse_number(parser_t *parser){
@@ -386,7 +613,9 @@ ast_t *parser_parse_number(parser_t *parser){
 
     number->value.as.numberValue = strtod(parser->current.value,NULL);
 
-    // number->countScope = GetScope();
+    number->countScope = GetScope();
+    parser_eat(TYPE(parser),parser,NULL);
+
     return number;
 }
 
@@ -402,7 +631,7 @@ ast_t *parser_parse_char(parser_t *parser){
 
     newValue(&ast_char->value,CHAR);
     ast_char->value.as.charValue = parser->current.value[0];
-    // ast_char->countScope = GetScope();
+    ast_char->countScope = GetScope();
     parser_eat(TYPE(parser),parser,NULL);
 
 
@@ -417,7 +646,7 @@ ast_t *parser_parse_bool(parser_t *parser){
     boolean->value.as.booleanValue = parser->current.type == TOKEN_TRUE ? 1:0;
     parser_eat(TYPE(parser),parser,NULL);
 
-    // boolean->countScope = GetScope();
+    boolean->countScope = GetScope();
 
     return boolean;
 }
@@ -429,7 +658,7 @@ ast_t *parser_parse_string(parser_t *parser){
     string->value.as.stringValue = new_String(parser->current.value);
     parser_eat(TYPE(parser),parser,NULL);
 
-    // string->countScope = GetScope();
+    string->countScope = GetScope();
 
 
     return string;
@@ -444,10 +673,10 @@ ast_t *parser_parse_string(parser_t *parser){
  */
 static ast_t *parser_parse_none(parser_t *parser){
 
-    ast_t *none = EW_OBJECT(AST_STRING,parser);
+    ast_t *none = NEW_OBJECT(AST_STRING,parser);
     parser_eat(TYPE(parser),parser,NULL);
 
-    // none->countScope = GetScope();
+    none->countScope = GetScope();
 
 
     return none;
@@ -465,7 +694,7 @@ ast_t *parser_parse_expr(parser_t *parser){
             parser->current.type == TOKEN_AND 
     ){
         ast_t *binop = NEW_OBJECT(AST_BINOP,parser);
-        // binop->countScope = GetScope();
+        binop->countScope = GetScope();
         binop->left = value;
         binop->op = AS_TOKEN(parser->current.type,parser->current.value);
         parser_eat(TYPE(parser),parser,NULL);
@@ -489,7 +718,7 @@ ast_t *parser_parse_expression(parser_t *parser){
             parser->current.type == TOKEN_DIF 
     ){
         ast_t *binop = NEW_OBJECT(AST_BINOP,parser);
-        // binop->countScope = GetScope();
+        binop->countScope = GetScope();
         binop->left = value;
         binop->op = AS_TOKEN(parser->current.type,parser->current.value);
         parser_eat(TYPE(parser),parser,NULL);       
@@ -504,7 +733,7 @@ ast_t *parser_parse_expression(parser_t *parser){
             parser->current.type == TOKEN_INF_EQUAL
     ){
         ast_t *binop = NEW_OBJECT(AST_BINOP,parser);
-        // binop->countScope = GetScope();
+        binop->countScope = GetScope();
         binop->left = value;
         binop->op = AS_TOKEN(parser->current.type,parser->current.value);
         parser_eat(TYPE(parser),parser,NULL);
@@ -520,7 +749,7 @@ ast_t *parser_parse_expression(parser_t *parser){
 
 ast_t *parser_parse_term(parser_t *parser){
     ast_t * value = parser_parse_factor(parser);
-    // value->countScope = GetScope();
+    value->countScope = GetScope();
 
     while (
             parser->current.type == TOKEN_MULT ||
@@ -528,7 +757,7 @@ ast_t *parser_parse_term(parser_t *parser){
             parser->current.type == TOKEN_MODULO 
     ){
         ast_t *binop = NEW_OBJECT(AST_BINOP,parser);
-        // binop->countScope = GetScope();
+        binop->countScope = GetScope();
         binop->left = value;
         binop->op = AS_TOKEN(parser->current.type,parser->current.value);
         parser_eat(TYPE(parser),parser,NULL);        
@@ -556,8 +785,8 @@ ast_t *parser_parse_factor(parser_t *parser){
         parser_eat(TYPE(parser),parser,NULL);
 
         ast_t * group = parser_parse_expr(parser);
-        // group->countScope = GetScope();
-        parser_eat(TOKEN_RPARENT,parser,"%s inconnue \n",ERROR_TO_STRING[SYNTAX_ERROR],parser->current.value);
+        group->countScope = GetScope();
+        parser_eat(TOKEN_RPARENT, parser,"unexpected `)` here");
         return group;
     }
 
@@ -619,7 +848,6 @@ ast_t *parser_parse_factor(parser_t *parser){
         }
     }
 
-
     return value != NULL ? value : newAst(AST_NONE);
 }
 
@@ -630,7 +858,7 @@ ast_t *parser_parse_return(parser_t *parser){
     }
 
     ast_t *ast_return = NEW_OBJECT(AST_RETURN,parser);
-    // ast_return->countScope = GetScope();
+    ast_return->countScope = GetScope();
 
     parser_eat(TYPE(parser),parser,NULL);
 
@@ -646,7 +874,7 @@ ast_t *parser_parse_return(parser_t *parser){
 ast_t *parser_parse_if(parser_t *parser){
     
     ast_t *ast_if = NEW_OBJECT(AST_IF,parser);
-    // ast_if->countScope = GetScope();
+    ast_if->countScope = GetScope();
 
     parser_eat(TYPE(parser),parser,NULL);
 
@@ -680,7 +908,7 @@ ast_t *parser_parse_if(parser_t *parser){
 ast_t *parser_parse_while(parser_t *parser){
     ast_t * ast_while = NEW_OBJECT(AST_WHILE,parser);
     parser_eat(TYPE(parser),parser,NULL);
-    // ast_while->countScope = GetScope();
+    ast_while->countScope = GetScope();
     // printf("while is : %d\n",ast_while->countScope);
     ast_while->while_expr = parser_parse_expr(parser);
 
@@ -697,13 +925,14 @@ ast_t *parser_parse_while(parser_t *parser){
 ast_t *parser_parse_break(parser_t *parser){
     ast_t * ast_break = NEW_OBJECT(AST_BREAK,parser);
     parser_eat(TYPE(parser),parser,NULL);
-    // ast_break->countScope = GetScope();
+    ast_break->countScope = GetScope();
     return ast_break;
 }
 
 
 ast_t *parser_parse_list(parser_t *parser){
     ast_t * list = NEW_OBJECT(AST_LIST,parser);
+    list->countScope = GetScope();
     newValue(&list->value,LIST);
 
     list->value.as.listValue = __init__list__(sizeof(ast_t*));
@@ -718,8 +947,7 @@ ast_t *parser_parse_list(parser_t *parser){
         );
 
         while (parser->current.type == TOKEN_COMA){
-            parser_eat(TOKEN_COMA,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
-        
+            parser_eat(TOKEN_COMA, parser,"unexpected `,` here");
             List_Append(list->value.as.listValue,
                 parser_parse_expr(parser)
             );
@@ -770,7 +998,7 @@ ast_t *parser_parse_struct_definition(parser_t *parser){
         }
         while (parser->current.type == TOKEN_SEMI || parser->current.type != TOKEN_RBRACKET){
             if(parser->current.type == TOKEN_SEMI){
-                parser_eat(TOKEN_SEMI,SYNTAX_ERROR,"%s inconnue \n",parser->current.value);
+                parser_eat(TOKEN_SEMI, parser,"unexpected `;` here");
             }
             item = parser_parse_statment(parser);
 

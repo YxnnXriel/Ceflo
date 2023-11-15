@@ -49,6 +49,7 @@ ast_t *parser_parse_variable(parser_t *parser);
 ast_t *parser_parse_function_definition(parser_t *parser);
 ast_t *parser_parse_function_call(parser_t *parser);
 ast_t *parser_parse_lfunc(parser_t *parser);
+ast_t *parser_parse_function_call_With_Name(ast_t * prev,parser_t *parser);
 
 ast_t *parser_parse_number(parser_t *parser);
 ast_t *parser_parse_char(parser_t *parser);

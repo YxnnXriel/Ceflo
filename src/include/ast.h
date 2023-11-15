@@ -69,6 +69,9 @@ typedef enum{
     LFUNC
 }type_ceflo;
 
+int type_ceflo_convert_to_type(const char *type);
+
+
 struct AST_STRUCT;
 struct SCOPE_STRUCT;
 struct VISITOR_STRUCT;

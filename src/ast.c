@@ -159,6 +159,32 @@ ast_t *newAstWithLine(uint8_t type, int line , int colone){
 
 
 
+int type_ceflo_convert_to_type(const char *type){
+    if(strcmp("int",type) == 0 || strcmp("float",type) == 0){
+        return NUMBER;
+    }
+    if(strcmp("char",type) == 0){
+        return CHAR;
+    }
+    if (strcmp(type, "bool") == 0){
+        return BOOL;
+    }
+
+    if (strcmp(type, "string") == 0 || strcmp(type, "str") == 0){
+        return STRING;
+    }
+
+    if(strcmp(type, "list") == 0){
+        return LIST;
+    }
+    if(strcmp(type,"none") == 0)
+        return -2;
+    
+    return -1;
+}
+
+
+
 
                                         // VALUE
 

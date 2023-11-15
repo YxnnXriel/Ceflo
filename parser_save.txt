@@ -1,3 +1,11 @@
+var t::int = lfunc a::int,b::int -> return a + n;
+
+
+func k -> i::int , o::str {
+
+}
+
+
 /**
  * @file parser.c
  * @author Yann Ariel (yannariel13@gmail.com)
@@ -1323,3 +1331,69 @@ ast_t *parser_parse_struct_definition(parser_t *parser , scope_t *scope){
 var t = 00
         
 
+
+
+
+
+
+
+
+
+    bool isfunctionfleche = false;
+
+    if(TYPE(parser) == TOKEN_ARROW){
+        isfunctionfleche = true;
+        parser_eat(TYPE(parser),parser,NULL);
+    }else if(TYPE(parser) == TOKEN_LBRACKET){
+            parser_eat(TOKEN_LPARENT,parser,NULL);
+    }
+
+
+    if(parser->current.type != TOKEN_RPARENT && parser->current.type != TOKEN_LBRACKET){
+        ast_t *arg = parser_parse_variable(parser);
+        List_Ast_Append(&function->function_defintion_args,arg);
+        while (parser->current.type == TOKEN_COMA){
+            parser_eat(TYPE(parser),parser,NULL);
+            arg = parser_parse_variable(parser);
+            List_Ast_Append(&function->function_defintion_args,arg);
+        }
+    }
+
+    if(!isfunctionfleche){
+        parser_eat(TOKEN_RPARENT,parser,"%s : you are missing `%s`\n",  
+            ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
+            TOKEN_TO_STRING[TOKEN_RPARENT]
+        );
+    }
+
+    if(parser->current.type == TOKEN_ID){
+        // function typer , TODO:
+        
+        int get_type = type_ceflo_convert_to_type(parser->current.value);
+        function->function_definition_return_type = get_type == -2 ? NONE : get_type;
+        parser_eat(TOKEN_ID,parser,"ID %s inconnue \n",parser->current.value);
+        allowChar(&function->function_definition_return_type_name,parser->prev.value);
+    }
+
+    ScopePlus();
+
+
+    // TODO : make inline function
+    
+    parser_eat(TOKEN_LBRACKET,parser,"%s : unexpected `%s` for begin bodyfunction\n",
+        ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
+        TOKEN_TO_STRING[TOKEN_LBRACKET]
+    );
+
+
+    if(parser->current.type != TOKEN_RBRACKET){
+        function->function_definition_body = parser_parse_statments(parser);
+    }
+
+    ScopeMinus();
+    parser_eat(TOKEN_RBRACKET,parser,"%s : unexpected `%s` for end bodyfunction\n",
+        ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
+        TOKEN_TO_STRING[TOKEN_RBRACKET]
+    );
+
+    return function;

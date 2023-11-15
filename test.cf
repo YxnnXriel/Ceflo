@@ -1,8 +1,13 @@
 
 
-var t::int = lfunc a::int,b::int -> return a + n;
 
+var a = -8;
 
-func k -> i::int , o::str {
-
+func MyFunction{
+    a = 98
+    return a * 2;
 }
+
+
+println(MyFunction(), "  ", a);
+
