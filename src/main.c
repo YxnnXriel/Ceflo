@@ -57,12 +57,27 @@
  * - Rewrite clean all							- OK
  * - Fix Bug typé								- OK
  * - Mise à jour du simple garbage				- OK
- * - Ajouter des fonctions pour chaque valeur 	- ?
+ * - Ajouter des fonctions pour chaque valeur 	- OK
  * - Inroduire les constantes				  	- ?
  * - Modifier les modif value dans scope.c		- ?
- * - Modifier le parser.c						- ?
- * 
+ * - Modifier le parser.c						- OK
+ * - Ajouter une Api pour l'interpréteur	    - ?
  */ 
+
+
+/*
+	l'api pour l'interpréteur vas fonctionner comme ceci :
+		je vais créer des fonctions d'integration plus simple autour de l'ast
+		ensuite je vais faire des fonctions d'evaluation de l'ast
+
+		dans le fond, j'aurais un fichier .h qui utilise l'ast et je fas tous
+		les fonctions d'integration de l'ast dans le fichier .c
+		et c'est à patir du fichier .h que les autres programmeur pourraient faire leurs 
+		bibliothèques.
+
+
+**/
+
 
 
 lexer_t lexer;

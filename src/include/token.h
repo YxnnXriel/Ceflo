@@ -24,6 +24,7 @@ typedef enum{
         TOKEN_IF, // if
         TOKEN_ELSE, // else
         TOKEN_VAR, // var
+        TOKEN_CONST, // var
         TOKEN_FUNC, // func
         TOKEN_LFUNC , // lfunc
         TOKEN_MAIN , // main
@@ -93,6 +94,7 @@ static const char *TOKEN_TO_STRING[]={
     "if",
     "else",
     "var",
+    "const",
     "func",
     "lfunc",
     "main",

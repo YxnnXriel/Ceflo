@@ -14,11 +14,11 @@
     
     #include "scope.h"
     #include "ast.h"
-
+    #include "common.h"
 typedef struct VISITOR_STRUCT{
     scope_t *global_scope;
     list_ast_t constants;
-
+    bool is_for_obj;
 }visitor_t;
 
 void newVisitor(visitor_t * visitor);

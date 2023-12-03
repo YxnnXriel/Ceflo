@@ -17,12 +17,14 @@
 #include "include/visitor.h"
 #include "include/ast.h"
 #include "include/error.h"
+#include "include/value_expr.h"
 
     #include "include/bulletin.h"
     #include "include/Value.h"
     #include "include/debug.h"
     #include "include/clear.h"
     #include "include/typer.h"
+
 
 
 #define CEFLO_GB 1
@@ -96,9 +98,20 @@ static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
 
 static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
     visitor->global_scope = scope;
+    visitor->is_for_obj = false;
     newList_Ast(&visitor->constants);
+
+
 }
 
+
+static void newVisitorWithScopeForObj(visitor_t * visitor , scope_t *scope){
+    visitor->global_scope = scope;
+    visitor->is_for_obj = true;
+    newList_Ast(&visitor->constants);
+
+
+}
 
 void freeLvisitor(void *x){
     visitor_t *visitor = (visitor_t*)x;
@@ -141,6 +154,7 @@ void freeVisitor(visitor_t *visitor){
  */
 void newVisitor(visitor_t * visitor){
     visitor->global_scope = newScope();
+    visitor->is_for_obj = false;
     newList_Ast(&visitor->constants);
 }
 
@@ -153,6 +167,7 @@ void visitor_Sweep_value(visitor_t *visitor){
             x++;
         }
     }
+    
     if(x != 0){
         List_Ast_Shift_All(&visitor->constants);
         visitor->constants.size -= x;
@@ -163,8 +178,10 @@ void visitor_Sweep_value(visitor_t *visitor){
 void visitor_append_value(visitor_t * visitor , ast_t * value){
 
     if(CEFLO_GB == 1){
-        if(visitor->constants.size == 100)
+        if(visitor->constants.size == 100){
+
             visitor_Sweep_value(visitor);
+        }
         
         List_Ast_Append(
             &visitor->constants,
@@ -214,6 +231,11 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
     //     printf("=== %s === \n",node->function_call_name);
     // }
 
+    // if(visitor->have_expr_result){
+
+    //     visitor->have_expr_result = false;
+    //     return visitor->expr_result;
+    // }
 
 
     switch (node->type){
@@ -282,27 +304,26 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
             if(noeud ->type == AST_RETURN){
                 if(noeud ->return_expr != NULL){
                     ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
-                    // ast_t *value =  ast_copy(return_value,node->scope);  
-                    // value->is_return_value = true; 
-                    // return value;
                     return_value->is_return_value = true;
                     return return_value;
                 }
             }
-
 
             if((noeud->is_return_value == true) 
                 &&
                 noeud->countScope - 1 != visitor->global_scope->countScope
 
             ){
-                if(visitor->global_scope->countScope == 0)
+                if(visitor->global_scope->countScope == 0){
                     noeud->is_return_value =  false;
-                else
+                }
+                else{
                     return noeud ;
+                }
             }else{
-                if(noeud->is_return_value)
+                if(noeud->is_return_value){
                     noeud->is_return_value =  false;
+                }
             }
 
         }
@@ -607,8 +628,11 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
 
     if(variable->type == AST_OBJ){
         visitor_t vs;
-        newVisitorWithScope(&vs,variable->value.as.ObjectValue.self);
-        return visitor_visit(&vs,node->right);
+        newVisitorWithScopeForObj(&vs,variable->value.as.ObjectValue.self);
+        ast_t *value =  visitor_visit(&vs,node->right);
+
+
+        return value;
     }
 
 
@@ -666,6 +690,7 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 
     ast_t * value = visitor_visit(visitor,node->variable_definition_value);
 
+
     if(value->type == AST_COMPOUND){
         value = newAst(AST_NONE);
     }
@@ -690,10 +715,11 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     }
 
 
-    if(value->marked_count == 0)
-        Value_incref(value);
+    // if(value->marked_count == 0)
+    //     Value_incref(value);
 
     value->is_for_variable = true;
+    value->variable_const = node->variable_const;
     
  
     if(node->variable_definition_static_type_name)
@@ -708,10 +734,11 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
             value->is_new_obj = false;    
     }
 
-    visitor_append_value(
-        visitor,
-        value
-    );
+    // visitor_append_value(
+    //     visitor,
+    //     value
+    // );
+
 
 
     scope_append_variable_definition(
@@ -756,6 +783,7 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
 
 
+
     if(value != NULL){
         // Debug_Print_Ast_Type(value);
         value->is_for_variable = true;
@@ -766,7 +794,7 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
         return value;
     }
 
-    if(value == NULL){
+    if(value == NULL && !visitor->is_for_obj ){
         
         if(node->variable_forGlobal == false)
             if(visitor->global_scope->scope_parent != NULL && visitor->global_scope->scope_parent->countScope != 0 ){
@@ -1109,436 +1137,32 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
 
 
-/**
- * @brief walk the tree of expr node
- * 
- * @param visitor 
- * @param left 
- * @param op 
- * @param right 
- * @return ast_t* 
- */
-ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t *op , ast_t *right){
+void visitor_visit_tree(visitor_t *visitor,Value_t * value, Value_t * left , token_t * op, Value_t * right){
 
- #define BINOP(l,o,r)    l(left->value) o r(right->value)
+    switch (left->type){
 
-    ast_t * value = NULL;
-    
-  
- switch (left->type){
-
-        case AST_CHAR:
-            value = newAst(AST_CHAR);
-            value->countScope = visitor->global_scope->countScope;
-            switch (right->type){
-                    case AST_NUMBER:
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.charValue = left->value.as.charValue + right->value.as.numberValue;break;
-                            case TOKEN_MINUS : value->value.as.charValue = left->value.as.charValue - right->value.as.numberValue;break;
-                            case TOKEN_MULT : value->value.as.charValue = left->value.as.charValue * right->value.as.numberValue;break;
-                            case TOKEN_DIV :  value->value.as.charValue = left->value.as.charValue / right->value.as.numberValue;break;
-                            case TOKEN_MODULO :  value->value.as.charValue = left->value.as.charValue % (int)right->value.as.numberValue;break;
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue < right->value.as.numberValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue > right->value.as.numberValue;break;
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue <= right->value.as.numberValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue >= right->value.as.numberValue;break;
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue == right->value.as.numberValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue || right->value.as.numberValue;break;
-                
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue && right->value.as.numberValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue != right->value.as.numberValue;break;
-                            default : value->value.as.charValue = left->value.as.charValue + right->value.as.numberValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_NONE:
-                        value->type = AST_BOOL;
-                        switch (op->type){
-                            case TOKEN_AND : value->value.as.booleanValue = left->value.type && right->value.type;break;
-                            case TOKEN_OR : value->value.as.booleanValue = left->value.type || right->value.type;break;
-                            case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->value.type == right->value.type;break;
-                            case TOKEN_DIF : value->value.as.booleanValue = left->value.type != right->value.type;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-
-                    case AST_CHAR:
-                        value->type = AST_CHAR;
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.charValue = left->value.as.charValue+ right->value.as.charValue;break;
-                            case TOKEN_MINUS : value->value.as.charValue= left->value.as.charValue- right->value.as.charValue;break;
-                            case TOKEN_MULT : value->value.as.charValue = left->value.as.charValue* right->value.as.charValue;break;
-                            case TOKEN_DIV : value->value.as.charValue  = left->value.as.charValue/ right->value.as.numberValue;break;
-                            case TOKEN_MODULO :value->type = AST_CHAR;value->value.as.charValue=left->value.as.charValue% right->value.as.charValue;break;
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue< right->value.as.charValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue> right->value.as.charValue;break;
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue <= right->value.as.charValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.charValue >= right->value.as.charValue;break;
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue== right->value.as.charValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue || right->value.as.charValue;break;
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue&& right->value.as.charValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.charValue!= right->value.as.charValue;break;
-                            default : value->value.as.charValue = left->value.as.charValue + right->value.as.charValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_LFUNC:
-                        value = visitor_visit_recursive_binop(
-                            visitor,
-                            left,
-                            op,
-                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
-                        );
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_STRING:
-                        value->type = AST_STRING;
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.stringValue = String_cat("%c%s",left->value.as.charValue,right->value.as.stringValue->str);break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-            }
-            break;
-
-
-
-
-
-        case AST_NUMBER:
-            value = newAst(AST_NUMBER);
-            value->countScope = visitor->global_scope->countScope;
-            switch (right->type){
-                    case AST_CHAR:
-                        value->type = AST_NUMBER;
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.numberValue = left->value.as.numberValue+ right->value.as.charValue;break;
-                            case TOKEN_MINUS : value->value.as.numberValue = left->value.as.numberValue- right->value.as.charValue;break;
-                            case TOKEN_MULT : value->value.as.numberValue = left->value.as.numberValue* right->value.as.charValue;break;
-                            case TOKEN_DIV : value->value.as.numberValue  = left->value.as.numberValue/ right->value.as.numberValue;break;
-                            case TOKEN_MODULO :value->type = AST_NUMBER;value->value.as.numberValue = (int)left->value.as.numberValue % right->value.as.charValue;break;
-                            
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue < right->value.as.charValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue> right->value.as.charValue;break;
-
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue <= right->value.as.charValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue >= right->value.as.charValue;break;
-
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue== right->value.as.charValue;break;
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue && right->value.as.charValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue || right->value.as.charValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue!= right->value.as.charValue;break;
-                            default : value->value.as.numberValue = left->value.as.numberValue + right->value.as.charValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-                    case AST_NUMBER:
-                        switch (op->type){
-                            case TOKEN_PLUS :value->value.as.numberValue = left->value.as.numberValue + right->value.as.numberValue;break;
-                            case TOKEN_MINUS : value->value.as.numberValue = left->value.as.numberValue - right->value.as.numberValue;break;
-                            case TOKEN_MULT : value->value.as.numberValue = left->value.as.numberValue * right->value.as.numberValue;break;
-                            case TOKEN_DIV :  value->value.as.numberValue = left->value.as.numberValue / right->value.as.numberValue;break;
-                            case TOKEN_MODULO :  value->value.as.numberValue = (int)left->value.as.numberValue % (int)right->value.as.numberValue;break;
-
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue < right->value.as.numberValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue > right->value.as.numberValue;break;
-                            
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue <= right->value.as.numberValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.numberValue >= right->value.as.numberValue;break;
-
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue == right->value.as.numberValue;break;
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue && right->value.as.numberValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue || right->value.as.numberValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.numberValue != right->value.as.numberValue;break;
-                            default : value->value.as.numberValue = left->value.as.numberValue + right->value.as.numberValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_NONE:
-                        value->type = AST_BOOL;
-                        switch (op->type){
-                            case TOKEN_AND : value->value.as.booleanValue = left->value.type && right->value.type;break;
-                            case TOKEN_OR : value->value.as.booleanValue = left->value.type || right->value.type;break;
-                            case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->value.type == right->value.type;break;
-                            case TOKEN_DIF : value->value.as.booleanValue = left->value.type != right->value.type;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_LFUNC:
-                        value = visitor_visit_recursive_binop(
-                            visitor,
-                            left,
-                            op,
-                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
-                        );
-                        Value_incref(value);
-                        return value;
-                        break;
-                    case AST_STRING:
-                        value->type = AST_STRING;
-                        switch (op->type){
-                            case TOKEN_PLUS :
-                            value->value.as.stringValue = String_cat("%g%s",left->value.as.numberValue,right->value.as.stringValue->str);break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-            }
-            break;
-
-        case AST_BOOL:
-            value = newAst(AST_BOOL);
-            value->countScope = visitor->global_scope->countScope;
-            switch (right->type){
-
-
-                    case AST_CHAR:
-                        value->type = AST_CHAR;
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.charValue = left->value.as.booleanValue + right->value.as.charValue;break;
-                            case TOKEN_MINUS : value->value.as.charValue= left->value.as.booleanValue - right->value.as.charValue;break;
-                            case TOKEN_MULT : value->value.as.charValue = left->value.as.booleanValue * right->value.as.charValue;break;
-                            case TOKEN_DIV : value->value.as.charValue  = left->value.as.booleanValue / right->value.as.numberValue;break;
-                            case TOKEN_MODULO :value->type = AST_NUMBER;value->value.as.booleanValue  =left->value.as.booleanValue % right->value.as.charValue;break;
-                            
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue  < right->value.as.charValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue > right->value.as.charValue;break;
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue  <= right->value.as.charValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue >= right->value.as.charValue;break;
-
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue == right->value.as.charValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue  || right->value.as.charValue;break;
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue  && right->value.as.charValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue != right->value.as.charValue;break;
-                            default : value->value.as.charValue  = left->value.as.booleanValue  + right->value.as.charValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-
-                    case AST_NUMBER:
-                    value->type = AST_NUMBER;
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.numberValue = left->value.as.booleanValue + right->value.as.numberValue;break;
-                            case TOKEN_MINUS : value->value.as.numberValue = left->value.as.booleanValue - right->value.as.numberValue;break;
-                            case TOKEN_MULT : value->value.as.numberValue = left->value.as.booleanValue * right->value.as.numberValue;break;
-                            case TOKEN_DIV :  value->value.as.numberValue = left->value.as.booleanValue / right->value.as.numberValue;break;
-                            case TOKEN_MODULO :  value->value.as.numberValue = left->value.as.booleanValue % (int)right->value.as.numberValue;break;
-
-
-
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue < right->value.as.numberValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue > right->value.as.numberValue;break;
-
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue <= right->value.as.numberValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue >= right->value.as.numberValue;break;
-
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue == right->value.as.numberValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue || right->value.as.numberValue;break;
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue && right->value.as.numberValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue != right->value.as.numberValue;break;
-                            default : value->value.as.numberValue = left->value.as.booleanValue + right->value.as.numberValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-                    case AST_BOOL:
-                    value->type = AST_BOOL;
-                        switch (op->type){
-                            case TOKEN_MODULO :  value->value.as.booleanValue = left->value.as.booleanValue % right->value.as.booleanValue;break;
-
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue < right->value.as.booleanValue;break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue > right->value.as.booleanValue;break;
-                            
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue <= right->value.as.booleanValue;break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = left->value.as.booleanValue >= right->value.as.booleanValue;break;
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue == right->value.as.booleanValue;break;
-                            case TOKEN_AND : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue && right->value.as.booleanValue;break;
-                            case TOKEN_OR : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue || right->value.as.booleanValue;break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = left->value.as.booleanValue != right->value.as.booleanValue;break;
-                            default : value->value.as.booleanValue = left->value.as.booleanValue + right->value.as.booleanValue;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-                    case AST_NONE:
-                        value->type = AST_BOOL;
-                        switch (op->type){
-                            case TOKEN_AND : value->value.as.booleanValue = left->type && right->type;break;
-                            case TOKEN_OR : value->value.as.booleanValue = left->type || right->type;break;
-                            case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->type == right->type;break;
-                            case TOKEN_DIF : value->value.as.booleanValue = left->type != right->type;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_LFUNC:
-                        value = visitor_visit_recursive_binop(
-                            visitor,
-                            left,
-                            op,
-                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
-                        );
-                        Value_incref(value);
-                        return value;
-                        break;
-                    
-                    case AST_STRING:
-                        value->type = AST_STRING;
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.stringValue = String_cat("%s%s",left->value.as.booleanValue ? "true":"false",right->value.as.stringValue->str);break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-            }
-            break;
-
-        case AST_STRING:
-            value = newAst(AST_STRING);
-            value->countScope = visitor->global_scope->countScope;
-            switch (right->type){
-                    case AST_NUMBER:
-                        switch (op->type){
-                            case TOKEN_PLUS :value->value.as.stringValue = String_cat("%s%g",left->value.as.stringValue->str,right->value.as.numberValue);break;
-                            case TOKEN_MULT :{
-                                if(right->value.as.numberValue <= 0){
-                                    Print_visitor_error(
-                                        right->line,
-                                        right->colone,
-                                        "./Ceflo",
-                                        " ...* %g pas pris en charge \n",
-                                        right->value.as.numberValue
-                                    );
-                                    clear_ceflo_clean();
-                                    exit(1);
-                                }
-                                char *chaine = calloc(strlen(left->value.as.stringValue->str)*right->value.as.numberValue,sizeof(char*));
-                                for (int i = 0; i < right->value.as.numberValue; i++)
-                                    strcat(chaine,left->value.as.stringValue->str);
-
-                                value->value.as.stringValue = new_String(chaine);
-                                free(chaine);
-                            }
-                                break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_NONE:
-                        value->type = AST_BOOL;
-                        switch (op->type){
-                            case TOKEN_AND : value->value.as.booleanValue = left->type && right->type;break;
-                            case TOKEN_OR : value->value.as.booleanValue = left->type || right->type;break;
-                            case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->type == right->type;break;
-                            case TOKEN_DIF : value->value.as.booleanValue = left->type != right->type;break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_CHAR:
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.stringValue = String_cat("%s%c",left->value.as.stringValue->str,right->value.as.charValue);break;
-                            // case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.charValue) < 0 ? 1 : 0; break;
-                            // case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.charValue ) > 0 ? 1 : 0; break;
-                            // case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.charValue) == 0 ? 1 : 0; break;
-                            // case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.charValue) != 0 ? 1 : 0; break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_LFUNC:
-                        value = visitor_visit_recursive_binop(
-                            visitor,
-                            left,
-                            op,
-                            visitor_visit_function(visitor,right->value.as.lfuncValue,NULL)
-                        );
-                        Value_incref(value);
-                        return value;
-                        break;
-
-                    case AST_STRING:
-                        switch (op->type){
-                            case TOKEN_PLUS : value->value.as.stringValue = String_cat("%s%s",left->value.as.stringValue->str,right->value.as.stringValue->str);break;
-                            
-                            case TOKEN_INF : value->type = AST_BOOL ;value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) < 0 ? 1 : 0; break;
-                            case TOKEN_SUP : value->type = AST_BOOL ;value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) > 0 ? 1 : 0; break;
-                            
-                            case TOKEN_INF_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) <= 0 ? 1 : 0; break;
-                            case TOKEN_SUP_EQUAL : value->type = AST_BOOL ;value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) >= 0 ? 1 : 0; break;
-
-                            case TOKEN_EQUAL_EQUAL : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) == 0 ? 1 : 0; break;
-                            case TOKEN_DIF : value->type = AST_BOOL ; value->value.as.booleanValue = strcmp(left->value.as.stringValue->str,right->value.as.stringValue->str) != 0 ? 1 : 0; break;
-                        }
-                        Value_incref(value);
-                        return value;
-                        break;
-            }
-            break;
-
-        case AST_NONE:
-                value = newAst(AST_BOOL);
-                value->countScope = visitor->global_scope->countScope;
-                switch (op->type){
-                    case TOKEN_AND : value->value.as.booleanValue = left->type && right->type;break;
-                    case TOKEN_EQUAL_EQUAL : value->value.as.booleanValue = left->type == right->type;break;
-                    case TOKEN_DIF : value->value.as.booleanValue = left->type != right->type;break;
-                    case TOKEN_OR : value->value.as.booleanValue = left->type || right->type;break;
-
-                }
-                Value_incref(value);
-                return value;
-            break;
-
-
-        case AST_LFUNC:
-            value = visitor_visit_recursive_binop(
-                visitor,
-                visitor_visit_function(visitor,left->value.as.lfuncValue,NULL),
-                op,
-                right
-            );
-            Value_incref(value);
-            return value;
+        case CHAR:
+            performe_visit_tree_char(value,left,op,right);
         break;
 
+        case NUMBER:
+            performe_visit_tree_number(value,left,op,right);
+        break;
+
+        case BOOL : 
+            performe_visit_tree_bool(value,left,op,right);
+        break;
+
+        case STRING:
+            performe_visit_tree_str(value,left,op,right);
+            break;
+        case NONE:
+            performe_visit_tree_none(value,left,op,right);
+            break;
     }
-    
-
-
-    // printf("ça na pas marcher !\n");
-
-    return value;
-
-
-
-
-
-    // return typer_value_expr(
-    //     left,op,right
-    // );
-   
 }
+
+
 
 /**
  * @brief join result of walk of tree expr
@@ -1549,30 +1173,29 @@ ast_t *visitor_visit_recursive_binop(visitor_t *visitor , ast_t * left , token_t
  */
 ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
 
-    ast_t *value = NULL;
+
+    Value_t buffer;
 
     ast_t *left = visitor_visit(visitor,node->left);
     ast_t *right = visitor_visit(visitor,node->right);
 
 
-    value = visitor_visit_recursive_binop(
+    visitor_visit_tree(
         visitor,
-        left,
+        &buffer,
+        &left->value,
         &node->op,
-        right
+        &right->value
     );
 
-    // // for marked
 
-    // // printf("            %d\n ",visitor->constants.size);
-    // visitor_append_value(
-    //     visitor,
-    //     value
-    // );
-
-
+    ast_t * value = newAst(value_to_type_ast(&buffer));
+    value->value = buffer;
     return value;
 }
+
+
+
 
 
 ast_t * visitor_visit_unop(visitor_t * visitor , ast_t * node){
@@ -1733,6 +1356,20 @@ ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
 ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->assignement_left);
+
+
+    if(variable->variable_const){
+            Print_visitor_error(
+                node->line,
+                node->colone,
+                "./Ceflo",
+                "Vous ne pouvez modifier %s !\n", 
+                variable->assignement_variable_name
+            );
+            clear_ceflo_clean();
+            exit(1);
+    }
+
     scope_t *scope = variable->scope;
 
     ast_t * value = visitor_visit(visitor,node->assignement_value);
@@ -1745,7 +1382,6 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         binop->right = value;
         binop->op = node->op;
         value =  visitor_visit(visitor,binop);
-
     }
 
     if(variable->variable_definition_static_type != NONE){

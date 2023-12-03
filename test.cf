@@ -1,13 +1,25 @@
 
+const DEBUG = true;
 
 
-var a = -8;
 
-func MyFunction{
-    a = 98
-    return a * 2;
+if DEBUG == true{
+    println("Nous Sommes en mode Debug !")
 }
 
 
-println(MyFunction(), "  ", a);
+struct Point{
+    var i = 0;
+    var j = 0;
+
+    var other = DEBUG;
+    func __init__(x,y){
+        i = x
+        j = y
+    }
+}
+
+const newPoint = new Point(21,22);
+newPoint.other = false;
+println(newPoint.other)
 

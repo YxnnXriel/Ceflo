@@ -70,6 +70,7 @@ ast_t *newAst(uint8_t type){
     new->variable_definition_static_type_name = NULL;
     new->variable_name = NULL;
     new->variable_forGlobal = false;
+    new->variable_const = false;
 
     new->function_definition_name = NULL;
     // new->function_defintion_args = NULL;
@@ -991,7 +992,6 @@ ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
     ast_t * variable = newAst(AST_VARIABLE_DEFINITION);
     allowChar(&variable->variable_definition_name,name);
     variable->variable_definition_value = value;
-    
     return variable;
 }
 
@@ -999,6 +999,7 @@ ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
 ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     ast_t *a = ast_cpy_variable_definition_lit(ast->variable_definition_name,NULL);
     a->variable_definition_value = ast_copy(ast->variable_definition_value,scope);
+    a->variable_const = ast->variable_const;
     if(ast->variable_definition_static_type_name != NULL)
         allowChar(
             &a->variable_definition_static_type_name,

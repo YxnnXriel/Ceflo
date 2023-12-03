@@ -69,6 +69,16 @@ static bool isInClassDefinition(ast_t * item){
     }
 }
 
+static char * GetOp(TokenEnum type){
+    switch (type){
+        case TOKEN_PLUS_EQUAL: return "+=";
+        case TOKEN_MINUS_EQUAL: return "-=";
+        case TOKEN_MULT_EQUAL: return "*=";
+        case TOKEN_DIV_EQUAL: return "/=";
+    }
+    return "=";
+}
+
 
 
 
@@ -231,6 +241,7 @@ ast_t *parser_parse_statment(parser_t *parser){
 
     switch(TYPE(parser)){
         case TOKEN_VAR : return parser_parse_variable_definition(parser);
+        case TOKEN_CONST : return parser_parse_variable_definition(parser);
         case TOKEN_FUNC : return parser_parse_function_definition(parser);
         case TOKEN_STRUCT : return parser_parse_struct_definition(parser);
         case TOKEN_ID : return parser_parse_variable(parser);
@@ -267,7 +278,13 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
 
     var->countScope = GetScope();
     
-    parser_eat(TOKEN_VAR,parser,NULL);
+    if(TYPE(parser) == TOKEN_VAR){
+        parser_eat(TOKEN_VAR,parser,NULL);
+    }else{
+        var->variable_const = true;
+        parser_eat(TOKEN_CONST,parser,NULL);
+    }
+
 
     parser_eat(TOKEN_ID,parser,"%s : declaration variable with name `%s` is not valid\n",
         ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR],
@@ -431,9 +448,11 @@ ast_t *parser_parse_variable(parser_t *parser){
         modifier->countScope = GetScope();
         modifier->assignement_left = variable;
         modifier->op = parser->current;
+        modifier->op = AS_TOKEN(parser->current.type -1 ,GetOp(parser->current.type - 1));
         parser_eat(TYPE(parser),parser,NULL);
         modifier->assignement_value = parser_parse_expr(parser);
         return modifier;
+    
     }
 
     //...., maybe the declaration is a acces variable
@@ -485,7 +504,7 @@ ast_t *parser_parse_function_definition(parser_t *parser){
     }
 
 
-    if(TYPE(parser) != TOKEN_LBRACKET){
+    if(TYPE(parser) != TOKEN_LBRACKET && TYPE(parser) != TOKEN_COLON){
         if(isarrow){
             get_function_definition_args(parser,function);
         }else{

@@ -135,6 +135,7 @@ typedef struct AST_STRUCT{
     /* ======  AST_VARIABLE ====== */
         char *variable_name;
         bool variable_forGlobal;
+        bool variable_const;
 
 
 

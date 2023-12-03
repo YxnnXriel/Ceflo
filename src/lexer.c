@@ -198,6 +198,8 @@ static TokenEnum lexer_precise_id(char *chaine ){
         return TOKEN_PASS;
     if(cpm("new"))
         return TOKEN_NEW;
+    if(cpm("const"))
+        return TOKEN_CONST;
     else
         return TOKEN_ID;
 

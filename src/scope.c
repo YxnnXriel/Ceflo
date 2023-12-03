@@ -72,7 +72,9 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
     if(stk_val != NULL){
         // update
         Hash_Modif(&scope->variable_definition,key,value);
-        stk_val->is_for_variable = false;
+        // stk_val->value = value->value;
+        // stk_val->is_for_variable = false;
+        // stk_val->variable_const = value->variable_const;
     }else{
         Hash_Append(&scope->variable_definition,key,value);
     }
