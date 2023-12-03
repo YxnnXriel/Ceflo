@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+        "*.vil": "vil",
+        "clear.h": "c",
+        "visitor.h": "c",
+        "common.h": "c",
+        "error.h": "c",
+        "array": "c",
+        "compare": "c",
+        "functional": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "scope.h": "c",
+        "optional": "c",
+        "system_error": "c"
+    }
+}
