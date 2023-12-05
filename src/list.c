@@ -253,6 +253,19 @@ void *Hash_Get(stk_t *stk , const char *key){
     return l != (void*)0 ? l->value:(void*)0;
 }
 
+hash_t *Hash_Get_With_addr(stk_t *stk , const char *key){
+
+    int index = Hash(key) % TAB_SIZE;
+    hash_t *l = stk->TabHash[index];
+
+    while (l != (void*)0 && strcmp(l->key,key) != 0){
+        l = l->next;
+    }
+
+
+    return l != (void*)0 ? l:(void*)0;
+}
+
 // a reevoir
 
 // void *Hash_Get_by_index(stk_t *stk ,int index){

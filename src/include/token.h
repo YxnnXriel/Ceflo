@@ -38,6 +38,7 @@ typedef enum{
         TOKEN_PASS , // pass
         TOKEN_NEW , // new
         TOKEN_CONTINUE, // continue
+        TOKEN_GLOBAL, // global
         TOKEN_BREAK, // break
         TOKEN_NONE, // None
         TOKEN_CHAR , // 'char value'
@@ -74,6 +75,7 @@ typedef enum{
         TOKEN_SUP_EQUAL , // >=
         TOKEN_INF , // <
         TOKEN_INF_EQUAL , // <=
+        TOKEN_ADDR , // &
         TOKEN_EOF 
 }TokenEnum;
 
@@ -108,6 +110,7 @@ static const char *TOKEN_TO_STRING[]={
     "pass",
     "new",
     "continue",
+    "global",
     "break",
     "None",
     "char_value",
@@ -144,6 +147,7 @@ static const char *TOKEN_TO_STRING[]={
     ">=",
     "<",
     "<=",
+    "&",
     "EOF"
 };
 

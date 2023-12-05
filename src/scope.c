@@ -29,6 +29,7 @@ scope_t* newScope(){
     scope_t *scope = calloc(1,sizeof(*scope));
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
+    __init__stk_hash(&scope->variable_definition_global);
     scope->scope_parent = NULL;
     scope->countScope = -1;
 
@@ -51,23 +52,87 @@ scope_t* newScope(){
 
 }
 
-ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef){
-    if(scope->variable_definition.Size == 0)
-        return NULL;
+ast_t * scope_get_variable_definition_global(scope_t * scope , const char *vardef){
+    ast_t * value = NULL;
+    if(scope->variable_definition_global.Size == 0){
+            return NULL;
+    }else{
+        value = (ast_t*)Hash_Get(&scope->variable_definition_global,vardef);
+        if(value != NULL)
+            value->scope = scope;
+        
+        return value;
+    }
+}
 
-    ast_t * value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
-    if(value != NULL){
-        value->scope = scope;
-        value->assignement_variable_name = vardef;
+
+ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef){
+    ast_t * value = NULL;
+
+    if(scope->variable_definition.Size != 0){
+        value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
+        if(value != NULL){
+            if(value->variable_definition_ptr == false){
+                value->scope = scope;
+            }
+            return value;
+        }
+    }
+    
+    if(scope->variable_definition_global.Size != 0){
+        return scope_get_variable_definition_global(scope,vardef);
     }
 
+
     return value;
+}
+
+ast_t ** scope_get_variable_definition_ptr(scope_t * scope , const char *vardef){
+    hash_t * hash = NULL;
+    if(scope->variable_definition.Size != 0){
+        hash = Hash_Get_With_addr(&scope->variable_definition,vardef);
+        if(hash != NULL){
+            ast_t ** value = (ast_t**)&(hash->value);
+            (*value)->scope = scope;
+            // (*value)->assignement_variable_name = vardef;
+            return value;
+        }
+    }
+
+    if(scope->variable_definition_global.Size != 0){    
+        hash = Hash_Get_With_addr(&scope->variable_definition_global,vardef);
+        if(hash != NULL){
+            ast_t ** value = (ast_t**)&(hash->value);
+            (*value)->scope = scope;
+            // (*value)->assignement_variable_name = vardef;
+            return value;
+        }
+    }
+
+    return NULL;
+}
+
+void scope_modif_variable_definition(scope_t *scope , const char *key , ast_t *value ){
+    ast_t * hold = scope_get_variable_definition(
+        scope,
+        key
+    );
+
+    if(hold && !hold->variable_definition_is_global ){
+        Hash_Modif(&scope->variable_definition,key,value);
+    }else if( hold && hold->variable_definition_is_global ){
+        Hash_Modif(&scope->variable_definition_global,key,value);
+    }
 }
 
 void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value){
     ast_t * stk_val = scope_get_variable_definition(scope,key);
 
-
+    if(value->variable_definition_is_global && stk_val == NULL){
+        Hash_Append(&scope->variable_definition_global,key,value);
+        // printf("globale size[%d]",scope->variable_definition_global.Size);
+        return;
+    }
 
     if(stk_val != NULL){
         // update
@@ -79,6 +144,8 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
         Hash_Append(&scope->variable_definition,key,value);
     }
 }
+
+
 
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef){
     // if(scope->function_definition.Size == 0)
@@ -234,6 +301,7 @@ int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
 }
 
+
 void freeLscope(void *x){
 
     scope_t *scope = (scope_t*)x;
@@ -250,6 +318,9 @@ void freeScope(scope_t * scope){
         }
         if(scope->struct_definition.Size != 0){
             Hash_Del(&scope->struct_definition);
+        }
+        if(scope->variable_definition_global.Size != 0){
+            Hash_Del(&scope->variable_definition_global);
         }
     }
 }

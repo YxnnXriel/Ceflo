@@ -210,6 +210,7 @@ ast_t *parser_parse_compound(parser_t *parser){
     // is Block of something
     // TODO: ajouter un champ NAME pour chaque block si le block est une fonction
     ast_t * block = NEW_OBJECT(AST_COMPOUND,parser);
+    block->countScope = GetScope();
 
     block->list_compound = __init__list__(sizeof(struct AST_STRUCT*));
 
@@ -286,12 +287,29 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
     }
 
 
+    if(TYPE(parser) == TOKEN_GLOBAL){
+        if(GetScope() != 0){
+            parser_eat(TOKEN_EOF,parser,"%s : the global variable declaration must be done in the main.\n",
+                ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR]
+            );
+        }
+        var->variable_definition_is_global = true;
+        parser_eat(TYPE(parser),parser,"");    
+    }
+
+    if(TYPE(parser) == TOKEN_MULT){
+        var->variable_definition_ptr = true;
+        parser_eat(TYPE(parser),parser,"");    
+    }
+
+
     parser_eat(TOKEN_ID,parser,"%s : declaration variable with name `%s` is not valid\n",
         ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR],
         VALUE(parser)
     );
 
     allowChar(&var->variable_definition_name,parser->prev.value);
+
 
     if(TYPE(parser) == TOKEN_DOUBLE_COLON){
         parser_eat(TYPE(parser),parser,"");    
@@ -312,7 +330,15 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
 
     if(TYPE(parser) == TOKEN_EQUAL){
         parser_eat(TOKEN_EQUAL,parser,NULL);
-        var->variable_definition_value = parser_parse_expr(parser);
+        ast_t * expr = parser_parse_expr(parser);
+        if(var->variable_definition_ptr){
+            if(expr->type != AST_VARIABLE && expr->type != AST_FUNCTION_CALL )
+                parser_eat(TOKEN_EOF,parser,"%s : you cannot use ptr '*' on anything other than variables or functions.\n",
+                    ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR]
+                );
+        }        
+        var->variable_definition_value = expr;
+
     }else{
         var->variable_definition_value = NEW_OBJECT(AST_NONE,parser);
     }
@@ -465,11 +491,25 @@ ast_t *parser_parse_variable(parser_t *parser){
 
 
 static void get_function_definition_args(parser_t *parser, ast_t *function){
+    bool addr = false;
+    if(TYPE(parser) == TOKEN_ADDR){
+        addr = true;
+        parser_eat(TYPE(parser),parser,NULL);
+    }
     ast_t *arg = parser_parse_variable(parser);
+    arg->is_arg_ptr = addr;
+    addr = false;
+
     List_Ast_Append(&function->function_defintion_args,arg);
     while (parser->current.type == TOKEN_COMA){
         parser_eat(TYPE(parser),parser,NULL);
+        if(TYPE(parser) == TOKEN_ADDR){
+            addr = true;
+            parser_eat(TYPE(parser),parser,NULL);
+         }
         arg = parser_parse_variable(parser);
+        arg->is_arg_ptr = addr;
+        addr = false;
         List_Ast_Append(&function->function_defintion_args,arg);
     }
 }
@@ -513,7 +553,9 @@ ast_t *parser_parse_function_definition(parser_t *parser){
                 function->function_definition_name,
                 TOKEN_TO_STRING[TOKEN_LPARENT]
             );
-            get_function_definition_args(parser,function);
+
+            if(TYPE(parser) != TOKEN_RPARENT )
+                get_function_definition_args(parser,function);
 
             parser_eat(TOKEN_RPARENT,parser,"%s : `%s` :  you are missing `%s`\n",  
                 ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],

@@ -1,25 +1,13 @@
+var global DEBUG = false;
 
-const DEBUG = true;
-
-
-
-if DEBUG == true{
-    println("Nous Sommes en mode Debug !")
+func modif(&i){
+    println(DEBUG)
 }
 
+var value = "yann"
 
-struct Point{
-    var i = 0;
-    var j = 0;
+println(value)
+modif(value)
+println(value)
 
-    var other = DEBUG;
-    func __init__(x,y){
-        i = x
-        j = y
-    }
-}
-
-const newPoint = new Point(21,22);
-newPoint.other = false;
-println(newPoint.other)
 

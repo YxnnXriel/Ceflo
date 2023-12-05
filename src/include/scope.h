@@ -7,6 +7,7 @@
 
 typedef struct SCOPE_STRUCT{
     stk_t  variable_definition;
+    stk_t  variable_definition_global;
     stk_t function_definition;
     stk_t struct_definition;
     int countScope;
@@ -34,7 +35,9 @@ void freeSingleScope(scope_t *scope);
 
 ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef);
 void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value);
-
+ast_t ** scope_get_variable_definition_ptr(scope_t * scope , const char *vardef);
+void scope_modif_variable_definition(scope_t *scope , const char *key , ast_t *value );
+ast_t * scope_get_variable_definition_global(scope_t * scope , const char *vardef);
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef);
 void scope_append_function_definition(scope_t *scope , const char *key , ast_t *value);
 

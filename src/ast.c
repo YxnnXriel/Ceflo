@@ -68,15 +68,18 @@ ast_t *newAst(uint8_t type){
     new->variable_definition_value = NULL;
     new->variable_definition_static_type = NONE;
     new->variable_definition_static_type_name = NULL;
+    new->variable_definition_ptr = false;
     new->variable_name = NULL;
     new->variable_forGlobal = false;
     new->variable_const = false;
+    new->variable_definition_is_global = false;
 
     new->function_definition_name = NULL;
     // new->function_defintion_args = NULL;
     new->function_definition_return_type = NONE;
     new->function_definition_body = NULL;
     new->function_definition_return_type_name = NULL;
+    new->is_arg_ptr = false;
 
     new->function_call_name = NULL;
     // new->function_call_args = NULL;
@@ -84,6 +87,8 @@ ast_t *newAst(uint8_t type){
     new->type_compound = R_FUNCTION_CALL_TYPE;
 
 
+
+    new->ptr_value = NULL;
     new->marked_count = 0;
     new->is_for_variable = false;
 
@@ -973,7 +978,9 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
     newList_Ast(&a->function_defintion_args);
     for (int i = 0; i < (int)function->function_defintion_args.size; i++){
         ast_t *arg = List_Ast_Get(&function->function_defintion_args,i);
+        bool is_arg_ptr = arg->is_arg_ptr;
         arg = ast_copy(arg,scope);
+        arg->is_arg_ptr = is_arg_ptr;
         List_Ast_Append(&a->function_defintion_args,arg);
     }
     
@@ -1000,6 +1007,8 @@ ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     ast_t *a = ast_cpy_variable_definition_lit(ast->variable_definition_name,NULL);
     a->variable_definition_value = ast_copy(ast->variable_definition_value,scope);
     a->variable_const = ast->variable_const;
+    a->variable_definition_ptr = ast->variable_definition_ptr;
+    a->variable_definition_is_global = ast->variable_definition_is_global;
     if(ast->variable_definition_static_type_name != NULL)
         allowChar(
             &a->variable_definition_static_type_name,

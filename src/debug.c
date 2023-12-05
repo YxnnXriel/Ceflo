@@ -12,8 +12,9 @@
         printf("%s \n",func_name);
     }
     
-    void Debug_Print_Ast_Type(ast_t *node){
+    uint8_t Debug_Print_Ast_Type(ast_t *node){
         printf("DEBUG : %s \n",AST_TO_STRING[node->type]);
+        return node->type;
     }
 
     void Debug_value_is_null(void *x){

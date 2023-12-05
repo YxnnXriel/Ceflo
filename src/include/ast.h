@@ -75,7 +75,7 @@ int type_ceflo_convert_to_type(const char *type);
 struct AST_STRUCT;
 struct SCOPE_STRUCT;
 struct VISITOR_STRUCT;
-
+struct AST_TYPE_VALUE;
 
 #define LIST_AST_COUNT 255
 typedef struct LIST_AST_STRUCT{
@@ -130,6 +130,8 @@ typedef struct AST_STRUCT{
         struct AST_STRUCT *variable_definition_value;
         type_ceflo variable_definition_static_type;
         char *variable_definition_static_type_name;
+        bool variable_definition_ptr;
+        bool variable_definition_is_global;
 
 
     /* ======  AST_VARIABLE ====== */
@@ -150,6 +152,7 @@ typedef struct AST_STRUCT{
         struct AST_STRUCT* function_definition_body;
         type_ceflo function_definition_return_type;
         char *function_definition_return_type_name;
+        bool is_arg_ptr;
 
 
 
@@ -164,6 +167,8 @@ typedef struct AST_STRUCT{
 
     /* ======  AST_VALUE ====== */
         Value_t value;
+        struct AST_STRUCT **ptr_value;
+        const char *var_ptr;
         int marked_count;
         bool is_for_variable;
 

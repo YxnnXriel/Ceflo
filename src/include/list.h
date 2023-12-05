@@ -45,6 +45,8 @@
     int Hash_Append(stk_t * stk ,const char *key ,void * value);
 
     void *Hash_Get(stk_t *stk , const char *key);
+    hash_t *Hash_Get_With_addr(stk_t *stk , const char *key);
+
     hash_t *Hash_Get_by_index(stk_t *stk ,int index);
     
     int Hash_Modif(stk_t *stk , const char *key,void *value);
