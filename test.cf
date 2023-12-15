@@ -1,13 +1,19 @@
-var global DEBUG = false;
+var global ma_var = 102
 
-func modif(&i){
-    println(DEBUG)
+var other_var = "Yann Ariel"
+
+
+func my_func{
+    
+    ma_var = 90
+    other_var = "Ariel"
 }
 
-var value = "yann"
 
-println(value)
-modif(value)
-println(value)
+println(ma_var)
 
 
+my_func()
+
+
+println(ma_var)

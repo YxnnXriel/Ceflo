@@ -1431,6 +1431,15 @@ ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
 
 
 
+static void visitor_visit_assignement_value(ast_t * node , ast_t *value){
+    value->variable_const = node->variable_const;
+    value->is_for_variable = node->is_for_variable;
+    value->variable_definition_ptr = node->variable_definition_ptr;
+    value->variable_definition_is_global = node->variable_definition_is_global;
+    if(node->variable_definition_static_type != NONE)
+        value->variable_definition_static_type = node->variable_definition_static_type;
+
+}
 
 ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
@@ -1489,6 +1498,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
             value->is_new_obj = false;    
     }
 
+    visitor_visit_assignement_value(variable,value);
 
     scope_modif_variable_definition(
         scope,
