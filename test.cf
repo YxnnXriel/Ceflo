@@ -1,12 +1,20 @@
 var global ma_var = 102
 
-var other_var = "Yann Ariel"
+var global other_var = "Yann Ariel"
 
 
 func my_func{
     
     ma_var = 90
     other_var = "Ariel"
+    other_var = "Ariel"
+    other_var = "Ariel"
+    other_var = "Ariel"
+    other_var = "Ariel"
+    other_var = "Ariel"
+    other_var = "Ariel"
+    other_var = 21
+
 }
 
 
