@@ -46,5 +46,6 @@ ast_t *scope_get_struct_definition(scope_t * scope , const char *structdef);
 void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *value);
 int scope_cpy_with_scope(scope_t *end , scope_t *ref);
 
+void Print_Scope(scope_t * scope , const char *chaine);
 
 #endif

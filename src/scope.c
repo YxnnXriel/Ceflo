@@ -234,6 +234,38 @@ static void Scope_intern_cpy(stk_t *Table , scope_t *end, void (*func)(scope_t *
     }
 } 
 
+void Print_Scope(scope_t * scope , const char *chaine){
+    if(chaine != NULL){
+        printf(" ===== %s ===== \n",chaine);
+    }
+
+    ast_t * node = NULL;
+
+    printf(" **** VARIABLE **** \n");
+    for (int i = 0; i < scope->variable_definition.Size; i++){
+        hash_t * item = Hash_Get_by_index(&scope->variable_definition,i);
+        node = (ast_t*)item->value;
+        printf("    %s\n",node->variable_definition_name); 
+    }
+
+    printf(" **** GLOBAL VARIABLE **** \n");
+    for (int i = 0; i < scope->variable_definition_global.Size; i++){
+        hash_t * item = Hash_Get_by_index(&scope->variable_definition_global,i);
+        node = (ast_t*)item->value;
+        printf("    %s\n",node->variable_definition_name); 
+    }
+
+
+    printf(" **** FUNCTION **** \n");
+    for (int i = 0; i < scope->function_definition.Size; i++){
+        hash_t * item = Hash_Get_by_index(&scope->function_definition,i);
+        node = (ast_t*)item->value;
+        printf("    %s\n",node->function_definition_name); 
+    }
+
+}
+
+
 int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
     if(ref != NULL){

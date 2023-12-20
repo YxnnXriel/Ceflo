@@ -58,10 +58,11 @@
  * - Fix Bug typé								- OK
  * - Mise à jour du simple garbage				- OK
  * - Ajouter des fonctions pour chaque valeur 	- OK
- * - Inroduire les constantes				  	- ?
+ * - Inroduire les constantes				  	- OK
  * - Modifier les modif value dans scope.c		- ?
  * - Modifier le parser.c						- OK
  * - Ajouter une Api pour l'interpréteur	    - ?
+ * - Fix bug variable acces						- ?
  */ 
 
 
@@ -78,6 +79,9 @@
 
 **/
 
+
+// Je crois que je dois revoir tous le système des variables , je vais le revoir tres bientot
+// je vais reflechir la dessus tres bientot
 
 
 lexer_t lexer;

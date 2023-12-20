@@ -768,9 +768,9 @@ ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope){
 
     a->left = ast_copy(ast->left, scope);
     a->list_ptr = ast_copy(ast->list_ptr, scope);
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     
     return a;
@@ -782,9 +782,9 @@ ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->assignement_left = ast_copy(ast->assignement_left,scope);
     a->assignement_value = ast_copy(ast->assignement_value,scope);
     a->op = ast->op;
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 }
@@ -792,9 +792,9 @@ ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope){
 ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope){
 
     ast_t *a = newAst(ast->type);
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 
@@ -805,9 +805,9 @@ ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast_t * a = newAst(ast->type);
     a->while_expr = ast_copy(ast->while_expr,scope);
     a->while_body = ast_copy(ast->while_body,scope);
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 
@@ -822,9 +822,9 @@ ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->else_body = ast_copy(ast->else_body,scope);
     a->if_other = ast_copy(ast->if_other,scope);
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 }   
@@ -870,9 +870,9 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
         a->value = ast->value;
     }
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 }
@@ -883,9 +883,9 @@ ast_t * ast_cpy_variable(ast_t * ast,struct SCOPE_STRUCT * scope){
     a->is_func_typer = ast->is_func_typer;
     allowChar(&a->variable_name,ast->variable_name);
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 }
@@ -898,9 +898,9 @@ ast_t *ast_cpy_binop(ast_t *ast , struct SCOPE_STRUCT * scope){
     a->op = ast->op;
     a->right = ast_copy(ast->right,scope);
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 }
@@ -909,9 +909,9 @@ ast_t *ast_cpy_return(ast_t *ast , struct SCOPE_STRUCT * scope){
     ast_t* a = newAst(ast->type);
     a->return_expr = ast_copy(ast->return_expr,scope);
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
     return a;
 }
 
@@ -929,9 +929,9 @@ ast_t *ast_cpy_compound(ast_t *ast , struct SCOPE_STRUCT * scope){
         );
     }
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     return a;
 }
@@ -952,9 +952,9 @@ ast_t *ast_cpy_function_call(ast_t *ast ,struct SCOPE_STRUCT * scope ){
         // Debug_Print_Ast_Type(arg);
     }
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
     return a;
 }
 
@@ -1015,9 +1015,9 @@ ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
             ast->variable_definition_static_type_name
         );
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
     if(ast->left != NULL){
         a->left = ast_cpy_variable_definition(ast->left,scope);
@@ -1043,9 +1043,9 @@ ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     }
 
 
-    if(scope == NULL){
+    // if(scope == NULL){
         cpy_line(a,ast);
-    }
+    // }
 
 
     return a;

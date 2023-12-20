@@ -1,27 +1,24 @@
-var global ma_var = 102
-
-var global other_var = "Yann Ariel"
 
 
-func my_func{
-    
-    ma_var = 90
-    other_var = "Ariel"
-    other_var = "Ariel"
-    other_var = "Ariel"
-    other_var = "Ariel"
-    other_var = "Ariel"
-    other_var = "Ariel"
-    other_var = "Ariel"
-    other_var = 21
+
+struct Personne {
+    var a
+    func __init__{
+        var b = 90
+        a = b
+    }
+
+    func get_a(){
+        return a + "1";
+    }
 
 }
 
 
-println(ma_var)
 
 
-my_func()
 
+var p1 = new Personne()
 
-println(ma_var)
+println(p1.get_a())
+
