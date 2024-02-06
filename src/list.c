@@ -299,9 +299,10 @@ hash_t *Hash_Get_by_index(stk_t *stk ,int index){
         return NULL;
 
     int n = 0;
+    hash_t *l = NULL;
     for (int i = 0; i < TAB_SIZE; i++){
         if(stk->TabHash[i] != (void*)0){
-            hash_t *l = stk->TabHash[i];
+            l = stk->TabHash[i];
             while (l != NULL){
                 if(n == index){
                     return l;    
@@ -309,6 +310,8 @@ hash_t *Hash_Get_by_index(stk_t *stk ,int index){
                 l = l->next;
                 n++;
             }
+            if(n == index)
+                return l;
         }
 
     }

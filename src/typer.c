@@ -54,10 +54,7 @@ static void save_free(){
     }
 
     if(type.type == AST_OBJ){
-        if(type.obj->obj_name != NULL)
-            free(type.obj->obj_name);
-
-        freeScope(type.obj->self);
+        free_obj(type.obj);
     }
     if(type.type == AST_LFUNC){
         freeSingleAst(type.lfunc);
@@ -88,6 +85,8 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
 
 
     if(to == AST_BOOL){
+        new->value.type = to - 4;
+
         #define NEW_BOOL new->type = AST_BOOL
         #define NBOOL new->value.as.booleanValue 
         switch ((*value)->type){
@@ -113,6 +112,7 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
     }
 
     if(to == AST_CHAR){
+        new->value.type = to - 4;
         #define NEW_CHAR new->type = AST_CHAR
         #define NCHAR new->value.as.charValue 
         switch ((*value)->type){
@@ -140,6 +140,7 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
     }
     
     if(to == AST_NUMBER){
+        new->value.type = to - 4;
         #define NEW_NUMBER new->type = AST_NUMBER
         #define NNUMBER new->value.as.numberValue 
         switch ((*value)->type){
@@ -167,6 +168,7 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
     }
 
     if(to == AST_STRING){
+        new->value.type = to - 4;
         #define NEW_STRING new->type = AST_STRING
         #define NSTRING new->value.as.stringValue 
         switch ((*value)->type){
@@ -196,6 +198,7 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
 
 
     if(to == AST_LIST){
+        new->value.type = to - 4;
         if((*value)->type == AST_LIST)
             return *value;
 

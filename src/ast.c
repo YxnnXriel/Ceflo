@@ -68,11 +68,8 @@ ast_t *newAst(uint8_t type){
     new->variable_definition_value = NULL;
     new->variable_definition_static_type = NONE;
     new->variable_definition_static_type_name = NULL;
-    new->variable_definition_ptr = false;
     new->variable_name = NULL;
     new->variable_forGlobal = false;
-    new->variable_const = false;
-    new->variable_definition_is_global = false;
 
     new->function_definition_name = NULL;
     // new->function_defintion_args = NULL;
@@ -88,7 +85,6 @@ ast_t *newAst(uint8_t type){
 
 
 
-    new->ptr_value = NULL;
     new->marked_count = 0;
     new->is_for_variable = false;
 
@@ -300,6 +296,8 @@ list_ast_t List_Ast_Cpy_Without_Index(list_ast_t * list , int index){
 void newObject(Obj_t * object){
     object->self = NULL;
     object->obj_name = NULL;
+    object->__str__ = NULL;
+    object->__cast__ = NULL;
 }
 
 bool ObjectIsSame(Obj_t *self , const char *name){
@@ -329,18 +327,18 @@ void newValue(Value_t * value , uint8_t type){
  * @return false 
  */
 bool printObj(ast_t * value){
-    ast_t *obj = NULL; 
+    ast_t *str_func = NULL; 
 
-    if(GetFunction(value->value.as.ObjectValue.self,"__str__",&obj) == true){
+    if(value->value.type == OBJECT && value->value.as.ObjectValue.__str__ != NULL){
         visitor_t visi;
         visi.global_scope = value->value.as.ObjectValue.self;
+        str_func =  value->value.as.ObjectValue.__str__;
         printValueAst(
             visitor_visit_function(
                 &visi,
-                obj,
+                str_func,
                 NULL
-            ),
-            &visi
+            )
         );
         return true;
     }
@@ -357,16 +355,14 @@ bool printObj(ast_t * value){
  * @return true 
  * @return false 
  */
-bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor){
+bool printlist(ast_t * value){
     printf("[ ");
     if(value->value.as.listValue->Size == 0){
         printf("Vide !");
     }else{
         for (int i = 0; i < value->value.as.listValue->Size; i++){
             ast_t * child = List_Get(value->value.as.listValue,i);
-
-            child = visitor_visit(visitor,child);
-            printValueAst(child,visitor);
+            printValueAst(child);
             if(i !=  value->value.as.listValue->Size - 1 )
                 printf(" , ");
 
@@ -378,19 +374,19 @@ bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor){
 }
 
 
-bool printlistByeValue(Value_t * value , struct VISITOR_STRUCT * visitor){
+bool printlistByeValue(Value_t * value){
     ast_t v;
     v.value = *value;
-    printlist(&v,visitor);
+    printlist(&v);
     return true;
 }
 
-bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor){
+bool printlistByeList(list_t * list){
 
     Value_t val;
     newValue(&val,LIST);
     val.as.listValue = list;
-    printlistByeValue(&val,visitor);
+    printlistByeValue(&val);
     return true;
 }
 
@@ -402,7 +398,7 @@ bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor){
  * @param value 
  * @param visitor 
  */
-void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
+void printValueAst(ast_t * value){
 
     if(value == NULL)
         return;
@@ -413,7 +409,7 @@ void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor){
             case AST_NUMBER : printf("%g",value->value.as.numberValue);break;
             case AST_STRING : printf("%s",value->value.as.stringValue->str);break;
             case AST_BOOL : printf("%s",value->value.as.booleanValue == 1 ? "true" : "false");break;
-            case AST_LIST: printlist(value,visitor);break;
+            case AST_LIST: printlist(value);break;
             case AST_OBJ:{
                 if(printObj(value) == false){
                     printf("obj");
@@ -438,6 +434,57 @@ bool Value_verif_is_none(Value_t *value){
 
 
 
+void free_obj(Obj_t *obj){
+    freeScope(obj->self);
+}
+
+
+
+struct AST_STRUCT * findObjAttr(Obj_t * obj,const char *name){
+    // recherche de variable
+
+    return scope_get_variable_definition(obj->self,name);
+
+}
+struct AST_STRUCT * findObjMethod(Obj_t * obj, const char *name){
+
+    // recherche de fonction
+
+    if(strcmp("__cast__",name)==0){
+        return obj->__cast__;
+    }
+
+
+    if(strcmp("__str__",name) == 0){
+        return obj->__str__;
+    }
+
+
+    return scope_get_variable_definition(obj->self,name);
+}
+
+
+struct AST_STRUCT * GetInStruct(struct AST_STRUCT * st , const char * type , const char *name){
+
+        for (int i = 0; i < st->struct_definition_item->Size; i++){
+
+            ast_t * item = (ast_t*) List_Get(st->struct_definition_item,i);
+
+            if(strcmp(type,"VAR") == 0 ){
+                if(item->type == AST_VARIABLE_DEFINITION && strcmp(name,item->variable_definition_name) == 0)
+                    return item;
+            }
+            if(strcmp(type , "FUNC") == 0){
+                if(item->type == AST_FUNCTION_DEFINITION && strcmp(name,item->function_definition_name) == 0)
+                    return item;
+            }
+        }
+
+
+        return NULL;
+}
+
+
 /**
  * @brief Modif Value
  * 
@@ -449,36 +496,50 @@ void modifValue(ast_t ** ref , ast_t * new){
     ast_t * value = *ref;
     
     if(value->type == AST_OBJ){
-        freeScope(value->value.as.ObjectValue.self);
+        free_obj(&value->value.as.ObjectValue);
+        // freeScope(value->value.as.ObjectValue.self);
     }
 
     if(new->type == AST_STRING){
-
         value->value.type = STRING;
         if(value->type == AST_STRING){
             String_Set(value->value.as.stringValue,new->value.as.stringValue->str);
         }else{
-            value->value.as.stringValue = new_String(new->value.as.stringValue->str);
             value->type = AST_STRING; 
+            value->value.type = STRING;
+            value->value.as.stringValue = new_String(new->value.as.stringValue->str);
         }
 
     }else if(new->type == AST_OBJ){
 
+
+            if(value->type == AST_STRING || value->value.type == STRING ){
+                String_free(value->value.as.stringValue);
+            }
+            if(value->type == AST_OBJ || value->value.type == OBJECT){
+                free_obj(&value->value.as.ObjectValue);
+            }
         value->type = AST_OBJ;
+        value->value.type = OBJECT;
 
 
-        if(new->is_new_obj)
+        if(new->is_new_obj){
             new->is_new_obj = false;
+            value->ref_list->Item[value->ref_list_index] = new;
+
+        }else{
+            value->ref_list->Item[value->ref_list_index] = ast_copy(new,NULL);
+        }
         
-        // printf("new[  %p  ]\n",(void*)new->value.as.ObjectValue.self);
-        // // value->value = ast_copy(new,NULL)->value;
-        // printf("value[  %p  ]\n",(void*)value->value.as.ObjectValue.self);
-
-        value->ref_list->Item[value->ref_list_index] = ast_copy(new,NULL);
-
-
 
     }else{
+            if(value->type == AST_STRING || value->value.type == STRING ){
+                String_free(value->value.as.stringValue);
+            }
+            if(value->type == AST_OBJ || value->value.type == OBJECT){
+                free_obj(&value->value.as.ObjectValue);
+            }
+
         value->value = new->value;
         value->type = new->type;
     }
@@ -590,13 +651,13 @@ void freeAst(ast_t *node){
     }
 
     if(node->type == AST_OBJ){
+
         // freeScope(
         //     node->value.as.ObjectValue.self
-        // );
-
-        if( node->value.as.ObjectValue.obj_name != NULL){
-            free(node->value.as.ObjectValue.obj_name);
-        }
+        // );   
+        // if( node->value.as.ObjectValue.obj_name != NULL){
+        //     free(node->value.as.ObjectValue.obj_name);
+        // }
     }
 
     if(node->type == AST_LIST){
@@ -679,7 +740,7 @@ void clearAstNode(ast_t * node){
 void PrintAst(){
     ast_t * node = var;
     while (node != NULL){
-        printValueAst(node,NULL);
+        printValueAst(node);
         printf("\n");
         node = node->next;
     }
@@ -753,7 +814,7 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
     if(ast->type == AST_NOOP)
         return ast;
 
-    // printf("CPY %s \n",AST_TO_STRING[ast->type]);
+    // printf("CPY %s \n",AST_TO_STRING[ast->type]);/
     ast_t *res = list_cpy_ast[ast->type].function(ast,scope);
 
     ast_r_scope(res,scope);
@@ -843,10 +904,22 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
         Obj_t *obj = &a->value.as.ObjectValue;
         obj->self = newScope();
         
-        if(ast->value.as.ObjectValue.obj_name != NULL){
-            allowChar(&a->value.as.ObjectValue.obj_name,ast->value.as.ObjectValue.obj_name);
-        }
+        // if(ast->value.as.ObjectValue.obj_name != NULL){
+        //     allowChar(&a->value.as.ObjectValue.obj_name,ast->value.as.ObjectValue.obj_name);
+        // }
         
+        obj->__str__ = ast_copy(
+            ast->value.as.ObjectValue.__str__,
+            scope
+        );
+
+
+        obj->__cast__ = ast_copy(
+            ast->value.as.ObjectValue.__cast__,
+            scope
+        );
+
+
         scope_cpy_with_scope(
             obj->self,
             ast->value.as.ObjectValue.self
@@ -1006,9 +1079,6 @@ ast_t * ast_cpy_variable_definition_lit(char *name , ast_t * value){
 ast_t * ast_cpy_variable_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     ast_t *a = ast_cpy_variable_definition_lit(ast->variable_definition_name,NULL);
     a->variable_definition_value = ast_copy(ast->variable_definition_value,scope);
-    a->variable_const = ast->variable_const;
-    a->variable_definition_ptr = ast->variable_definition_ptr;
-    a->variable_definition_is_global = ast->variable_definition_is_global;
     if(ast->variable_definition_static_type_name != NULL)
         allowChar(
             &a->variable_definition_static_type_name,

@@ -99,6 +99,7 @@ void performe_visit_tree_number(Value_t * value, Value_t * left , token_t * op, 
             }
             break;
         case NUMBER:
+
             switch (op->type){
                 case TOKEN_PLUS :value->as.numberValue = left->as.numberValue + right->as.numberValue;break;
                 case TOKEN_MINUS : value->as.numberValue = left->as.numberValue - right->as.numberValue;break;
@@ -235,10 +236,12 @@ void performe_visit_tree_str(Value_t * value, Value_t * left , token_t * op, Val
 
                 value->type = STRING;
 
+
         switch (right->type){
             case NUMBER:
                 switch (op->type){
-                    case TOKEN_PLUS :value->as.stringValue = String_cat("%s%g",left->as.stringValue->str,right->as.numberValue);break;
+                    case TOKEN_PLUS :
+                        value->as.stringValue = String_cat("%s%g",left->as.stringValue->str,right->as.numberValue);break;
                     case TOKEN_MULT :{
                         if(right->as.numberValue <= 0){
                             // Print_visitor_error(

@@ -84,9 +84,14 @@ typedef struct LIST_AST_STRUCT{
 }list_ast_t;
 
 typedef struct OBJECT_STRUCT {
-    char *obj_name;
+    const char *obj_name;
+    struct AST_STRUCT *__str__;
+    struct AST_STRUCT *__cast__;
     struct SCOPE_STRUCT *self;
 }Obj_t;
+
+struct AST_STRUCT * GetInStruct(struct AST_STRUCT * str , const char * type , const char *name);
+
 
 
 typedef struct AST_TYPE_VALUE{
@@ -103,6 +108,7 @@ typedef struct AST_TYPE_VALUE{
 }Value_t;
 
 
+    #define AS_TYPE(value) ((value).as.type)
     #define AS_BOOL(value) ((value).as.booleanValue)
     #define AS_NUMBER(value) ((value).as.numberValue)
     #define AS_CHAR(value) ((value).as.charValue)
@@ -130,14 +136,11 @@ typedef struct AST_STRUCT{
         struct AST_STRUCT *variable_definition_value;
         type_ceflo variable_definition_static_type;
         char *variable_definition_static_type_name;
-        bool variable_definition_ptr;
-        bool variable_definition_is_global;
 
 
     /* ======  AST_VARIABLE ====== */
         char *variable_name;
         bool variable_forGlobal;
-        bool variable_const;
 
 
 
@@ -167,8 +170,6 @@ typedef struct AST_STRUCT{
 
     /* ======  AST_VALUE ====== */
         Value_t value;
-        struct AST_STRUCT **ptr_value;
-        const char *var_ptr;
         int marked_count;
         bool is_for_variable;
 
@@ -293,14 +294,17 @@ void newValue(Value_t * value , uint8_t type);
 void modifValue(ast_t ** ref  , ast_t * new);
 void newObject(Obj_t * object);
 bool ObjectIsSame(Obj_t *self , const char *name);
-void printValueAst(ast_t * value,struct VISITOR_STRUCT * visitor);
+void printValueAst(ast_t * value);
 bool printObj(ast_t * value);
-bool printlist(ast_t * value , struct VISITOR_STRUCT * visitor);
-bool printlistByeValue(Value_t * value , struct VISITOR_STRUCT * visitor);
-bool printlistByeList(list_t * list , struct VISITOR_STRUCT * visitor);
-
+bool printlist(ast_t * value);
+bool printlistByeValue(Value_t * value);
+bool printlistByeList(list_t * list);
+struct AST_STRUCT * findObjAttr(Obj_t * obj,const char *name);
+struct AST_STRUCT * findObjMethod(Obj_t * obj, const char *name);
+void free_obj(Obj_t *obj);
 void Value_incref(ast_t * value);
 bool Value_decref(ast_t * value);
+
 
 void newList_Ast(list_ast_t *list);
 int List_Ast_Append(list_ast_t *list , ast_t *ast);

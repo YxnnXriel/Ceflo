@@ -13,11 +13,27 @@ ast_t * bulletin_println(visitor_t * visitor , ast_t * node , list_ast_t *args )
     for ( i = 0; i < (int) args->size; i++){
         ast_t * child = List_Ast_Get(args,i);
         child = visitor_visit(visitor,child);
-        printValueAst(child,visitor);
+        printValueAst(child);
     }
     
     printf("\n");
 
+    ast_t * count = newAst(AST_NUMBER);
+    count->value.as.numberValue = i;
+    count->value.type = NUMBER;
+
+    return count; 
+}
+
+ast_t * bulletin_print(visitor_t * visitor , ast_t * node , list_ast_t *args ){
+
+    int i = 0;
+    for ( i = 0; i < (int) args->size; i++){
+        ast_t * child = List_Ast_Get(args,i);
+        child = visitor_visit(visitor,child);
+        printValueAst(child);
+    }
+    
     ast_t * count = newAst(AST_NUMBER);
     count->value.as.numberValue = i;
     count->value.type = NUMBER;

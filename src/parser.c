@@ -281,25 +281,6 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
     
     if(TYPE(parser) == TOKEN_VAR){
         parser_eat(TOKEN_VAR,parser,NULL);
-    }else{
-        var->variable_const = true;
-        parser_eat(TOKEN_CONST,parser,NULL);
-    }
-
-
-    if(TYPE(parser) == TOKEN_GLOBAL){
-        if(GetScope() != 0){
-            parser_eat(TOKEN_EOF,parser,"%s : the global variable declaration must be done in the main.\n",
-                ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR]
-            );
-        }
-        var->variable_definition_is_global = true;
-        parser_eat(TYPE(parser),parser,"");    
-    }
-
-    if(TYPE(parser) == TOKEN_MULT){
-        var->variable_definition_ptr = true;
-        parser_eat(TYPE(parser),parser,"");    
     }
 
 
@@ -331,18 +312,16 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
     if(TYPE(parser) == TOKEN_EQUAL){
         parser_eat(TOKEN_EQUAL,parser,NULL);
         ast_t * expr = parser_parse_expr(parser);
-        if(var->variable_definition_ptr){
-            if(expr->type != AST_VARIABLE && expr->type != AST_FUNCTION_CALL )
-                parser_eat(TOKEN_EOF,parser,"%s : you cannot use ptr '*' on anything other than variables or functions.\n",
-                    ERROR_TO_STRING[VARIABLE_DEFINITION_ERROR]
-                );
-        }        
         var->variable_definition_value = expr;
 
     }else{
         var->variable_definition_value = NEW_OBJECT(AST_NONE,parser);
     }
 
+    if(TYPE(parser) == TOKEN_COMA){
+        parser_eat(TOKEN_COMA,parser,NULL);
+        var->left = parser_parse_variable_definition(parser);
+    }
 
     return var;
 }
@@ -417,7 +396,12 @@ ast_t *parser_parse_variable(parser_t *parser){
         ){
             ast_t * list_assign = NEW_OBJECT(AST_LIST_ASSIGNEMENT,parser);
             list_assign->countScope = GetScope();
-            list_assign->op = parser->current;
+            if(TYPE(parser) == TOKEN_EQUAL ){
+                list_assign->op = AS_TOKEN(TYPE(parser),VALUE(parser));
+            }else{
+
+                list_assign->op = AS_TOKEN(parser->current.type -1 ,GetOp(parser->current.type - 1));
+            }
             parser_eat(TYPE(parser),parser,NULL);
             list_assign->assignement_left = variable;
             list_assign->assignement_value = parser_parse_expr(parser);
@@ -569,7 +553,11 @@ ast_t *parser_parse_function_definition(parser_t *parser){
     if(TYPE(parser) == TOKEN_COLON){
         parser_eat(TYPE(parser),parser,NULL);
         int get_type = type_ceflo_convert_to_type(parser->current.value);
-        function->function_definition_return_type = get_type == -2 ? NONE : get_type;
+        function->function_definition_return_type = get_type == -1 ? OBJECT : get_type;
+
+        if(get_type == -2){
+            function->function_definition_return_type = NONE;
+        }
         parser_eat(TOKEN_ID,parser,"ID %s inconnue \n",parser->current.value);
         allowChar(&function->function_definition_return_type_name,parser->prev.value);
     }

@@ -13,6 +13,8 @@
         "utility": "c",
         "scope.h": "c",
         "optional": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "lexer.h": "c",
+        "typer.h": "c"
     }
 }

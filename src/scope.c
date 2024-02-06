@@ -29,8 +29,8 @@ scope_t* newScope(){
     scope_t *scope = calloc(1,sizeof(*scope));
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
-    __init__stk_hash(&scope->variable_definition_global);
     scope->scope_parent = NULL;
+    scope->is_for_obj = false;
     scope->countScope = -1;
 
 
@@ -52,94 +52,23 @@ scope_t* newScope(){
 
 }
 
-ast_t * scope_get_variable_definition_global(scope_t * scope , const char *vardef){
-    ast_t * value = NULL;
-    if(scope->variable_definition_global.Size == 0){
-            return NULL;
-    }else{
-        value = (ast_t*)Hash_Get(&scope->variable_definition_global,vardef);
-        if(value != NULL)
-            value->scope = scope;
-        
-        return value;
-    }
-}
-
 
 ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef){
     ast_t * value = NULL;
 
     if(scope->variable_definition.Size != 0){
         value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
-        if(value != NULL){
-            if(value->variable_definition_ptr == false){
-                value->scope = scope;
-            }
-            return value;
-        }
     }
     
-    if(scope->variable_definition_global.Size != 0){
-        return scope_get_variable_definition_global(scope,vardef);
-    }
-
 
     return value;
 }
 
-ast_t ** scope_get_variable_definition_ptr(scope_t * scope , const char *vardef){
-    hash_t * hash = NULL;
-    if(scope->variable_definition.Size != 0){
-        hash = Hash_Get_With_addr(&scope->variable_definition,vardef);
-        if(hash != NULL){
-            ast_t ** value = (ast_t**)&(hash->value);
-            (*value)->scope = scope;
-            // (*value)->assignement_variable_name = vardef;
-            return value;
-        }
-    }
-
-    if(scope->variable_definition_global.Size != 0){    
-        hash = Hash_Get_With_addr(&scope->variable_definition_global,vardef);
-        if(hash != NULL){
-            ast_t ** value = (ast_t**)&(hash->value);
-            (*value)->scope = scope;
-            // (*value)->assignement_variable_name = vardef;
-            return value;
-        }
-    }
-
-    return NULL;
-}
-
-void scope_modif_variable_definition(scope_t *scope , const char *key , ast_t *value ){
-    ast_t * hold = scope_get_variable_definition(
-        scope,
-        key
-    );
-
-    if(hold && !hold->variable_definition_is_global ){
-        Hash_Modif(&scope->variable_definition,key,value);
-    }else if( hold && hold->variable_definition_is_global ){
-        Hash_Modif(&scope->variable_definition_global,key,value);
-    }
-}
 
 void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value){
-    ast_t * stk_val = scope_get_variable_definition(scope,key);
-
-    if(value->variable_definition_is_global && stk_val == NULL){
-        Hash_Append(&scope->variable_definition_global,key,value);
-        // printf("globale size[%d]",scope->variable_definition_global.Size);
-        return;
-    }
-
-    if(stk_val != NULL){
-        // update
+    ast_t * val = scope_get_variable_definition(scope,key);
+    if(val != NULL){
         Hash_Modif(&scope->variable_definition,key,value);
-        // stk_val->value = value->value;
-        // stk_val->is_for_variable = false;
-        // stk_val->variable_const = value->variable_const;
     }else{
         Hash_Append(&scope->variable_definition,key,value);
     }
@@ -148,15 +77,12 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 
 
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef){
-    // if(scope->function_definition.Size == 0)
-    //     return NULL;
+    if(scope->function_definition.Size == 0)
+        return NULL;
 
-
-    ast_t * value = Hash_Get(&scope->function_definition,funcdef);
-    if(value == NULL){
-        value = Hash_Get(&scope->variable_definition,funcdef);
-        return value != NULL && value->type == AST_LFUNC? value->value.as.lfuncValue:NULL;
-    }
+    ast_t * value = NULL; 
+    
+    value = Hash_Get(&scope->function_definition,funcdef);
 
 
     return value;
@@ -248,13 +174,6 @@ void Print_Scope(scope_t * scope , const char *chaine){
         printf("    %s\n",node->variable_definition_name); 
     }
 
-    printf(" **** GLOBAL VARIABLE **** \n");
-    for (int i = 0; i < scope->variable_definition_global.Size; i++){
-        hash_t * item = Hash_Get_by_index(&scope->variable_definition_global,i);
-        node = (ast_t*)item->value;
-        printf("    %s\n",node->variable_definition_name); 
-    }
-
 
     printf(" **** FUNCTION **** \n");
     for (int i = 0; i < scope->function_definition.Size; i++){
@@ -273,57 +192,6 @@ int scope_cpy_with_scope(scope_t *end , scope_t *ref){
         Scope_intern_cpy(&ref->function_definition,end,scope_append_function_definition);
         Scope_intern_cpy(&ref->variable_definition,end,scope_append_variable_definition);
         Scope_intern_cpy(&ref->struct_definition,end,scope_append_struct_definition);
-
-
-        // for (int i = 0; i < ref->function_definition.Size ; i++){
-            
-        //     ast_t * func = scope_get_function_definition(
-        //         ref,
-        //         ListString_Get(ref->function_names,i)
-        //     );
-        //     scope_append_function_definition(
-        //         end,
-        //         func->function_definition_name,
-        //         ast_copy(func,end)
-        //     );
-        // }
-
-        // // for (int i = 0; i < ref->variable_definition.Size ; i++){
-            
-        // //     ast_t * var = scope_get_variable_definition(
-        // //         ref,
-        // //         ListString_Get(ref->variable_names,i)
-        // //     );
-        // //     scope_append_variable_definition(
-        // //         end,
-        // //         ListString_Get(ref->variable_names,i),
-        // //         ast_copy(var,end)
-        // //     );
-        // // }
-
-        // for (int i = 0; i < ref->variable_definition.Size; i++){
-        //     hash_t* item = Hash_Get_by_index(&ref->variable_definition,i);
-
-        //     scope_append_variable_definition(
-        //         end,
-        //         item->key,
-        //         ast_copy((ast_t*)item->value,end)
-        //     );            
-        // }
-
-        // for (int i = 0; i < ref->struct_definition.Size ; i++){
-            
-        //     ast_t * structt = scope_get_struct_definition(
-        //         ref,
-        //         ListString_Get(ref->struct_names,i)
-        //     );
-        //     scope_append_struct_definition(
-        //         end,
-        //         ListString_Get(ref->struct_names,i),
-        //         ast_copy(structt,end)
-        //     );
-        // }
-
         end->countScope = ref->countScope;
         end->scope_parent = ref->scope_parent;
 
@@ -350,9 +218,6 @@ void freeScope(scope_t * scope){
         }
         if(scope->struct_definition.Size != 0){
             Hash_Del(&scope->struct_definition);
-        }
-        if(scope->variable_definition_global.Size != 0){
-            Hash_Del(&scope->variable_definition_global);
         }
     }
 }

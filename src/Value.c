@@ -117,7 +117,7 @@ ast_t * value_List_deleted(visitor_t * visitor , list_t *list , ast_t * value){
 ast_t * value_List_print(visitor_t * visitor , list_t *list , ast_t * value){
     if(!is_null_args(value)) return RETURN_NONE;
 
-        printlistByeList(list,visitor);
+        printlistByeList(list);
     return value;
 }
 
@@ -146,15 +146,12 @@ ast_t * value_List_filter(visitor_t * visitor , list_t *list , ast_t * value){
 
     list_ast_t new = List_Ast_Cpy_Without_Index(&value->function_call_args,0);
 
-    ast_t * cpy_args = newAst(AST_FUNCTION_CALL);
-    cpy_args->function_call_args = new;
-    
     
     if(func->type == AST_LFUNC){
         return visitor_visit_function(
             visitor,
             func->value.as.lfuncValue,
-            cpy_args
+            &new
         );
     }
 

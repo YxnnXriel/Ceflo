@@ -27,4 +27,5 @@ test :
 	-make
 	./$(EXEC) $(FILE)
 val :
+	-make
 	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC) $(FILE)

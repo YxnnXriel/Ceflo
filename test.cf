@@ -1,24 +1,9 @@
 
 
 
-struct Personne {
-    var a
-    func __init__{
-        var b = 90
-        a = b
+struct Point {
+    var name = 89;
+    func __init__(name){
+        self.name
     }
-
-    func get_a(){
-        return a + "1";
-    }
-
 }
-
-
-
-
-
-var p1 = new Personne()
-
-println(p1.get_a())
-

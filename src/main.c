@@ -59,10 +59,12 @@
  * - Mise à jour du simple garbage				- OK
  * - Ajouter des fonctions pour chaque valeur 	- OK
  * - Inroduire les constantes				  	- OK
- * - Modifier les modif value dans scope.c		- ?
- * - Modifier le parser.c						- OK
+ * - Modifier les modif value dans scope.c		- OK
  * - Ajouter une Api pour l'interpréteur	    - ?
- * - Fix bug variable acces						- ?
+ * - Fix bug variable acces						- OK
+ * - Ajouter le resolveur d'object lors du casting - ?
+ * - reparer la fonction __init__ 				- ?
+ * - Nettoyer et optimiser le codes de certain partie - ? 
  */ 
 
 
@@ -95,9 +97,6 @@ int main(int argc, char const *argv[]){
 		newLexer(&lexer,argv[1]);
 		ast_t *node = parser_parse(&lexer);
 		visitor_visit_code(node);
-
-
-
 		
 	}else{
 		printf("[CEFLO]\n");
