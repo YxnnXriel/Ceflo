@@ -1,24 +1,16 @@
 
 
 
+struct Person {
+    var Name = "Joe Don"
+    var Age = 21
 
-struct Point {
-    var x;
-    var y;
-
-    func __init__(self,x,y){
-        self.x = x
-        self.y = y
-    }
-
-    func GetPoint(self){
-        println(self.x + " " + self.y)
+    func __str__(self){
+        return self.Name + " " + self.Age
     }
 }
 
+var p1 = new Person();
 
-var Pa = new Point(23,89);
 
-
-Pa.GetPoint()
-
+println(p1)

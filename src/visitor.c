@@ -600,7 +600,6 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             if(strcmp("__init__",item->function_definition_name) == 0 && init == NULL){
                 // if(node->function_call_args.size == item->function_defintion_args.size)
                     init = item;
-                continue;
             }
 
             if(strcmp("__str__",item->function_definition_name)==0){
@@ -610,7 +609,10 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             if(strcmp("__cast__",item->function_definition_name)== 0){
                 newObj->__cast__ = item;
             }
+
+            continue;
         }
+
         visitor_visit(
             &vs,
             ast_copy(item,vs.global_scope)
@@ -1025,7 +1027,18 @@ ast_t* visitor_visit_method(visitor_t *visitor ,scope_t * self ,  ast_t * method
 
 
     visit.global_scope->countScope = method->function_definition_body->countScope; 
-    visit.global_scope->scope_parent = visitor->global_scope;
+    if(visitor != NULL)    
+        visit.global_scope->scope_parent = visitor->global_scope;
+
+
+    if(self != NULL && method->is_define_self == true){
+        ast_t * self_to_ast = create_self_ast(self);
+        scope_append_variable_definition(
+            newscope,
+            "self",
+            self_to_ast
+        );
+    }
 
 
 
@@ -1045,14 +1058,6 @@ ast_t* visitor_visit_method(visitor_t *visitor ,scope_t * self ,  ast_t * method
             exit(1);
         }
 
-        if(self != NULL && method->is_define_self == true){
-            ast_t * self_to_ast = create_self_ast(self);
-            scope_append_variable_definition(
-                newscope,
-                "self",
-                self_to_ast
-            );
-        }
 
 
 

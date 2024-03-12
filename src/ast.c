@@ -333,11 +333,18 @@ bool printObj(ast_t * value){
 
     if(value->value.type == OBJECT && value->value.as.ObjectValue.__str__ != NULL){
         visitor_t visi;
-        visi.global_scope = value->value.as.ObjectValue.self;
+        scope_t * self = value->value.as.ObjectValue.self;
+        visi.global_scope = self;
         str_func =  value->value.as.ObjectValue.__str__;
+
+        if(!str_func->is_define_self){
+            self = NULL;
+        }
+
         printValueAst(
-            visitor_visit_function(
-                &visi,
+            visitor_visit_method(
+                NULL,
+                self,
                 str_func,
                 NULL
             )
@@ -1049,6 +1056,7 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
 
     a->function_definition_return_type = function->function_definition_return_type;
     a->is_define_self = function->is_define_self; 
+    
     if(function->function_definition_name){
         allowChar(&a->function_definition_name,function->function_definition_name);
     }
