@@ -44,6 +44,7 @@
         AST(AST_ASSIGNEMENT)  \
         AST(AST_STRUCT_DEFINITION)  \
         AST(AST_STRUCT)  \
+        AST(AST_SELF)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
@@ -89,6 +90,7 @@ typedef struct OBJECT_STRUCT {
     struct AST_STRUCT *__cast__;
     struct SCOPE_STRUCT *self;
 }Obj_t;
+
 
 struct AST_STRUCT * GetInStruct(struct AST_STRUCT * str , const char * type , const char *name);
 
@@ -156,7 +158,7 @@ typedef struct AST_STRUCT{
         type_ceflo function_definition_return_type;
         char *function_definition_return_type_name;
         bool is_arg_ptr;
-
+        bool is_define_self;
 
 
     /* ======  AST_FUNCTION_CALL ====== */
@@ -183,6 +185,7 @@ typedef struct AST_STRUCT{
     /* ======  scope ====== */
         struct SCOPE_STRUCT *scope;
         int countScope;
+        bool is_for_obj;
 
     
 
@@ -336,6 +339,8 @@ bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** re
 
 
 // COPY AST
+
+ast_t * create_self_ast(struct SCOPE_STRUCT *self);
 
 
 typedef ast_t * (*cpy_ast_fn)(ast_t * , struct SCOPE_STRUCT * );

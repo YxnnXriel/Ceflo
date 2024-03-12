@@ -77,6 +77,7 @@ ast_t *newAst(uint8_t type){
     new->function_definition_body = NULL;
     new->function_definition_return_type_name = NULL;
     new->is_arg_ptr = false;
+    new->is_define_self = false;
 
     new->function_call_name = NULL;
     // new->function_call_args = NULL;
@@ -88,6 +89,7 @@ ast_t *newAst(uint8_t type){
     new->marked_count = 0;
     new->is_for_variable = false;
 
+    new->is_for_obj = false;
     new->scope = NULL;
     new->countScope = -1;
     // binop
@@ -747,6 +749,15 @@ void PrintAst(){
     
 }
 
+// MARK
+ast_t * create_self_ast(struct SCOPE_STRUCT *self){
+    ast_t * ast = newAst(AST_OBJ);
+    newValue(&ast->value,OBJECT);
+    newObject(&ast->value.as.ObjectValue);
+    ast->value.as.ObjectValue.self = self;
+
+    return ast;
+}
 
 
 
@@ -790,6 +801,7 @@ static void cpy_line(ast_t *a , ast_t *ast){
     a->line = ast->line;
     a->colone = ast->colone;
     a->countScope = ast->countScope;
+    a->is_for_obj = ast->is_for_obj;
 }
 
 static ast_t *ast_r_scope(ast_t *ast , struct SCOPE_STRUCT * scope){
@@ -1036,7 +1048,7 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
     ast_t *a = newAst(function->type);
 
     a->function_definition_return_type = function->function_definition_return_type;
-
+    a->is_define_self = function->is_define_self; 
     if(function->function_definition_name){
         allowChar(&a->function_definition_name,function->function_definition_name);
     }

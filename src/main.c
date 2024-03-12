@@ -68,6 +68,8 @@
  */ 
 
 
+//  abjimk
+
 /*
 	l'api pour l'interpréteur vas fonctionner comme ceci :
 		je vais créer des fonctions d'integration plus simple autour de l'ast

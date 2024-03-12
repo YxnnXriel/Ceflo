@@ -63,10 +63,31 @@ static bool isInClassDefinition(ast_t * item){
     switch (item->type){
         case AST_FUNCTION_DEFINITION:
         case AST_VARIABLE_DEFINITION:
+            item->is_for_obj = true;
         return true;
         default:
             return false;
     }
+}
+
+// pour voir si les paramètre on seulement un seul pointeur self ou non
+static bool isSelfOneMethodDefinition(ast_t * item){
+    if(item->type != AST_FUNCTION_DEFINITION)
+        return true;
+
+    int p = 0;
+
+    for (int i = 0; i < item->function_defintion_args.size; i++){
+        ast_t * args = List_Ast_Get(&item->function_defintion_args,i);
+        if(strcmp("self",args->variable_name) == 0){
+            if(p == 0)
+                p = 1;
+            else
+                return false;
+        }
+    }
+
+    return true;
 }
 
 static char * GetOp(TokenEnum type){
@@ -327,6 +348,46 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
 }
 
 
+
+static ast_t *parser_parse_variable_access(parser_t * parser){
+    ast_t * variable = NEW_OBJECT(AST_VARIABLE,parser);
+    variable->countScope = GetScope();
+
+    if(type_ceflo_convert_to_type(VALUE(parser)) != -1){
+        parser_eat(TOKEN_EOF,parser,"%s : `%s` name id or variable cannot be a type",
+            ERROR_TO_STRING[SYNTAX_ERROR],
+            VALUE(parser)
+       );        
+    }
+
+    parser_eat(TOKEN_ID,parser,"%s : `%s` is not valid for referencies something\n",
+        ERROR_TO_STRING[SYNTAX_ERROR],
+        VALUE(parser)
+    );
+    allowChar(&variable->variable_name,parser->prev.value);
+
+
+    if(parser->current.type == TOKEN_LPARENT){
+        return parser_parse_function_call(parser);
+    }
+
+
+    return variable;
+}
+
+
+static ast_t * parser_parse_obj_access(parser_t * parser , ast_t * prev_variable){
+
+        parser_eat(TYPE(parser),parser,NULL);
+        ast_t * obj_acces = NEW_OBJECT(AST_OBJ_ACCESS,parser);
+        obj_acces->left = prev_variable;
+        obj_acces->right = parser_parse_variable_access(parser);
+        obj_acces->countScope = GetScope();
+
+        return obj_acces;
+}
+
+
 /**
  * @brief here you can have variable access like variable, variable[], variable.property etc
  * 
@@ -425,13 +486,16 @@ ast_t *parser_parse_variable(parser_t *parser){
     if(parser->current.type == TOKEN_DOT){
         //...., maybe the declaration is a struct , access or assignement
         
-        parser_eat(TYPE(parser),parser,NULL);
-        ast_t * obj_acces = NEW_OBJECT(AST_OBJ_ACCESS,parser);
-        obj_acces->left = variable;
-        obj_acces->right = parser_parse_expr(parser);
-        obj_acces->countScope = GetScope();
+        // parser_eat(TYPE(parser),parser,NULL);
+        // ast_t * obj_acces = NEW_OBJECT(AST_OBJ_ACCESS,parser);
+        // obj_acces->left = variable;
+        // obj_acces->right = parser_parse_expr(parser);
+        // obj_acces->countScope = GetScope();
 
-        variable = obj_acces;
+        // variable = obj_acces;
+
+        variable = parser_parse_obj_access(parser,variable);
+    
     }
 
 
@@ -480,11 +544,18 @@ static void get_function_definition_args(parser_t *parser, ast_t *function){
         addr = true;
         parser_eat(TYPE(parser),parser,NULL);
     }
+
     ast_t *arg = parser_parse_variable(parser);
+
+    if(strcmp(arg->variable_name,"self") == 0){
+        function->is_define_self = true;
+    }else{
+        List_Ast_Append(&function->function_defintion_args,arg);
+    }
     arg->is_arg_ptr = addr;
     addr = false;
 
-    List_Ast_Append(&function->function_defintion_args,arg);
+
     while (parser->current.type == TOKEN_COMA){
         parser_eat(TYPE(parser),parser,NULL);
         if(TYPE(parser) == TOKEN_ADDR){
@@ -492,6 +563,15 @@ static void get_function_definition_args(parser_t *parser, ast_t *function){
             parser_eat(TYPE(parser),parser,NULL);
          }
         arg = parser_parse_variable(parser);
+
+        if(strcmp(arg->variable_name,"self") == 0){
+            if(function->is_define_self == false){
+                function->is_define_self = true;
+                continue;
+            }else{
+                parser_eat(TOKEN_EOF,parser,"%s : multiple self definition for its Function \n",ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR]);
+            }
+        }
         arg->is_arg_ptr = addr;
         addr = false;
         List_Ast_Append(&function->function_defintion_args,arg);
@@ -848,6 +928,8 @@ ast_t *parser_parse_factor(parser_t *parser){
         return func;
     }
 
+
+
     if(parser->current.type == TOKEN_AT_SIGN){
         parser_eat(TOKEN_DOT,parser,NULL);
         parser_eat(TYPE(parser),parser,NULL);
@@ -1060,6 +1142,13 @@ ast_t *parser_parse_struct_definition(parser_t *parser){
                     );
                     exit(1);
                 }
+                // if(!isSelfOneMethodDefinition(item)){
+                //     Print_error(
+                //         parser->lexer,
+                //         "StructDefError: le pointeur self est definir plusieur fois\n"
+                //     );
+                //     exit(1);
+                // }
                 List_Append(
                     ast_struct->struct_definition_item,
                     item

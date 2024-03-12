@@ -1,9 +1,24 @@
 
 
 
+
 struct Point {
-    var name = 89;
-    func __init__(name){
-        self.name
+    var x;
+    var y;
+
+    func __init__(self,x,y){
+        self.x = x
+        self.y = y
+    }
+
+    func GetPoint(self){
+        println(self.x + " " + self.y)
     }
 }
+
+
+var Pa = new Point(23,89);
+
+
+Pa.GetPoint()
+
