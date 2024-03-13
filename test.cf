@@ -1,7 +1,0 @@
-
-
-
-func Hello(c,u,x,b){
-    println("Yann Ariel")
-}
-

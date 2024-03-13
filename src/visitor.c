@@ -1166,41 +1166,46 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * a
         }
 
         // printf("[%s]\n",func->function_definition_name);
-        for (int i = 0; i < (int) args->size; i++){
+
+
+        for (int i = 0; i < (int) args->size ; i++){
+
             ast_t *args1 = List_Ast_Get(&func->function_defintion_args,i);
 
             char * variable_name = args1->variable_name;
-            // printf("       {%s} ",variable_name);
-            ast_t * value = visitor_visit(visitor,List_Ast_Get(args,i));
-     
+            ast_t * val = List_Ast_Get(args,i);
+            ast_t * value = NULL;
+
+            value = visitor_visit(visitor,val);
+
             if(args1->variable_definition_static_type != NONE){
-                ast_t *res = typer_caste_value(args1->variable_definition_static_type + 4,&value);
+                    ast_t *res = typer_caste_value(args1->variable_definition_static_type + 4,&value);
 
-                if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
-                    res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
+                    if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
+                        res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
+                    }
+
+                    if(res == NULL){
+                        Print_visitor_error(
+                        args1->line,
+                        args1->colone,
+                        "./Ceflo",
+                        "casting du type impossible !\n"
+                    );
+                    
+                    clear_ceflo_clean();
+                    exit(1);
                 }
-
-                if(res == NULL){
-                    Print_visitor_error(
-                    args1->line,
-                    args1->colone,
-                    "./Ceflo",
-                    "casting du type impossible !\n"
-                );
-                
-                clear_ceflo_clean();
-                exit(1);
             }
-        }
 
 
-            
             scope_append_variable_definition(
                 newscope,
                 variable_name,
                 value
             );
         }
+        
     }
     
 
