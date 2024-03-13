@@ -87,7 +87,7 @@ static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
 
 
 static bool ismethodHaveSelf(ast_t * method){
-    for (int i = 0; i < method->function_defintion_args.size; i++){
+    for (int i = 0; i < (int)method->function_defintion_args.size; i++){
         ast_t  * item = List_Ast_Get(&method->function_defintion_args,i);
         if(strcmp(item->variable_name,"self") == 0)
             return true;
@@ -675,7 +675,6 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
         scope_t * self = variable->value.as.ObjectValue.self;
         visitor_t vs;
         newVisitorWithScope(&vs,self);
-        // Debug_Print_Ast_Type(right);
         
         if(right->type == AST_FUNCTION_CALL){
             
@@ -1406,20 +1405,28 @@ void visitor_visit_tree(visitor_t *visitor,Value_t * value, Value_t * left , tok
         break;
 
         case NUMBER:
-                
             performe_visit_tree_number(value,left,op,right);
         break;
 
         case BOOL : 
             performe_visit_tree_bool(value,left,op,right);
         break;
-
         case STRING:
             performe_visit_tree_str(value,left,op,right);
             break;
         case NONE:
             performe_visit_tree_none(value,left,op,right);
             break;
+        default :
+            Print_visitor_error(
+                0,
+                0,
+                "./Ceflo",
+                " operator '-' n'est pas compatible avec l'expression qui suit \n"
+            );
+            clear_ceflo_clean();
+            exit(1);
+        break;
     }
 }
 

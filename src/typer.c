@@ -62,6 +62,82 @@ static void save_free(){
 }
 
 
+static bool estToutNombre(const char *chaine) {
+    if (chaine == NULL || *chaine == '\0') {
+        return false;
+    }
+
+    while (*chaine) {
+        if (!isdigit(*chaine)) {
+            if(*chaine == '_' || *chaine == '.'){
+                chaine++;
+                continue;
+            }else{
+                return false;
+            }
+
+        }
+        chaine++;
+    }
+
+    return true;
+}
+
+double convertirEnDouble(const char *chaine) {
+    if (chaine == NULL || *chaine == '\0') {
+        return 0.0;
+    }
+
+    // Variables pour stocker le résultat et le signe
+    double resultat = 0.0;
+    double decimale = 0.0;
+    bool estNegatif = false;
+    bool separateurDecimaleTrouve = false;
+
+    // Parcourt la chaîne caractère par caractère
+    while (*chaine) {
+        if (*chaine == '_') {
+            // Ignorer le caractère underscore
+            chaine++;
+            continue;
+        }
+        if (*chaine == '-') {
+            // Gérer le signe négatif
+            estNegatif = true;
+        } else if (*chaine == '.') {
+            // Gérer la partie décimale
+            if (separateurDecimaleTrouve) {
+                // Si un séparateur décimal a déjà été trouvé, la chaîne est invalide
+                return 0.0;
+            }
+            separateurDecimaleTrouve = true;
+        } else if (*chaine >= '0' && *chaine <= '9') {
+            // Convertir les chiffres en nombre
+            if (separateurDecimaleTrouve) {
+                // Si c'est la partie décimale, ajouter au résultat décimal
+                decimale = decimale * 10 + (*chaine - '0');
+            } else {
+                // Si c'est la partie entière, ajouter au résultat
+                resultat = resultat * 10 + (*chaine - '0');
+            }
+        } else {
+            // Si un caractère non numérique est rencontré, la chaîne est invalide
+            return 0.0;
+        }
+        chaine++;
+    }
+
+    // Appliquer le signe négatif si nécessaire
+    if (estNegatif) {
+        resultat = -resultat;
+        decimale = -decimale;
+    }
+
+    // Ajouter la partie décimale au résultat
+    resultat += decimale / 10;
+
+    return resultat;
+}
 
 
 ast_t * typer_caste_value_try_obj( uint8_t to , ast_t **value , ast_t *obj){
@@ -157,7 +233,12 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
             case AST_NUMBER: return *value;
             case AST_STRING : 
                 typer_verif(*value);
-                NEW_NUMBER;NNUMBER = strlen(AS_STRING((*value)->value));
+                NEW_NUMBER;
+                if(estToutNombre(AS_STRING((*value)->value))){
+                    NNUMBER = convertirEnDouble(AS_STRING((*value)->value));
+                }else{
+                    NNUMBER = strlen(AS_STRING((*value)->value));
+                }
                 save_free();
                 return new;
             
@@ -224,15 +305,18 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
 
         ast_t * new = NULL;
         int args_size = args->size;
+        ast_t * args1 = visitor_visit(visitor,List_Ast_Get(args,0)); 
 
     if(strcmp("int",typer_name) == 0 || 
     strcmp("float",typer_name) == 0){
-        if(args_size > 1)return NULL;
+        if(args_size > 1){
+            return NULL;
+        }
 
         if(args_size == 0)
             return newAst(AST_NUMBER);
         
-        new = typer_caste_value(AST_NUMBER,&args->list[0]);
+        new = typer_caste_value(AST_NUMBER,&args1);
 
         AS_NUMBER(new->value) = strcmp("float",typer_name) != 0 ? 
         (int)AS_NUMBER(new->value):AS_NUMBER(new->value); 
@@ -247,7 +331,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_CHAR);
         
-        new = typer_caste_value(AST_CHAR,&args->list[0]);
+        new = typer_caste_value(AST_CHAR,&args1);
         return new;
     }
 
@@ -258,7 +342,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_BOOL);
         
-        new = typer_caste_value(AST_BOOL,&args->list[0]);
+        new = typer_caste_value(AST_BOOL,&args1);
         return new;
     }
 
@@ -269,7 +353,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_STRING);
         
-        new = typer_caste_value(AST_STRING,&args->list[0]);
+        new = typer_caste_value(AST_STRING,&args1);
         return new;
     }
     
@@ -281,13 +365,20 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         for (int i = 0; i < (int)args->size; i++){
             List_Append(
                 AS_LIST(new->value),
-                args->list[i] // a revoir !
+                // args->list[i] 
+                visitor_visit(visitor,List_Ast_Get(args,i))
+                // a revoir !
             );
         }
 
         return new;
     }
     else{
+
+        /**
+         * TODO: rechercher dans les structures et trouver ça réprésentation
+         * 
+         */
         ast_t *func = newAst(AST_STRUCT);
         allowChar(&func->function_call_name,typer_name);
         func->function_call_args = List_Ast_Cpy(args);

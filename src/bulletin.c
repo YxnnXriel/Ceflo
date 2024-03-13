@@ -43,19 +43,18 @@ ast_t * bulletin_print(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
 
 ast_t * bulletin_input(visitor_t * visitor , ast_t * node , list_ast_t *args ){
-    bulletin_println(visitor,node,args);
+    bulletin_print(visitor, node, args);
 
     char buffer[BUFSIZ];
-    fgets(buffer,BUFSIZ-1,stdin);
+    fgets(buffer, BUFSIZ, stdin);
 
-    buffer[strlen(buffer)-1] = '\0';
-    fflush(stdin);
+    // Supprimer le caractère de nouvelle ligne de la chaîne saisie
+    buffer[strlen(buffer) - 1] = '\0';
 
     ast_t *string = newAst(AST_STRING);
     string->value.as.stringValue = new_String(buffer);
 
     return string;
-
 }
 
 

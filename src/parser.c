@@ -77,7 +77,7 @@ static bool isSelfOneMethodDefinition(ast_t * item){
 
     int p = 0;
 
-    for (int i = 0; i < item->function_defintion_args.size; i++){
+    for (int i = 0; i < (int)item->function_defintion_args.size; i++){
         ast_t * args = List_Ast_Get(&item->function_defintion_args,i);
         if(strcmp("self",args->variable_name) == 0){
             if(p == 0)
@@ -931,7 +931,7 @@ ast_t *parser_parse_factor(parser_t *parser){
 
 
     if(parser->current.type == TOKEN_AT_SIGN){
-        parser_eat(TOKEN_DOT,parser,NULL);
+        parser_eat(TYPE(parser),parser,NULL);
         parser_eat(TYPE(parser),parser,NULL);
 
         ast_t *func_typer =  parser_parse_function_call(parser);

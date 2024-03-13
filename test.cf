@@ -1,16 +1,7 @@
 
 
 
-struct Person {
-    var Name = "Joe Don"
-    var Age = 21
-
-    func __str__(self){
-        return self.Name + " " + self.Age
-    }
+func Hello(c,u,x,b){
+    println("Yann Ariel")
 }
 
-var p1 = new Person();
-
-
-println(p1)
