@@ -76,7 +76,7 @@
 			"patterns": [
 			{
 				"name":"entity.name.function.member.ceflo",
-				"match": "\\b(println|print|getline|Append)\\b"
+				"match": "\\b(println|print|input|Append|printf)\\b"
 			}
 		]
 		},
