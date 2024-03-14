@@ -15,6 +15,7 @@
         "optional": "c",
         "system_error": "c",
         "lexer.h": "c",
-        "typer.h": "c"
+        "typer.h": "c",
+        "bulletin.h": "c"
     }
 }

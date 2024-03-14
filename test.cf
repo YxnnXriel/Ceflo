@@ -1,0 +1,27 @@
+
+
+struct Point {
+    var x , y;
+
+    func __init__ -> self{
+        self.x = @int(input("> entrer la valeur de x : "))
+        self.y = @int(input("> entrer la valeur de y : "))
+    }
+    func GetX -> self {
+        return self.x
+    }
+
+    func __str__ -> self {
+        return "(" + self.x + "," + self.y + ")";
+    }
+}
+
+
+// var P1 = [new Point() , new Point()]
+
+
+var t = new Point();
+
+println(t.GetX())
+
+// printf("{1} sont les coordonnées de ma variable P1 ",P1);

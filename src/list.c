@@ -294,26 +294,23 @@ hash_t *Hash_Get_With_addr(stk_t *stk , const char *key){
 
 // }
 
-hash_t *Hash_Get_by_index(stk_t *stk ,int index){
-    if(index > stk->Size)
+void * Hash_Get_by_index(stk_t *stk ,int index){
+    if(index >= stk->Size)
         return NULL;
 
     int n = 0;
     hash_t *l = NULL;
     for (int i = 0; i < TAB_SIZE; i++){
-        if(stk->TabHash[i] != (void*)0){
+        if(stk->TabHash[i] != NULL){ 
             l = stk->TabHash[i];
             while (l != NULL){
                 if(n == index){
-                    return l;    
+                    return l->value;    
                 }
                 l = l->next;
                 n++;
             }
-            if(n == index)
-                return l;
         }
-
     }
     return NULL;
 }

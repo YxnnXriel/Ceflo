@@ -60,4 +60,5 @@ ast_t* visitor_visit_method(visitor_t *visitor ,scope_t * self ,  ast_t * method
 int  visitor_visit_code(ast_t* node);
 // void freeVsisitorGB();
 
+
 #endif

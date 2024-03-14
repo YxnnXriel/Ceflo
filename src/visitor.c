@@ -600,17 +600,20 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             if(strcmp("__init__",item->function_definition_name) == 0 && init == NULL){
                 // if(node->function_call_args.size == item->function_defintion_args.size)
                     init = item;
+                continue;
+
             }
 
             if(strcmp("__str__",item->function_definition_name)==0){
                 newObj->__str__ = item;
+                continue;
             }
 
             if(strcmp("__cast__",item->function_definition_name)== 0){
                 newObj->__cast__ = item;
+                continue;
             }
 
-            continue;
         }
 
         visitor_visit(
