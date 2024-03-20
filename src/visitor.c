@@ -216,11 +216,11 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
     }
 
 
-    // printf("[< %s >] \n",AST_TO_STRING[node->type]);
+    printf("[< %s >] \n",AST_TO_STRING[node->type]);
 
-    // if(node->type == AST_FUNCTION_CALL){
-    //     printf("=== %s === \n",node->function_call_name);
-    // }
+    if(node->type == AST_FUNCTION_CALL){
+        printf("=== %s === \n",node->function_call_name);
+    }
 
 
     switch (node->type){
@@ -1215,8 +1215,10 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * a
 
     ast_t *returnValue =  visitor_visit(&visit,func->function_definition_body);   
 
-    freeSingleScope(newscope);
-
+    if(returnValue->type != AST_OBJ)
+        freeSingleScope(newscope);
+    else
+        Debug_Print_Ast_Type(returnValue);
     returnValue = is_function_return_type(visitor,func,returnValue);
 
     if(returnValue == NULL){

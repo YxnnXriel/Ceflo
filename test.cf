@@ -1,4 +1,25 @@
 
 
-var l::int = 0;
-println(l);
+struct Point {
+    var x::int;
+    var y::int;
+
+
+    func __init__(self,x,y){
+        self.x = x
+        self.y = y
+        return 0;
+    }
+
+    func __self__(self){
+        return self
+    }
+
+}
+
+
+
+var p = new Point(0,1);
+var m = p.__self__()
+
+println(m)

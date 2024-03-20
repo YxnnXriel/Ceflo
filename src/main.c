@@ -62,9 +62,10 @@
  * - Modifier les modif value dans scope.c		- OK
  * - Ajouter une Api pour l'interpréteur	    - ?
  * - Fix bug variable acces						- OK
- * - Ajouter le resolveur d'object lors du casting - ?
- * - reparer la fonction __init__ 				- ?
- * - Nettoyer et optimiser le codes de certain partie - ? 
+ * - Ajouter le resolveur d'object lors du casting - OK
+ * - reparer la fonction __init__ 				- OK
+ * - Nettoyer et optimiser le codes de certain partie - ?
+ * - trouver l'erreur avec le retour du pointeur self - ?
  */ 
 
 
