@@ -1,12 +1,18 @@
 
+struct Point {
+    var x , y;
 
-func GetOne{
-    return 1;
+    func __init__(self,x,y){
+        self.x = x
+        self.y = y
+    }
+
+    func __str__(self){
+        return format("x:{self.x} - y:{self.y}")
+    }
 }
 
-var x = 1
-var y = 4
+var p = new Point(0,1)
 
-var t = format("{x} + {y} + {GetOne()} = {x+y+GetOne()}")
 
-println(t)
+println(p)
