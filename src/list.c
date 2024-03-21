@@ -294,7 +294,7 @@ hash_t *Hash_Get_With_addr(stk_t *stk , const char *key){
 
 // }
 
-void * Hash_Get_by_index(stk_t *stk ,int index){
+void * Hash_Get_by_index(stk_t *stk ,int index, int mod){
     if(index >= stk->Size)
         return NULL;
 
@@ -305,7 +305,7 @@ void * Hash_Get_by_index(stk_t *stk ,int index){
             l = stk->TabHash[i];
             while (l != NULL){
                 if(n == index){
-                    return l->value;    
+                    return mod == 0 ? l->value:l;
                 }
                 l = l->next;
                 n++;

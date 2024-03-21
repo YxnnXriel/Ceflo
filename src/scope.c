@@ -151,7 +151,7 @@ void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *va
 
 static void Scope_intern_cpy(stk_t *Table , scope_t *end, void (*func)(scope_t *scope , const char *key , ast_t *value)){
     for (int i = 0; i < Table->Size; i++){
-        hash_t* item = Hash_Get_by_index(Table,i);
+        hash_t* item = Hash_Get_by_index(Table,i,1);
         func(
             end,
             item->key,
@@ -169,7 +169,7 @@ void Print_Scope(scope_t * scope , const char *chaine){
 
     printf(" **** VARIABLE **** \n");
     for (int i = 0; i < scope->variable_definition.Size; i++){
-        node = (ast_t*)Hash_Get_by_index(&scope->variable_definition,i);
+        node = (ast_t*)Hash_Get_by_index(&scope->variable_definition,i,0);
         if(node != NULL)
             printf("    %p\n",(void*)node); 
     }
@@ -177,7 +177,7 @@ void Print_Scope(scope_t * scope , const char *chaine){
 
     printf(" **** FUNCTION **** \n");
     for (int i = 0; i < scope->function_definition.Size; i++){
-        node = (ast_t*)Hash_Get_by_index(&scope->function_definition,i);
+        node = (ast_t*)Hash_Get_by_index(&scope->function_definition,i,0);
         if(node != NULL)
             printf("    %s\n",node->function_definition_name); 
     }
@@ -188,13 +188,11 @@ void Print_Scope(scope_t * scope , const char *chaine){
 int scope_cpy_with_scope(scope_t *end , scope_t *ref){
 
     if(ref != NULL){
-
         Scope_intern_cpy(&ref->function_definition,end,scope_append_function_definition);
         Scope_intern_cpy(&ref->variable_definition,end,scope_append_variable_definition);
         Scope_intern_cpy(&ref->struct_definition,end,scope_append_struct_definition);
         end->countScope = ref->countScope;
         end->scope_parent = ref->scope_parent;
-
     }
 
     return 1;

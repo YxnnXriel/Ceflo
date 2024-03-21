@@ -48,8 +48,8 @@
 /**
  * TODO: secure lexer entry,and try free current ast if we meet a problem
  * - Faire les attributs et les fonction d'une liste   - OK
- * - Ajouter un dictionnaire(si c'est possible)
- * - Bien d'autre
+ * - Ajouter un dictionnaire(si c'est possible)  - ?
+ * - Bien d'autre								 - ?
  * - Fix Bug function call and List  			- OK
  * - Fix Bug list access , new obj   			- OK
  * - Fix lfunc type right            			- OK
@@ -65,7 +65,7 @@
  * - Ajouter le resolveur d'object lors du casting - OK
  * - reparer la fonction __init__ 				- OK
  * - Nettoyer et optimiser le codes de certain partie - ?
- * - trouver l'erreur avec le retour du pointeur self - ?
+ * - trouver l'erreur avec le retour du pointeur self - OK
  */ 
 
 

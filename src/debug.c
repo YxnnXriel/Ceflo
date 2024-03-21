@@ -18,5 +18,5 @@
     }
 
     void Debug_value_is_null(void *x){
-        printf("%s\n",x == NULL ? "NON":"OUI");
+        printf("%s\n",x == NULL ? "OUI":"NON");
     }

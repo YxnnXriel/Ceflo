@@ -11,6 +11,11 @@ struct Point {
         return 0;
     }
 
+    func __str__(self){
+        return self.x + " " + self.y
+    }
+
+
     func __self__(self){
         return self
     }
@@ -22,4 +27,12 @@ struct Point {
 var p = new Point(0,1);
 var m = p.__self__()
 
+
+p.x = 89
+m.x = 78
+
+
+
+
+println(p)
 println(m)

@@ -340,7 +340,7 @@ bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** re
 
 // COPY AST
 
-ast_t * create_self_ast(struct SCOPE_STRUCT *self);
+ast_t * create_self_ast(struct OBJECT_STRUCT *self);
 
 
 typedef ast_t * (*cpy_ast_fn)(ast_t * , struct SCOPE_STRUCT * );

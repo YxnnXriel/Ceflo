@@ -333,8 +333,8 @@ bool printObj(ast_t * value){
 
     if(value->value.type == OBJECT && value->value.as.ObjectValue.__str__ != NULL){
         visitor_t visi;
-        scope_t * self = value->value.as.ObjectValue.self;
-        visi.global_scope = self;
+        Obj_t * self = &value->value.as.ObjectValue;
+        visi.global_scope = self->self;
         str_func =  value->value.as.ObjectValue.__str__;
 
         if(!str_func->is_define_self){
@@ -757,11 +757,11 @@ void PrintAst(){
 }
 
 // MARK
-ast_t * create_self_ast(struct SCOPE_STRUCT *self){
+ast_t * create_self_ast(struct OBJECT_STRUCT *self){
     ast_t * ast = newAst(AST_OBJ);
     newValue(&ast->value,OBJECT);
     newObject(&ast->value.as.ObjectValue);
-    ast->value.as.ObjectValue.self = self;
+    ast->value.as.ObjectValue = *self;
 
     return ast;
 }
@@ -938,11 +938,11 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
             scope
         );
 
-
         scope_cpy_with_scope(
             obj->self,
             ast->value.as.ObjectValue.self
         );
+
 
     }else if(ast->type == AST_LIST){
         newValue(&a->value,LIST);

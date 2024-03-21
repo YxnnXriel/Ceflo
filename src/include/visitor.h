@@ -56,7 +56,7 @@ ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node);
 
 void newGb();
 ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * args);
-ast_t* visitor_visit_method(visitor_t *visitor ,scope_t * self ,  ast_t * method , list_ast_t * args);
+ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method , list_ast_t * args);
 int  visitor_visit_code(ast_t* node);
 // void freeVsisitorGB();
 

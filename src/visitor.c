@@ -216,11 +216,11 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
     }
 
 
-    printf("[< %s >] \n",AST_TO_STRING[node->type]);
+    // printf("[< %s >] \n",AST_TO_STRING[node->type]);
 
-    if(node->type == AST_FUNCTION_CALL){
-        printf("=== %s === \n",node->function_call_name);
-    }
+    // if(node->type == AST_FUNCTION_CALL){
+    //     printf("=== %s === \n",node->function_call_name);
+    // }
 
 
     switch (node->type){
@@ -633,9 +633,9 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
         //     node
         // );
         
-        scope_t *init_self = NULL;
+        Obj_t *init_self = NULL;
         if(init->is_define_self)
-            init_self = newObj->self; 
+            init_self = newObj; 
 
         // printf("    [< %s >]    \n",node->function_call_name);
         visitor_visit_method(
@@ -675,14 +675,14 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
     
 
     if(variable->type == AST_OBJ){
-        scope_t * self = variable->value.as.ObjectValue.self;
+        Obj_t * self = &variable->value.as.ObjectValue;
         visitor_t vs;
-        newVisitorWithScope(&vs,self);
+        newVisitorWithScope(&vs,self->self);
         
         if(right->type == AST_FUNCTION_CALL){
             
             ast_t *method = scope_get_function_definition(
-                self,
+                self->self,
                 right->function_call_name
             );
 
@@ -833,6 +833,7 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
 
         
         
+    
     if(value->type == AST_OBJ ){
         // je fais une copie
         if(value->is_new_obj == false){
@@ -841,6 +842,7 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
         else
             value->is_new_obj = false;    
     }
+    
 
 
     // visitor_append_value(
@@ -1021,7 +1023,7 @@ ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
 
 
 
-ast_t* visitor_visit_method(visitor_t *visitor ,scope_t * self ,  ast_t * method , list_ast_t * args){
+ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method , list_ast_t * args){
     
     scope_t * newscope = newScope();
     visitor_t visit;
@@ -1213,12 +1215,11 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * a
     
 
 
+
     ast_t *returnValue =  visitor_visit(&visit,func->function_definition_body);   
 
-    if(returnValue->type != AST_OBJ)
-        freeSingleScope(newscope);
-    else
-        Debug_Print_Ast_Type(returnValue);
+    freeSingleScope(newscope);
+
     returnValue = is_function_return_type(visitor,func,returnValue);
 
     if(returnValue == NULL){

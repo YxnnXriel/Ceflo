@@ -16,6 +16,8 @@
         "system_error": "c",
         "lexer.h": "c",
         "typer.h": "c",
-        "bulletin.h": "c"
+        "bulletin.h": "c",
+        "list.h": "c",
+        "stdint.h": "c"
     }
 }
