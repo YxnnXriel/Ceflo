@@ -1,38 +1,12 @@
 
 
-struct Point {
-    var x::int;
-    var y::int;
-
-
-    func __init__(self,x,y){
-        self.x = x
-        self.y = y
-        return 0;
-    }
-
-    func __str__(self){
-        return self.x + " " + self.y
-    }
-
-
-    func __self__(self){
-        return self
-    }
-
+func GetOne{
+    return 1;
 }
 
+var x = 1
+var y = 4
 
+var t = format("{x} + {y} + {GetOne()} = {x+y+GetOne()}")
 
-var p = new Point(0,1);
-var m = p.__self__()
-
-
-p.x = 89
-m.x = 78
-
-
-
-
-println(p)
-println(m)
+println(t)

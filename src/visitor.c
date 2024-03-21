@@ -259,6 +259,8 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
             break;
     }
 
+
+
     return node;
 }
 
@@ -849,7 +851,6 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     //     visitor,
     //     value
     // );
-
 
 
     scope_append_variable_definition(

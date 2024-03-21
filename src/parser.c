@@ -191,6 +191,19 @@ ast_t *parser_parse(lexer_t *lexer){
     return node;
 }
 
+/**
+ * @brief here we parse one statement, it's for lexerString
+ * 
+ * @param lexer 
+ * @return ast_t* 
+ */
+ast_t *parser_parse_one(lexer_t *lexer){
+    parser_t parser;
+    newParser(&parser,lexer);
+    ast_t *node = parser_parse_statment(&parser);
+    freeParser(&parser);
+    return node;
+}
 
 
 /**
@@ -266,7 +279,7 @@ ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_CONST : return parser_parse_variable_definition(parser);
         case TOKEN_FUNC : return parser_parse_function_definition(parser);
         case TOKEN_STRUCT : return parser_parse_struct_definition(parser);
-        case TOKEN_ID : return parser_parse_variable(parser);
+        case TOKEN_ID : return parser_parse_expr(parser);
         case TOKEN_RETURN : return parser_parse_return(parser);
         case TOKEN_IF : return parser_parse_if(parser);
         case TOKEN_WHILE : return parser_parse_while(parser);
@@ -957,7 +970,8 @@ ast_t *parser_parse_factor(parser_t *parser){
     switch (parser->current.type){
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
-            value = parser_parse_number(parser);break;
+            value = parser_parse_number(parser);
+            break;
         case TOKEN_CHAR:
             value = parser_parse_char(parser);break;
         case TOKEN_STRING:
@@ -967,6 +981,7 @@ ast_t *parser_parse_factor(parser_t *parser){
             value = parser_parse_bool(parser);break;
         case TOKEN_LBRACE:
             value = parser_parse_list(parser);
+            break;
     }
 
     if(value != NULL && parser->current.type == TOKEN_DOT){
@@ -1161,4 +1176,29 @@ ast_t *parser_parse_struct_definition(parser_t *parser){
 
 
     return ast_struct;
+}
+
+
+ast_t * makeAst(const char * chaine){
+    lexer_t lex;
+
+	newLexerWithString(&lex,chaine);
+	ast_t *node = parser_parse_one(&lex);
+
+    return node;
+}
+
+bool expectedAst(ast_t * node ,ast_t *parent,  uint8_t *expect, int lenght){
+    for (int i = 0; i < lenght; i++){
+        if(node->type == expect[i]){
+            fprintf(stderr,"unexpected tokenizer: you try to inject something like %s here [%d:%d]\n",
+                AST_TO_STRING[expect[i]],
+                parent != NULL ? parent->line:0, 
+                parent != NULL ? parent->colone: 0
+            );
+            return false;
+        }
+    }
+
+    return true;
 }

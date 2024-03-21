@@ -163,6 +163,7 @@ ast_t *newAstWithLine(uint8_t type, int line , int colone){
 
 
 
+
 int type_ceflo_convert_to_type(const char *type){
     if(strcmp("int",type) == 0 || strcmp("float",type) == 0){
         return NUMBER;

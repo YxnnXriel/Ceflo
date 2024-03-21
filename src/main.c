@@ -100,7 +100,7 @@ int main(int argc, char const *argv[]){
 		newLexer(&lexer,argv[1]);
 		ast_t *node = parser_parse(&lexer);
 		visitor_visit_code(node);
-		
+
 	}else{
 		printf("[CEFLO]\n");
 		printf("./Ceflo [args]\n");

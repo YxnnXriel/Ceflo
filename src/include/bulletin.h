@@ -2,6 +2,7 @@
 #define __BULLETIN_H__
 
     #include "visitor.h"
+    #include "typer.h"
 
     typedef struct BULLETIN_STRUCT {
         char *name;
@@ -15,16 +16,19 @@
     ast_t * bulletin_print(visitor_t * visitor , ast_t * node , list_ast_t *args );
     ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args );
     ast_t * bulletin_input(visitor_t * visitor , ast_t * node , list_ast_t *args );
-    ast_t * bulletin_format(visitor_t * visitor, ast_t * node, list_ast_t * args);
+    ast_t * bulletin_printf(visitor_t * visitor, ast_t * node, list_ast_t * args);
+    ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args);
 
-    #define BULLETIN_LIST_COUNT 6
+
+    #define BULLETIN_LIST_COUNT 7
 
     static bulletin Bulletin_List[] = {
         {"println",&bulletin_println},
         {"print",&bulletin_print},
         {"printaddr",&bulletin_printaddr},
         {"input",&bulletin_input},
-        {"printf",&bulletin_format},
+        {"printf",&bulletin_printf},
+        {"format",&bulletin_format},
         {NULL,NULL}
     };
     

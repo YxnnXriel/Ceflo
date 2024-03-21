@@ -53,6 +53,7 @@
         listString new_ListString_limit(int x);
 
         int ListString_Append(listString list , const char *value);
+        int ListString_Append_char(listString list , char c_value);
         int ListString_lenght(listString list , int index);
         char * ListString_Get(listString list , int index);
         void ListString_Set(listString list , int index , char *new_value);

@@ -71,6 +71,23 @@ ast_t *parser_parse_list(parser_t *parser);
 ast_t *parser_parse_struct_definition(parser_t *parser);
 
 
+ast_t * makeAst(const char * chaine);
+ast_t *parser_parse_one(lexer_t *lexer);
+bool expectedAst(ast_t * node ,ast_t *parent,  uint8_t *expect, int lenght);
 
+
+
+static uint8_t EXPECTED_DEFAULT[]={
+        AST_FUNCTION_DEFINITION,
+        AST_VARIABLE_DEFINITION,
+        AST_BREAK,
+        AST_COMPOUND,
+        AST_IF,
+        AST_WHILE,
+        AST_RETURN,
+        AST_SELF,
+    };
+
+#define EXPECTED_DEFAULT_LENGHT 8
 
 #endif

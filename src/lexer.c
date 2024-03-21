@@ -67,6 +67,7 @@ void newLexer(lexer_t *lexer,const char* source){
 
 }
 
+
 /*
     copy
 */
@@ -74,7 +75,7 @@ void newLexerWithString(lexer_t * lexer,const char *source){
     lexer->fileCode = calloc(strlen(source)+1,sizeof(char));
     strcpy(lexer->fileCode,source);
     lexer->lenght_file_code = strlen(lexer->fileCode);
-    lexer->fileName = new_String(source);
+    lexer->fileName = NULL;
     lexer->line = 1;
     lexer->colone = 1;
     lexer->index = 0;

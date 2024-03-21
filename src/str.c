@@ -155,14 +155,15 @@ listString String_Split(String str , char *delim){
 
  
 String String_Remont(listString list ,char *delim){
-    int len = 0;
-    len += list->Size;
+    
+    int len = list->Size;
+    
     for (int i = 0; i < list->Size; i++)
     {
-        len += ListString_lenght(list,0);
+        len += ListString_lenght(list,i);
     }
 
-    char *s = malloc(len *sizeof(char*));
+    char *s = calloc(len,sizeof(char));
 
     for (int i = 0; i < list->Size; i++)
     {
@@ -172,10 +173,11 @@ String String_Remont(listString list ,char *delim){
             strcat(s,delim);
     }
 
+    String str = new_String(s);
+    free(s);
 
-    ListString_Clear(list);
-
-    return new_String(s);
+    // ListString_Clear(list);
+    return str; 
 
 }
 
@@ -322,6 +324,25 @@ int ListString_Append(listString list , const char *value){
 }
 
 
+int ListString_Append_char(listString list , char c_value){
+
+        char *value = calloc(2,sizeof(char));
+        value[0] = c_value;
+        value[1] = '\0';
+
+        list->Size++;
+        list->ListStr = list->ListStr == (void*)0 ? 
+        calloc(list->Size,sizeof(list->ListStr)):
+        realloc(list->ListStr, list->Size * sizeof(list->ListStr));
+
+        list->ListStr[list->Size -1] = new_String(value);
+
+        free(value);
+
+    return 1;
+}
+
+
 /**
  * @brief Renvoi la longueur de la chaine à l'index passer en parametre
  * 
@@ -389,28 +410,28 @@ int ListString_Search(listString list , char *value){
  */
 
 
-int ListString_Delete(listString list , int index){
+int ListString_Delete(listString list, int index) {
+    if(index < list->Size && index >= 0) { // Vérifie que l'index est valide
 
-    if(index <= list->Size ){
+        string_t *str = list->ListStr[index];
 
-
-        string_t * str = list->ListStr[index];
-
-        for (int i = index; i < list->Size -1; i++)
-            list->ListStr[i+1] = list->ListStr[i]; 
-            
+        // Déplace les éléments vers la gauche pour remplir l'espace de l'élément supprimé
+        for(int i = index; i < list->Size - 1; i++)
+            list->ListStr[i] = list->ListStr[i + 1]; 
         
-        if(list->Size > 0){
-            String_free(str);
-            list->Size--;
-            list->ListStr = realloc(list->ListStr,sizeof(*list->ListStr) *list->Size );
-        }else
-            free(list->ListStr);
+        // Libère la mémoire de l'élément supprimé
+        String_free(str);
         
-        return 1;
+        list->Size--;
+
+        // Réalloue de la mémoire pour la nouvelle taille de la liste
+        if(list->Size != 0)
+            list->ListStr = realloc(list->ListStr, sizeof(struct STRUCT_STR*) * list->Size);
+        
+        return 1; // Retourne 1 pour indiquer que la suppression a réussi
     }
 
-    return 0;
+    return 0; // Retourne 0 si l'index est invalide ou si la liste est vide
 }
 
 /**
@@ -429,6 +450,7 @@ int ListString_Clear(listString list){
     }
 
     list->Size = 0;
+    free(list->ListStr);
     free(list);
     return 1;
     

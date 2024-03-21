@@ -334,13 +334,15 @@ void freeSingleAst(ast_t * ast);
 void PrintAst();
 
 
+// SELF OBJ
+ast_t * create_self_ast(struct OBJECT_STRUCT *self);
+
 // FUNCTION AST
 bool GetFunction(struct SCOPE_STRUCT *scope , const char *funcName , ast_t ** res);
 
 
 // COPY AST
 
-ast_t * create_self_ast(struct OBJECT_STRUCT *self);
 
 
 typedef ast_t * (*cpy_ast_fn)(ast_t * , struct SCOPE_STRUCT * );

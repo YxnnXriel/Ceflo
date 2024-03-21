@@ -4,8 +4,11 @@
 #include <ctype.h>
 #include "include/clear.h"
 #include "include/bulletin.h"
+#include "include/error.h"
+#include "include/str.h"
+#include "include/parser.h"
 
-
+#include "include/debug.h"
 
 
 
@@ -43,9 +46,105 @@ ast_t * bulletin_print(visitor_t * visitor , ast_t * node , list_ast_t *args ){
     return count; 
 }
 
+static char *substring(const char *str, int start, int end,char *sub) {
+    if (start < 0 || end < 0 || end <= start) {
+        printf("Indices invalides\n");
+        return NULL;
+    }
+
+    int j = 0;
+    for (int i = start; i < end; i++) {
+        sub[j++] = str[i];
+    }
+    sub[j] = '\0'; // Ajoute le caractère de fin de chaîne
+    return sub;
+}
 
 
 ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
+    // Vérifier que la liste d'arguments contient au moins deux éléments (chaîne de formatage et au moins une valeur à insérer)
+    if (args->size != 1) {
+            Print_visitor_error(
+                node->line,
+                node->colone,
+                "./Ceflo",
+                "format() prends 1 argument \n"
+            );
+
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
+    }
+
+    // Récupérer la chaîne de formatage (premier argument)
+    ast_t *format_string_ast = List_Ast_Get(args, 0);
+    if (format_string_ast->type != AST_STRING) {
+            Print_visitor_error(
+                node->line,
+                node->colone,
+                "./Ceflo",
+                "format() prends 1 argument - type str \n"
+            );
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
+    }
+    String f = format_string_ast->value.as.stringValue;
+    listString_t *list = new_ListString();
+    const char *format_string = f->str;
+
+    for (int i = 0; i < f->lenght; i++){
+
+        if(f->str[i] == '{'){
+
+            int end_index = i + 1;
+            int begin_index = end_index;
+            while (format_string[end_index] != '}' && format_string[end_index] != '%' && format_string[end_index] != '\0') {
+                end_index++;
+            }
+            if(format_string[end_index] == '%'){
+                ListString_Append_char(list,'{');
+                i++;
+            }
+            else if (format_string[end_index] == '}') {
+                char sub[255];
+                char *t = substring(format_string,begin_index,end_index,sub);
+                ast_t * res = makeAst(t);
+                if(expectedAst(res,node,EXPECTED_DEFAULT,EXPECTED_DEFAULT_LENGHT) == 0){
+                    ListString_Clear(list);
+                    clear_ceflo_clean();
+                    exit(EXIT_FAILURE);                  
+                }
+                
+                if(!isValue(res)){
+                    res = visitor_visit(visitor,res);
+                }
+                ast_t * cpy = ast_copy(res,NULL);
+                ast_t *str_value = typer_caste_value(AST_STRING,&cpy);
+                ListString_Append(list,str_value->value.as.stringValue->str);
+                i = end_index;
+            }
+            else {
+                // Si le placeholder n'est pas fermé, afficher un message d'erreur
+                fprintf(stderr, "Erreur : placeholder non fermé dans la chaîne de formatage.\n");
+                ListString_Clear(list);
+                clear_ceflo_clean();
+                exit(EXIT_FAILURE);    
+            }
+        }else{
+            ListString_Append_char(list,f->str[i]);
+        }
+    }
+    
+    String value = String_Remont(list,"");
+    ListString_Clear(list);
+    
+    ast_t *count = newAst(AST_STRING);
+    count->value.as.stringValue = value;
+    count->value.type = STRING;
+    return count;
+}
+
+
+ast_t *bulletin_printf(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     // Vérifier que la liste d'arguments contient au moins deux éléments (chaîne de formatage et au moins une valeur à insérer)
     if (args->size < 1) {
         fprintf(stderr, "Erreur : nombre d'arguments insuffisant pour la fonction bulletin_format.\n");
@@ -88,10 +187,9 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
                     ast_t *formatted_value_ast = visitor_visit(visitor, value_ast);
                     printValueAst(formatted_value_ast);
                     j = end_index; // Passer à la fin du placeholder }
-                    i = nbr+1;
                 } else {
                     // Si l'indice est invalide, afficher un message d'erreur
-                    fprintf(stderr, "Erreur : indice d'argument invalide dans la chaîne de formatage.\n");
+                    fprintf(stderr, "Erreur : indice d'argument invalide dans la chaîne de formatage. actu (%d)\n",arg_index);
                     clear_ceflo_clean();
                     exit(EXIT_FAILURE);
                 }
@@ -121,21 +219,29 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     return count;
 }
 
-ast_t * bulletin_input(visitor_t * visitor , ast_t * node , list_ast_t *args ){
+ast_t *bulletin_input(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     bulletin_print(visitor, node, args);
 
     char buffer[BUFSIZ];
-    fgets(buffer, BUFSIZ, stdin);
+    if (fgets(buffer, BUFSIZ, stdin) == NULL) {
+        // Gestion d'une éventuelle erreur lors de la lecture depuis stdin
+        fprintf(stderr, "Erreur lors de la lecture depuis stdin.\n");
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
+    }
 
-    // Supprimer le caractère de nouvelle ligne de la chaîne saisie
-    buffer[strlen(buffer) - 1] = '\0';
+    // Supprimer le caractère de nouvelle ligne de la chaîne saisie s'il est présent
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len - 1] == '\n') {
+        buffer[len - 1] = '\0';
+    }
 
     ast_t *string = newAst(AST_STRING);
     string->value.as.stringValue = new_String(buffer);
+    string->value.type = STRING;
 
     return string;
 }
-
 
 ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
