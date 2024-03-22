@@ -767,6 +767,37 @@ ast_t * create_self_ast(struct OBJECT_STRUCT *self){
     return ast;
 }
 
+ast_t *ObjectGetAttr(Obj_t * obj,const char *name , int type){
+    if(strcmp("__str__",name) == 0)
+        return obj->__str__;
+
+    if(strcmp("__cast__",name)==0)
+        return obj->__cast__;
+    
+    if(strcmp("self",name)==0){
+        return create_self_ast(obj);
+    }
+
+    if(type == 0){
+        // variable
+        return scope_get_variable_definition(obj->self,name);
+    }else if (type == 1){
+        return scope_get_function_definition(obj->self,name);
+    }else{
+        ast_t * value = NULL;
+
+        value = scope_get_variable_definition(obj->self,name);
+        if(value != NULL)
+            return value;
+        
+        value = scope_get_function_definition(obj->self,name);
+
+        return value;
+    }
+
+    return NULL;
+    
+}
 
 
                                     // COPY AST

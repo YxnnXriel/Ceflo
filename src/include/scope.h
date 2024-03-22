@@ -45,4 +45,7 @@ int scope_cpy_with_scope(scope_t *end , scope_t *ref);
 
 void Print_Scope(scope_t * scope , const char *chaine);
 
+
+
+
 #endif

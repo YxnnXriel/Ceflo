@@ -243,6 +243,21 @@ ast_t *bulletin_input(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     return string;
 }
 
+ast_t *bulletin_nextInt(visitor_t *visitor, ast_t *node, list_ast_t *args) {
+    double val = 0;
+    bulletin_print(visitor, node, args);
+    if (scanf("%lg", &val) != 1) {
+        fprintf(stderr, "stdinError: veuillez entrer un entier valide.\n");
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
+    }
+
+    ast_t *value = newAst(AST_NUMBER);
+    value->value.as.numberValue = val;
+    value->value.type = NUMBER;
+    return value;
+}
+
 ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args ){
 
     for (int i = 0; i < (int) args->size; i++){

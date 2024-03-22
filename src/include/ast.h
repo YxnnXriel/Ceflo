@@ -335,6 +335,7 @@ void PrintAst();
 
 
 // SELF OBJ
+ast_t *ObjectGetAttr(Obj_t * obj,const char *name , int type);
 ast_t * create_self_ast(struct OBJECT_STRUCT *self);
 
 // FUNCTION AST

@@ -689,6 +689,10 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
             );
 
             if(method == NULL){
+                method = ObjectGetAttr(self,right->function_call_name,1);
+            }
+
+            if(method == NULL){
                 Print_visitor_error(
                     right->line,
                     right->colone,
@@ -707,8 +711,6 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
                 method,
                 &right->function_call_args
             );
-
-
 
         }else{
             res = visitor_visit(&vs,right);
@@ -903,7 +905,7 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
     if(value == NULL && visitor->is_for_obj == false ){
         // else{
-            if(visitor->global_scope->scope_parent != NULL){
+            if(visitor->global_scope != NULL && visitor->global_scope->scope_parent != NULL){
                 return getVariable(visitor,node);
         //         return getVariable(visitor,node);
             }

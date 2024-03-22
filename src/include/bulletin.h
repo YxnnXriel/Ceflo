@@ -18,9 +18,11 @@
     ast_t * bulletin_input(visitor_t * visitor , ast_t * node , list_ast_t *args );
     ast_t * bulletin_printf(visitor_t * visitor, ast_t * node, list_ast_t * args);
     ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args);
+    ast_t *bulletin_nextInt(visitor_t *visitor, ast_t *node, list_ast_t *args);
 
 
-    #define BULLETIN_LIST_COUNT 7
+
+    #define BULLETIN_LIST_COUNT 8
 
     static bulletin Bulletin_List[] = {
         {"println",&bulletin_println},
@@ -29,6 +31,7 @@
         {"input",&bulletin_input},
         {"printf",&bulletin_printf},
         {"format",&bulletin_format},
+        {"nextInt",&bulletin_nextInt},
         {NULL,NULL}
     };
     

@@ -317,7 +317,6 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
             return newAst(AST_NUMBER);
         
         new = typer_caste_value(AST_NUMBER,&args1);
-
         AS_NUMBER(new->value) = strcmp("float",typer_name) != 0 ? 
         (int)AS_NUMBER(new->value):AS_NUMBER(new->value); 
 
