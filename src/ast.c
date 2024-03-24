@@ -870,6 +870,7 @@ ast_t * ast_copy(ast_t *ast,struct SCOPE_STRUCT * scope){
 
     ast_r_scope(res,scope);
 
+    
     return res;
 }
 

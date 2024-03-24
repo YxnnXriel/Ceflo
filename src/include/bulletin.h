@@ -29,8 +29,8 @@
         {"print",&bulletin_print},
         {"printaddr",&bulletin_printaddr},
         {"input",&bulletin_input},
-        {"printf",&bulletin_printf},
         {"format",&bulletin_format},
+        {"printf",&bulletin_printf},
         {"nextInt",&bulletin_nextInt},
         {NULL,NULL}
     };

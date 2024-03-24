@@ -1,18 +1,8 @@
 
-struct Point {
-    var x , y;
-
-    func __init__(self){
-        self.x = nextInt("(x)> ")
-        self.y = nextInt("(y)> ")
-    }
-
-    func __str__(self){
-        return format("{self.x} - {self.y}")
-    }
-}
-
-var p = new Point()
 
 
-println(p);
+
+
+var a = @int(nextInt())
+
+println(format("le nombre + 2 est {a}"))

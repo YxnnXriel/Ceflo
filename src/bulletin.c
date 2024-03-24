@@ -94,7 +94,7 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     for (int i = 0; i < f->lenght; i++){
 
         if(f->str[i] == '{'){
-
+            
             int end_index = i + 1;
             int begin_index = end_index;
             while (format_string[end_index] != '}' && format_string[end_index] != '%' && format_string[end_index] != '\0') {
@@ -117,8 +117,11 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
                 if(!isValue(res)){
                     res = visitor_visit(visitor,res);
                 }
+
                 ast_t * cpy = ast_copy(res,NULL);
+
                 ast_t *str_value = typer_caste_value(AST_STRING,&cpy);
+                
                 ListString_Append(list,str_value->value.as.stringValue->str);
                 i = end_index;
             }
@@ -273,13 +276,16 @@ ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args
 }
 
 ast_t *bulletin_switch_function(visitor_t * visitor , ast_t *node , list_ast_t *args){
+
     if(node->function_call_name == NULL)
         return NULL;
     const char * function_name = node->function_call_name;
 
     for (int i = 0; i < BULLETIN_LIST_COUNT -1; i++)
-        if(strcmp(function_name,Bulletin_List[i].name) == 0)
-            return Bulletin_List[i].func(visitor,node,&node->function_call_args);
+        if(strcmp(function_name,Bulletin_List[i].name) == 0){
+            ast_t *t =  Bulletin_List[i].func(visitor,node,args);
+            return t;
+        }
 
         
     return NULL;
