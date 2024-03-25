@@ -169,9 +169,13 @@ void Print_Scope(scope_t * scope , const char *chaine){
 
     printf(" **** VARIABLE **** \n");
     for (int i = 0; i < scope->variable_definition.Size; i++){
-        node = (ast_t*)Hash_Get_by_index(&scope->variable_definition,i,0);
-        if(node != NULL)
-            printf("    %p\n",(void*)node); 
+        hash_t *item = Hash_Get_by_index(&scope->variable_definition,i,1);
+        node = (ast_t*)item->value;
+        if(node != NULL){
+            printf("    %p - [%s] -> ",(void*)item,item->key); 
+            printValueAst(node);
+            printf("\n");
+        }
     }
 
 

@@ -277,6 +277,18 @@ ast_t * bulletin_printaddr(visitor_t * visitor , ast_t * node , list_ast_t *args
     return node;
 
 }
+ast_t * bulletin_printscope(visitor_t * visitor , ast_t * node , list_ast_t *args ){
+    
+    ast_t * res = bulletin_format(visitor,node,args);
+    Print_Scope(visitor->global_scope,AS_STRING(res->value));
+    freeSingleAst(res);
+
+    ast_t *value = newAst(AST_NUMBER);
+    value->value.as.numberValue = args->size;
+    value->value.type = NUMBER;
+    return value;
+}
+
 
 ast_t *bulletin_switch_function(visitor_t * visitor , ast_t *node , list_ast_t *args){
 

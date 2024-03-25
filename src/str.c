@@ -17,7 +17,7 @@
 String new_String(const char *str){
 
     String st = calloc(1,sizeof(*st));
-
+    size_t lenght = strlen(str);
     if(st == NULL){
         fprintf(stderr,"line :%d , files :%s , function : %s\n",
             __LINE__,
@@ -29,8 +29,8 @@ String new_String(const char *str){
 
     if(str != NULL){
         st->str = calloc(strlen(str) + 1, sizeof(char*));
-        strcpy(st->str,str);
-        st->lenght = strlen(str); 
+        memcpy(st->str,str,lenght);
+        st->lenght = lenght; 
     }else{
 
         st->str = NULL;

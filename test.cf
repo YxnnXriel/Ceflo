@@ -1,23 +1,39 @@
 
-println("========== Somme des rangées et colonnes ==========");
+// println("========== Somme des rangées et colonnes ==========");
 
-var ran_lenght = nextInt("Entrer le nombre de rangées et colonnes : ")
-var Tab = [];
-var somme = 0 , total = 0;
+// var ran_lenght = nextInt("Entrer le nombre de rangées et colonnes : ")
+// var Tab = [];
+// var somme = 0 , total = 0;
+// var i, j;
+// for i = 0 ; i < ran_lenght ; i+=1{
+//     Tab.append([])
+//     for j = 0; j < ran_lenght; j+=1{
+//         Tab[i].append(nextInt("entrez la valeur de Tab["+i+"]["+j+"] = "))
+//     }
+// }
 
-for var i = 0 ; i < ran_lenght ; i+=1{
-    Tab.append([])
-    for var j = 0; j < ran_lenght; j+=1{
-        Tab[i].append(nextInt("entrez la valeur de Tab["+i+"]["+j+"] = "))
+
+// for i = 0 ; i < ran_lenght;i+=1, total += somme , somme = 0 {
+//     for j = 0 ; j < ran_lenght; j+=1{
+//         somme += Tab[i][j];
+//     }
+//     printf("Somme rangée {i+1} : {somme}")
+// }   
+
+// printf("Total = {total}")
+
+
+
+func fibo(n){
+    if n == 1 or n == 0{
+        return 1
     }
+
+    // debugprintscope("fibo")
+
+    return fibo(n-1) * n
 }
 
+var a = 9
 
-for var i = 0 ; i < ran_lenght;i+=1, total += somme , somme = 0 {
-    for var j = 0 ; j < ran_lenght; j+=1{
-        somme += Tab[i][j];
-    }
-    printf("Somme rangée {i+1} : {somme}")
-}   
-
-printf("Total = {total}")
+printf("fibo de {a} est {fibo(a)} \n")
