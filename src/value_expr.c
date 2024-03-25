@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "include/value_expr.h"
 
 
@@ -130,7 +129,6 @@ void performe_visit_tree_number(Value_t * value, Value_t * left , token_t * op, 
                 case TOKEN_DIF : value->as.booleanValue = left->type != right->type;break;
             }
             break;
-
 
         case STRING:
             value->type = STRING;

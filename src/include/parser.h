@@ -66,6 +66,7 @@ ast_t *parser_parse_return(parser_t *parser);
 ast_t *parser_parse_if(parser_t *parser);
 ast_t *parser_parse_while(parser_t *parser);
 ast_t *parser_parse_break(parser_t *parser);
+ast_t *parser_parse_for(parser_t * parser);
 
 ast_t *parser_parse_list(parser_t *parser);
 ast_t *parser_parse_struct_definition(parser_t *parser);

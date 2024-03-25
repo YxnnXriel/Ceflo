@@ -44,6 +44,7 @@ ast_t * visitor_visit_unop(visitor_t * visitor , ast_t * node);
 
 ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node);
+ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node);
 ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node);
 
 

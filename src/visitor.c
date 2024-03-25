@@ -245,6 +245,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_UNOP: return visitor_visit_unop(visitor,node);break;
         case AST_IF: return visitor_visit_if(visitor,node);break;
         case AST_WHILE: return visitor_visit_while(visitor,node);break;
+        case AST_FOR: return visitor_visit_for(visitor,node);break;
         case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);break;
         case AST_LIST: return visitor_visit_list_init(visitor,node);break;
         case AST_LIST_ASSIGNEMENT: return visitor_visit_list_assignement(visitor,node);break;
@@ -1612,9 +1613,30 @@ ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
 }
 
 
+ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
+    scope_t * scope = newScope();
+    visitor_t vsFor;
+    newVisitorWithScope(&vsFor,scope);
+    scope->scope_parent = visitor->global_scope;
 
+    visitor_visit(
+        &vsFor,
+        node->for_init
+    );
 
+    while (visitor_visit_evaluate_expr(visitor_visit(&vsFor,node->for_condition))){
+        ast_t *res =  visitor_visit(&vsFor,node->for_body);
+        if(res->is_return_value)
+            return res;
+        if(res->type == AST_BREAK){
+            break;
+        }
+        visitor_visit(&vsFor,node->for_solve);
+    }
 
+    freeSingleScope(scope);
+    return node;
+}
 
 
 

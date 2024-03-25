@@ -283,6 +283,7 @@ ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_RETURN : return parser_parse_return(parser);
         case TOKEN_IF : return parser_parse_if(parser);
         case TOKEN_WHILE : return parser_parse_while(parser);
+        case TOKEN_FOR : return parser_parse_for(parser);
         case TOKEN_BREAK : return parser_parse_break(parser);
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
@@ -1066,6 +1067,42 @@ ast_t *parser_parse_while(parser_t *parser){
     parser_eat(TOKEN_RBRACKET,parser,"%s : you have forgotten endblock for while `{}` ",ERROR_TO_STRING[SYNTAX_ERROR]);
 
     return ast_while;
+}
+
+ast_t *parser_parse_for(parser_t * parser){
+
+    ast_t * ast_for = NEW_OBJECT(AST_FOR,parser);
+    ast_for->countScope = GetScope();
+    parser_eat(TYPE(parser),parser,NULL);
+    ast_for->for_init = parser_parse_statment(parser);
+    parser_eat(TOKEN_SEMI,parser,"%s : you have forgotten semicolon `;` after initializing",ERROR_TO_STRING[SYNTAX_ERROR]);
+    ast_for->for_condition = parser_parse_expr(parser);
+    parser_eat(TOKEN_SEMI,parser,"%s : you have forgotten semicolon `;` after condition",ERROR_TO_STRING[SYNTAX_ERROR]);
+
+    ast_t * compound = NEW_OBJECT(AST_COMPOUND,parser);
+    compound->list_compound = __init__list__(sizeof(struct AST_STRUCT*));
+
+    ast_t * child = parser_parse_statment(parser);
+    List_Append(compound->list_compound,child);
+
+    while (TYPE(parser) == TOKEN_COMA || child->type != AST_NOOP){
+        if(TYPE(parser) == TOKEN_COMA){
+            parser_eat(TOKEN_COMA,parser,NULL);
+        }
+        child = parser_parse_statment(parser);
+        List_Append(compound->list_compound,child);
+    }
+
+    parser_eat(TOKEN_LBRACKET,parser,"%s : you have forgotten block for for statment `{}` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+    if(parser->current.type != TOKEN_RBRACKET){
+        ast_for->for_body = parser_parse_statments(parser);
+    }
+    parser_eat(TOKEN_RBRACKET,parser,"%s : you have forgotten endblock for for statment `{}` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+
+
+    ast_for->for_solve = compound;
+
+    return ast_for;
 }
 
 ast_t *parser_parse_break(parser_t *parser){

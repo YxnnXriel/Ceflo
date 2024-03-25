@@ -1,8 +1,23 @@
 
+println("========== Somme des rangées et colonnes ==========");
+
+var ran_lenght = nextInt("Entrer le nombre de rangées et colonnes : ")
+var Tab = [];
+var somme = 0 , total = 0;
+
+for var i = 0 ; i < ran_lenght ; i+=1{
+    Tab.append([])
+    for var j = 0; j < ran_lenght; j+=1{
+        Tab[i].append(nextInt("entrez la valeur de Tab["+i+"]["+j+"] = "))
+    }
+}
 
 
+for var i = 0 ; i < ran_lenght;i+=1, total += somme , somme = 0 {
+    for var j = 0 ; j < ran_lenght; j+=1{
+        somme += Tab[i][j];
+    }
+    printf("Somme rangée {i+1} : {somme}")
+}   
 
-
-var a = @int(nextInt())
-
-println(format("le nombre + 2 est {a}"))
+printf("Total = {total}")

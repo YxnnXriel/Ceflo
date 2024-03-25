@@ -110,6 +110,13 @@ ast_t *newAst(uint8_t type){
     new->while_expr = NULL;
     new->while_body = NULL;
 
+
+    new->for_init = NULL;
+    new->for_condition = NULL;
+    new->for_solve = NULL;
+    new->for_body = NULL;
+
+
     // TYPE DEFINITION
     new->struct_definition_item = NULL;
     new->struct_definition_name = NULL;
@@ -827,6 +834,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_RETURN] = {&ast_cpy_return},
     [AST_IF] = {&ast_cpy_if},
     [AST_WHILE] = {&ast_cpy_while},
+    [AST_FOR] = {&ast_cpy_for},
     [AST_BREAK] = {&ast_cpy_break},
     [AST_LIST_ACCESS] = {&ast_cpy_list_access},
     [AST_LIST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
@@ -926,6 +934,17 @@ ast_t *ast_cpy_while(ast_t *ast , struct SCOPE_STRUCT * scope){
 
 }
 
+ast_t *ast_cpy_for(ast_t *ast , struct SCOPE_STRUCT * scope){
+
+    ast_t *a = newAst(ast->type);
+    a->for_init = ast_copy(ast->for_init,scope);
+    a->for_condition = ast_copy(ast->for_condition,scope);
+    a->for_solve = ast_copy(ast->for_solve,scope);
+    a->for_body = ast_copy(ast->for_body,scope);
+
+    cpy_line(a,ast);
+    return a;
+}
 ast_t *ast_cpy_if(ast_t *ast , struct SCOPE_STRUCT * scope){
 
     ast_t * a = newAst(ast->type);

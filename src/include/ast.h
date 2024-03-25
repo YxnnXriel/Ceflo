@@ -40,6 +40,7 @@
         AST(AST_UNOP)  \
         AST(AST_IF)  \
         AST(AST_WHILE)  \
+        AST(AST_FOR)  \
         AST(AST_BREAK)  \
         AST(AST_ASSIGNEMENT)  \
         AST(AST_STRUCT_DEFINITION)  \
@@ -216,6 +217,16 @@ typedef struct AST_STRUCT{
         struct AST_STRUCT *while_body;
 
 
+    /* ======  for ====== */
+        struct AST_STRUCT *for_init;
+        struct AST_STRUCT *for_condition;
+        struct AST_STRUCT *for_solve;
+        struct AST_STRUCT *for_body;
+        
+
+
+
+
     /* ======  assignement ====== */
         struct AST_STRUCT *assignement_left;
         struct AST_STRUCT *assignement_value;
@@ -369,7 +380,7 @@ ast_t *ast_cpy_break(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
-
+ast_t *ast_cpy_for(ast_t *ast , struct SCOPE_STRUCT * scope);
 
 
 
