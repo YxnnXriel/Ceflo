@@ -195,6 +195,31 @@ int type_ceflo_convert_to_type(const char *type){
     return -1;
 }
 
+uint8_t type_ceflo_to_ast(uint8_t type){
+    switch (type){
+        case NONE: return AST_NONE;
+        case BOOL: return AST_BOOL;
+        case CHAR: return AST_CHAR;
+        case NUMBER: return AST_NUMBER;
+        case STRING: return AST_STRING;
+        case LIST: return AST_LIST;
+        case OBJECT: return AST_OBJ;
+        default : return AST_OBJ;
+    }
+}
+
+uint8_t ast_type_to_ceflo(uint8_t type){
+    switch (type){
+        case AST_NONE: return NONE;
+        case AST_BOOL: return BOOL;
+        case AST_CHAR: return CHAR;
+        case AST_NUMBER: return NUMBER;
+        case AST_STRING: return STRING;
+        case AST_LIST: return LIST;
+        case AST_OBJ: return OBJECT;
+        default : return OBJECT;
+    }
+}
 
 
 
@@ -339,12 +364,14 @@ void newValue(Value_t * value , uint8_t type){
 bool printObj(ast_t * value){
     ast_t *str_func = NULL; 
 
+            
+
     if(value->value.type == OBJECT && value->value.as.ObjectValue.__str__ != NULL){
         visitor_t visi;
         Obj_t * self = &value->value.as.ObjectValue;
         visi.global_scope = self->self;
         str_func =  value->value.as.ObjectValue.__str__;
-
+        
         if(!str_func->is_define_self){
             self = NULL;
         }
@@ -604,6 +631,8 @@ bool isValue(ast_t* self){
     
     return false;
 }
+
+
 
 
 
@@ -1117,8 +1146,6 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
         
         allowChar(&a->function_definition_return_type_name,function->function_definition_return_type_name);
     }
-
-    a->function_definition_return_type = function->function_definition_return_type;
 
     newList_Ast(&a->function_defintion_args);
     for (int i = 0; i < (int)function->function_defintion_args.size; i++){

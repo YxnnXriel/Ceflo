@@ -301,6 +301,12 @@ static const char *AST_TO_STRING[] ={
 ast_t *newAst(uint8_t type);
 ast_t *newAstWithLine(uint8_t type, int line , int colone);
 
+// CONVERT TYPE
+
+uint8_t type_ceflo_to_ast(uint8_t type);
+uint8_t ast_type_to_ceflo(uint8_t type);
+
+
 
 
 // VALUE

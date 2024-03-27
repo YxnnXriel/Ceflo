@@ -182,8 +182,7 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
 
     char str[50];
     ast_t *new = *value;
-    uint8_t type_ast = to - 4;
-
+    uint8_t type_ast = ast_type_to_ceflo(to);
 
     if(to == AST_BOOL){
 
@@ -192,22 +191,22 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
         switch ((*value)->type){
             case AST_BOOL:return new;
             case AST_CHAR:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_BOOL;NBOOL = AS_CHAR((*value)->value);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_NUMBER: 
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_BOOL;NBOOL = AS_NUMBER((*value)->value);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_STRING :
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_BOOL;NBOOL = strlen(AS_STRING((*value)->value));
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
         }
         #undef NEW_BOOL
@@ -219,23 +218,23 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
         #define NCHAR new->value.as.charValue 
         switch ((*value)->type){
             case AST_BOOL:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_CHAR;NCHAR = AS_BOOL((*value)->value);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_CHAR: return *value;
             case AST_NUMBER:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_CHAR;NCHAR = AS_NUMBER((*value)->value);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_STRING : 
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_CHAR;NCHAR = strlen(AS_STRING((*value)->value));
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             
         }
@@ -249,20 +248,20 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
         #define NNUMBER new->value.as.numberValue 
         switch ((*value)->type){
             case AST_BOOL:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_NUMBER;NNUMBER = AS_BOOL((*value)->value);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_CHAR:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_NUMBER;NNUMBER = AS_CHAR((*value)->value);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_NUMBER: return *value;
             case AST_STRING : 
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_NUMBER;
                 if(estToutNombre(AS_STRING((*value)->value))){
                     NNUMBER = convertirEnDouble(AS_STRING((*value)->value));
@@ -270,9 +269,8 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
                     NNUMBER = strlen(AS_STRING((*value)->value));
                 }
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
-            
         }
         #undef NEW_NUMBER
         #undef NNUMBER
@@ -284,16 +282,16 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
         #define NSTRING new->value.as.stringValue 
         switch ((*value)->type){
             case AST_BOOL:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_STRING;NSTRING = new_String(AS_BOOL((*value)->value) <= 1 ? "true":"false");
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_CHAR:
-                typer_verif(*value);
+                // typer_verif(*value);
                 NEW_STRING;NSTRING = new_String(&(*value)->value.as.charValue);
                 new->value.type = type_ast;
-                save_free();
+                // save_free();
                 return new;
             case AST_STRING: return new;
             case AST_NUMBER : 
@@ -313,21 +311,38 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
 
     if(to == AST_LIST){
         if((*value)->type == AST_LIST)
-            return *value;
-
-        ast_t *list = newAst(AST_LIST);
-        newValue(&list->value,LIST);
-        AS_LIST(list->value) = __init__list__(sizeof(ast_t*));
-        List_Append(
-            AS_LIST(list->value),
-            *value
-        );
+            return new;
 
         typer_verif(*value);
-        (*value)->value.as.listValue = AS_LIST(list->value);
-        new->value.type = type_ast;
+
+        list_t *list = __init__list__(sizeof(ast_t*));
+        ast_t *cpy = ast_copy(new,NULL);
+        List_Append(list,cpy);
         save_free();
-        return list;
+        
+        (*value)->value.as.listValue = list;
+        (*value)->value.type = LIST;
+        (*value)->type =  AST_LIST;
+        
+
+        return new;
+
+    
+
+
+
+        // ast_t *list = newAst(AST_LIST);
+        // newValue(&list->value,LIST);
+        // AS_LIST(list->value) = __init__list__(sizeof(ast_t*));
+        // List_Append(
+        //     AS_LIST(list->value),
+        //     new
+        // );
+
+        // (*value)->value.as.listValue = AS_LIST(list->value);
+        // (*value)->value.type = type_ast;
+        // // new->value.type = type_ast;
+        // return list;
     }
 
 

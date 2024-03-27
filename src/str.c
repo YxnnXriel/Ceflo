@@ -30,7 +30,7 @@ String new_String(const char *str){
     if(str != NULL){
         st->str = calloc(strlen(str) + 1, sizeof(char*));
         memcpy(st->str,str,lenght);
-        st->lenght = lenght; 
+        st->lenght = (int)lenght; 
     }else{
 
         st->str = NULL;

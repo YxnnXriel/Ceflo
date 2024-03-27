@@ -665,8 +665,8 @@ ast_t *parser_parse_function_definition(parser_t *parser){
     if(TYPE(parser) == TOKEN_COLON){
         parser_eat(TYPE(parser),parser,NULL);
         int get_type = type_ceflo_convert_to_type(parser->current.value);
+  
         function->function_definition_return_type = get_type == -1 ? OBJECT : get_type;
-
         if(get_type == -2){
             function->function_definition_return_type = NONE;
         }

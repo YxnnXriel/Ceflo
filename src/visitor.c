@@ -677,10 +677,12 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
     ast_t * right = node->right;
     
 
+
     if(variable->type == AST_OBJ){
         Obj_t * self = &variable->value.as.ObjectValue;
         visitor_t vs;
         newVisitorWithScope(&vs,self->self);
+        vs.global_scope->scope_parent = visitor->global_scope;
         
         if(right->type == AST_FUNCTION_CALL){
             
@@ -716,7 +718,7 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
         }else{
             res = visitor_visit(&vs,right);
         }
-
+        vs.global_scope->scope_parent = NULL;
         return res;
     }
 
@@ -904,7 +906,7 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
     }
 
 
-    if(value == NULL && visitor->is_for_obj == false ){
+    if(value == NULL && (visitor->is_for_obj == false || node->variable_forGlobal == true) ){
         // else{
             if(visitor->global_scope != NULL && visitor->global_scope->scope_parent != NULL){
                 return getVariable(visitor,node);
@@ -957,9 +959,12 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
 
 
 static ast_t *is_function_return_type(visitor_t *visitor, ast_t *function , ast_t *value){
+
     if(function->function_definition_return_type != NONE){
         if(function->function_definition_return_type != OBJECT){
-            return typer_caste_value(function->function_definition_return_type + 4, &value);
+            uint8_t type = type_ceflo_to_ast(function->function_definition_return_type);
+            ast_t *res =  typer_caste_value(type, &value);
+            return res;
         }else{
 
             if(value->type != AST_OBJ) return NULL;
@@ -1116,9 +1121,12 @@ ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method ,
 
     ast_t *returnValue =  visitor_visit(&visit,method->function_definition_body);   
 
-    freeSingleScope(newscope);
 
-    returnValue = is_function_return_type(visitor,method,returnValue);
+    is_function_return_type(visitor,method,returnValue);
+
+    
+
+    freeSingleScope(newscope);
 
     if(returnValue == NULL){
         Print_visitor_error(
@@ -1222,9 +1230,10 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * a
 
     ast_t *returnValue =  visitor_visit(&visit,func->function_definition_body);   
 
-    freeSingleScope(newscope);
+    is_function_return_type(visitor,func,returnValue);
 
-    returnValue = is_function_return_type(visitor,func,returnValue);
+    
+    freeSingleScope(newscope);
 
     if(returnValue == NULL){
         Print_visitor_error(
@@ -1623,6 +1632,8 @@ ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
         &vsFor,
         node->for_init
     );
+
+
 
     while (visitor_visit_evaluate_expr(visitor_visit(&vsFor,node->for_condition))){
         ast_t *res =  visitor_visit(&vsFor,node->for_body);
