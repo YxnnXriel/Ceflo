@@ -22,8 +22,8 @@
 
 
 
+#define NEW_OBJECT(type,parser) newAstWithLine(type,parser->lexer->line,parser->lexer->colone)
 #define CURRENT(parser) parser->current
-
 #define PREV(parser) parser->prev
 #define LINE(parser) parser->lexer->line
 #define COLONE(parser) parser->lexer->colone
@@ -103,7 +103,6 @@ static char * GetOp(TokenEnum type){
 
 
 
-#define NEW_OBJECT(type,parser) newAstWithLine(type,parser->lexer->line,parser->lexer->colone)
 
 /**
  * @brief init parser
@@ -159,7 +158,7 @@ int parser_eat(TokenEnum type, parser_t * parser, char *fmt , ...){
     va_start(args,fmt);
 
     if(TYPE(parser) != type){
-        printf("%s:%d:%d: ","./Ceflo",parser->lexer->line,parser->lexer->colone);
+        printf("%s:%d:%d: ",parser->lexer->fileName->str,parser->lexer->line,parser->lexer->colone);
         vprintf(fmt,args);
         va_end(args);
         parser_error(parser);
@@ -279,12 +278,12 @@ ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_CONST : return parser_parse_variable_definition(parser);
         case TOKEN_FUNC : return parser_parse_function_definition(parser);
         case TOKEN_STRUCT : return parser_parse_struct_definition(parser);
-        case TOKEN_ID : return parser_parse_expr(parser);
         case TOKEN_RETURN : return parser_parse_return(parser);
         case TOKEN_IF : return parser_parse_if(parser);
         case TOKEN_WHILE : return parser_parse_while(parser);
         case TOKEN_FOR : return parser_parse_for(parser);
         case TOKEN_BREAK : return parser_parse_break(parser);
+        case TOKEN_ID :
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
         case TOKEN_CHAR:
@@ -363,7 +362,7 @@ ast_t *parser_parse_variable_definition(parser_t *parser){
 
 
 
-static ast_t *parser_parse_variable_access(parser_t * parser){
+ast_t *parser_parse_dot_access(parser_t * parser){
     ast_t * variable = NEW_OBJECT(AST_VARIABLE,parser);
     variable->countScope = GetScope();
 
@@ -380,9 +379,28 @@ static ast_t *parser_parse_variable_access(parser_t * parser){
     );
     allowChar(&variable->variable_name,parser->prev.value);
 
+    
+    if(parser->current.type == TOKEN_LBRACE){
+        while (parser->current.type == TOKEN_LBRACE){
+            ast_t * list_acces = NEW_OBJECT(AST_LIST_ACCESS,parser);
+            list_acces->left = variable;
+            list_acces->countScope = GetScope();
+            parser_eat(TOKEN_LBRACE,parser,NULL);
+            list_acces->list_ptr = parser_parse_expr(parser);
+            parser_eat(TOKEN_RBRACE,parser,"%s : we have forgot to close `%s` here\n",
+                ERROR_TO_STRING[SYNTAX_ERROR],
+                TOKEN_TO_STRING[TOKEN_LBRACE]
+            );
+            variable = list_acces;
+        }
+    }
 
-    if(parser->current.type == TOKEN_LPARENT){
+    if(TYPE(parser) == TOKEN_LPARENT){
         return parser_parse_function_call(parser);
+    }
+
+    if(TYPE(parser) == TOKEN_DOT){
+        return parser_parse_obj_access(parser,variable); 
     }
 
 
@@ -390,12 +408,12 @@ static ast_t *parser_parse_variable_access(parser_t * parser){
 }
 
 
-static ast_t * parser_parse_obj_access(parser_t * parser , ast_t * prev_variable){
+ast_t * parser_parse_obj_access(parser_t * parser , ast_t * prev_variable){
 
         parser_eat(TYPE(parser),parser,NULL);
         ast_t * obj_acces = NEW_OBJECT(AST_OBJ_ACCESS,parser);
         obj_acces->left = prev_variable;
-        obj_acces->right = parser_parse_variable_access(parser);
+        obj_acces->right = parser_parse_dot_access(parser);
         obj_acces->countScope = GetScope();
 
         return obj_acces;
@@ -583,7 +601,7 @@ static void get_function_definition_args(parser_t *parser, ast_t *function){
                 function->is_define_self = true;
                 continue;
             }else{
-                parser_eat(TOKEN_EOF,parser,"%s : multiple self definition for its Function \n",ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR]);
+                parser_eat(TOKEN_EOF,parser,"%s : multiple self definition for this Function \n",ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR]);
             }
         }
         arg->is_arg_ptr = addr;

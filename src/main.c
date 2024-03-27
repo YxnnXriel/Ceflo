@@ -21,7 +21,7 @@
 #include "include/ast.h"
 #include "include/visitor.h"
 #include "include/clear.h"
-
+#include <signal.h>
 #include <unistd.h>
 
 /*
@@ -93,9 +93,19 @@ lexer_t lexer;
 
 
 
+void handle_sigint(int sig) { 
+	clear_ceflo_clean(); 
+	exit(1);
+} 
+
+
 int main(int argc, char const *argv[]){
 
 	if(argc >= 2){
+		signal(SIGINT, handle_sigint);
+		signal(SIGSEGV, handle_sigint);
+		signal(SIGFPE, handle_sigint);
+		signal(SIGILL, handle_sigint);
 
 		newLexer(&lexer,argv[1]);
 		ast_t *node = parser_parse(&lexer);

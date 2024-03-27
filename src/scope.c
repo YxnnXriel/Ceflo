@@ -29,6 +29,7 @@ scope_t* newScope(){
     scope_t *scope = calloc(1,sizeof(*scope));
     __init__stk_hash(&scope->function_definition);
     __init__stk_hash(&scope->variable_definition);
+    __init__stk_hash(&scope->struct_definition);
     scope->scope_parent = NULL;
     scope->is_for_obj = false;
     scope->countScope = -1;
@@ -167,25 +168,60 @@ void Print_Scope(scope_t * scope , const char *chaine){
 
     ast_t * node = NULL;
 
-    printf(" **** VARIABLE **** \n");
-    for (int i = 0; i < scope->variable_definition.Size; i++){
-        hash_t *item = Hash_Get_by_index(&scope->variable_definition,i,1);
-        node = (ast_t*)item->value;
-        if(node != NULL){
-            printf("    %p - [%s] -> ",(void*)item,item->key); 
-            printValueAst(node);
-            printf("\n");
+    string_t * champ = new_String("****VARIABLE****");
+    listString_t *list = new_ListString();
+
+    // printf(" **** VARIABLE **** \n");
+    if(scope->variable_definition.Size > 0){
+        for (int i = 0; i < scope->variable_definition.Size; i++){
+            hash_t *item = Hash_Get_by_index(&scope->variable_definition,i,1);
+            node = (ast_t*)item->value;
+            if(node != NULL){
+                // printf("    %p - [%s] -> ",(void*)item,item->key); 
+                // printValueAst(node);
+                // printf("\n");
+                ListString_Append(list,item->key);
+            }
         }
+        Table(champ,list);
+        ListString_Clear(list);
+        list = new_ListString();
     }
 
 
-    printf(" **** FUNCTION **** \n");
-    for (int i = 0; i < scope->function_definition.Size; i++){
-        node = (ast_t*)Hash_Get_by_index(&scope->function_definition,i,0);
-        if(node != NULL)
-            printf("    %s\n",node->function_definition_name); 
+
+    if(scope->function_definition.Size > 0){
+        String_Set(champ,"****FUNCTION****");
+        // printf(" **** FUNCTION **** \n");
+        for (int i = 0; i < scope->function_definition.Size; i++){
+            node = (ast_t*)Hash_Get_by_index(&scope->function_definition,i,0);
+            if(node != NULL){
+                ListString_Append(list,node->function_definition_name);
+                // printf("    %s\n",node->function_definition_name); 
+            }
+        }
+
+        Table(champ,list);
+        ListString_Clear(list);
+        
+        list = new_ListString();
     }
 
+
+    if(scope->struct_definition.Size > 0){
+        String_Set(champ,"****STRUCT****");
+        // printf(" **** STRUCT **** \n");
+        for (int i = 0; i < scope->struct_definition.Size; i++){
+            node = (ast_t*)Hash_Get_by_index(&scope->struct_definition,i,0);
+            if(node != NULL)
+                // printf("    %s\n",node->struct_definition_name);
+                ListString_Append(list,node->struct_definition_name);
+        }
+        Table(champ,list);
+    }
+
+    ListString_Clear(list);
+    String_free(champ);
 }
 
 

@@ -1,3 +1,30 @@
 
 
-println("Hello world")
+
+
+
+
+
+
+
+
+
+
+
+struct Point {
+    var j
+}
+
+
+var x = -2;
+var y = 90;
+
+
+println(x*y)
+
+
+
+
+
+
+debugprintscope("FIN");

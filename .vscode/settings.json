@@ -18,6 +18,7 @@
         "typer.h": "c",
         "bulletin.h": "c",
         "list.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "signal.h": "c"
     }
 }

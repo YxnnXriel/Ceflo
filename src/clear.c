@@ -5,6 +5,6 @@
 
 
 void clear_ceflo_clean(){
-    clearAst();
     clearScope();
+    clearAst();
 }

@@ -49,4 +49,8 @@ char * lexer_get_line_for_file(lexer_t * lexer , int line);
 
 
 
+token_t lexer_check_return_token(lexer_t *lexer,char carac_peek,char *default_value, 
+    char *peek_value, uint8_t type_peek ,uint8_t type_default);
+
+
 #endif

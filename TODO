@@ -1,0 +1,3 @@
+- Ajouter une structure pour géré les erreurs
+- Ajouter la verifation de AST_NOOP
+- J'ai ajouter les signaux pour nettoyer la mémoire en cas d'un CTRL+C

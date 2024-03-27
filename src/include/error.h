@@ -1,6 +1,12 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 
+
+    /**
+ * TODO: faire une struture pour les erreurs 
+ */
+
+
     #include <stdarg.h>
     #include "lexer.h"
 #define FOREACH_ERROR(ERR)    \

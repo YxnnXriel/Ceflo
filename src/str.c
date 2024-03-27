@@ -315,8 +315,8 @@ int ListString_Append(listString list , const char *value){
 
         list->Size++;
         list->ListStr = list->ListStr == (void*)0 ? 
-        calloc(list->Size,sizeof(list->ListStr)):
-        realloc(list->ListStr, list->Size * sizeof(list->ListStr));
+        calloc(1,sizeof(struct STRUCT_STR*)):
+        realloc(list->ListStr, list->Size * sizeof(struct STRUCT_STR*));
 
         list->ListStr[list->Size -1] = new_String(value);
 
@@ -612,20 +612,15 @@ void Table(String champs,listString list){
 
     listString champ = String_Split(champs," \n");
 
-    int *lenTab = malloc(( champ->Size+1 )*sizeof(int));
-    int *eachlen = malloc( (champ->Size+1 ) *sizeof(int));
-    
-    for (int i = 0; i < champ->Size; i++){
-        lenTab[i] = 0;
-        eachlen[i]= 0;
-    }
-    
+    int *lenTab = calloc(champ->Size+1,sizeof(int*));
+    int *eachlen = calloc(champ->Size+1,sizeof(int*));
 
     int une_ligne = 0;
     for (int i = 1; i < champ->Size+1; i++){
         for (int j = 0; j < list->Size; j++){
             char *s = ListString_Get(list,j);
-            listString chaine = String_Split(new_String(s)," \n");
+            string_t * delem_str = new_String(s);
+            listString chaine = String_Split(delem_str," \n");
             int x = ListString_lenght(chaine,i-1);
             if(x > lenTab[i]){
                 lenTab[i] = x;
@@ -633,6 +628,9 @@ void Table(String champs,listString list){
             if(lenTab[i] < ListString_lenght(champ,i-1)){
                 lenTab[i] = ListString_lenght(champ,i-1);   
             }
+            
+            ListString_Clear(chaine);
+            String_free(delem_str);
         }
         une_ligne += lenTab[i] + 3;
         eachlen[i] = lenTab[i];
@@ -644,12 +642,17 @@ void Table(String champs,listString list){
     dessine_ligne(champ,une_ligne , lenTab,eachlen,'-');
 
     for (int i = 0; i < list->Size; i++){
-        listString cha = String_Split(new_String(ListString_Get(list,i))," \n");
+        string_t * str = new_String(ListString_Get(list,i));
+        listString cha = String_Split(str," \n");
         dessine_ligne(cha,une_ligne , lenTab,eachlen,'|');
         ListString_Clear(cha);
+        String_free(str);
     }
     
     dessine_ligne(champ,une_ligne , lenTab,eachlen,'^');
 
     ListString_Clear(champ);
+
+    free(lenTab);
+    free(eachlen);
 }
