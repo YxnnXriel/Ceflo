@@ -1,9 +1,11 @@
 
 
-var k = lfunc (name,age) {
-    println("je me nomme " , name , " jai ", age, " ans")
-}
+var sayHello = lfunc () : int {
+    println("Hello !")
+    return 1.787;
+};
 
 
+var p = sayHello()
 
-k("yann ariel",21)
+println(p)

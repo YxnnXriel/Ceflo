@@ -626,6 +626,9 @@ ast_t *parser_parse_function_definition(parser_t *parser){
     parser_eat(TYPE(parser),parser,NULL);
 
     if(TYPE(parser) == TOKEN_ID){
+        if(PREV(parser).type == TOKEN_LFUNC){
+            parser_eat(TOKEN_EOF,parser,"%s : dont put name for definition lfunc\n",ERROR_TO_STRING[SYNTAX_ERROR]);
+        }
         allowChar(&function->function_definition_name,VALUE(parser));
         parser_eat(TYPE(parser),parser,NULL);
     }else{
