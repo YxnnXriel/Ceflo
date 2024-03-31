@@ -1,45 +1,11 @@
 
-struct Point{
-    var x;
-    var y;
 
-    func __init__(self){
-        self.x = 0
-        self.y = 0
-    }
 
-    func __init__(self,x){
-        self.x = x
-        self.y = 0
-    }
 
-    func __init__(self,x,y){
-        self.x = x
-        self.y = y
-    }
-
-    func MoveUp(self){
-        self.y +=1
-    }
-
-    func moveDown(self){
-        self.y -=1
-    }
-
-    func moveLeft(self){
-        self.x -=1
-    }
-
-    func moveRight(self){
-        self.x +=1
-    }
-
-    func __str__(self){
-        return self.x + " " + self.y
-    }
+var a = lfunc {
+    return [1,2,3]
 }
 
+var t = a[1]()[1]
 
-var f = new Point(21,232);
-
-println(f)
+println(t)

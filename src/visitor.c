@@ -132,7 +132,7 @@ void freeVisitor(visitor_t *visitor){
 
         AST_OBJ for me is just a scope who a many element (variable , function ect ..)
 
-        [HELP]
+    [HELP]
         use ctrl + f , '$' for walk to different AST branch 
 */
 

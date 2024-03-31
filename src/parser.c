@@ -507,11 +507,11 @@ ast_t *parser_parse_variable(parser_t *parser){
     if(parser->current.type == TOKEN_LPARENT){
         //.... maybe the declaration is a function call 
         if(is_lbrace_and_function_call){
-            return parser_parse_function_call_With_Name(variable,parser);
+            variable = parser_parse_function_call_With_Name(variable,parser);
         }
         else{
 
-            return parser_parse_function_call(parser);
+            variable = parser_parse_function_call(parser);
         }
     }
 
