@@ -580,14 +580,11 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     obj->is_new_obj =  true;
 
     obj->countScope = node->countScope;
-
     newObj->obj_name = node->function_call_name;
-
     newObj->self->is_for_obj = true;
 
     visitor_t vs;
     newVisitorWithScope(&vs,newObj->self);
-    newObj->self->scope_parent = visitor->global_scope;
     ast_t * init = NULL;
 
     obj->scope = newObj->self;
@@ -601,10 +598,9 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
         ast_t *item = List_Get(structDef->struct_definition_item,i);
         if(item->type == AST_FUNCTION_DEFINITION){
             if(strcmp("__init__",item->function_definition_name) == 0 && init == NULL){
-                // if(node->function_call_args.size == item->function_defintion_args.size)
+                if(node->function_call_args.size == item->function_defintion_args.size)
                     init = item;
                 continue;
-
             }
 
             if(strcmp("__str__",item->function_definition_name)==0){
@@ -635,10 +631,10 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
         //     &vs,
         //     node
         // );
-        
         Obj_t *init_self = NULL;
         if(init->is_define_self)
             init_self = newObj; 
+
 
         // printf("    [< %s >]    \n",node->function_call_name);
         visitor_visit_method(
@@ -647,11 +643,6 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
             init,
             &node->function_call_args 
         );
-
-        // je reset la portée de depart
-        newObj->self->scope_parent = NULL;
-        newObj->self->is_for_obj = true;
-
 
     }
 
@@ -691,9 +682,11 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
                 right->function_call_name
             );
 
+
             if(method == NULL){
                 method = ObjectGetAttr(self,right->function_call_name,1);
             }
+
 
             if(method == NULL){
                 Print_visitor_error(
@@ -704,8 +697,14 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
                     variable->assignement_variable_name
                 );
             }
+
+            
             if(!method->is_define_self){
                 self = NULL;
+            }
+
+            if(method->type == AST_LFUNC){
+                method = method->value.as.lfuncValue;
             }
 
             res = visitor_visit_method(
@@ -1044,6 +1043,7 @@ ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method ,
         visit.global_scope->scope_parent = visitor->global_scope;
 
 
+
     if(self != NULL && method->is_define_self == true){
         ast_t * self_to_ast = create_self_ast(self);
         scope_append_variable_definition(
@@ -1075,6 +1075,7 @@ ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method ,
 
 
         // printf("[%s]\n",func->function_definition_name);
+
         for (int i = 0; i < (int) args->size; i++){
             ast_t *args1 = List_Ast_Get(&method->function_defintion_args,i);
             ast_t * value = NULL; 
@@ -1121,6 +1122,7 @@ ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method ,
 
     ast_t *returnValue =  visitor_visit(&visit,method->function_definition_body);   
 
+        
 
     is_function_return_type(visitor,method,returnValue);
 
@@ -1683,7 +1685,6 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     scope_t *scope = variable->scope;
 
     ast_t * value = visitor_visit(visitor,node->assignement_value);
-
 
 
     if(node->op.type != TOKEN_ID){
