@@ -1,7 +1,9 @@
 
 
+var k = lfunc (name,age) {
+    println("je me nomme " , name , " jai ", age, " ans")
+}
 
-var t = input("entrer un nombre : ")
 
 
-println(t)
+k("yann ariel",21)

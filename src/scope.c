@@ -57,11 +57,8 @@ scope_t* newScope(){
 ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef){
     ast_t * value = NULL;
 
-    if(scope->variable_definition.Size != 0){
-        value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
-    }
+    value = (ast_t*)Hash_Get(&scope->variable_definition,vardef);
     
-
     return value;
 }
 
@@ -78,12 +75,20 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
 
 
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef){
-    if(scope->function_definition.Size == 0)
-        return NULL;
+    // if(scope->function_definition.Size == 0)
+    //     return NULL;
 
     ast_t * value = NULL; 
-    
     value = Hash_Get(&scope->function_definition,funcdef);
+    
+    if(value == NULL){
+        value = scope_get_variable_definition(scope,funcdef);
+        if(value != NULL && value->type == AST_LFUNC){
+            return value;
+        }
+        else
+            return NULL;
+    }
 
 
     return value;

@@ -1282,10 +1282,6 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         functionDef = visitor_visit(visitor,node->left);
     } 
 
-    if(functionDef != NULL && functionDef->type == AST_LFUNC){
-        functionDef = functionDef->value.as.lfuncValue;
-    }
-
     if(functionDef == NULL)
         functionDef =  scope_get_function_definition(
             visitor->global_scope,
@@ -1314,6 +1310,10 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         exit(1);
     }
 
+
+    if(functionDef->type == AST_LFUNC){
+        functionDef = functionDef->value.as.lfuncValue;
+    }
 
     // scope_t * newscope = newScope();
     // int visitorScopeCount = visitor->global_scope->countScope;

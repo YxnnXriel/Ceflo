@@ -629,7 +629,9 @@ ast_t *parser_parse_function_definition(parser_t *parser){
         allowChar(&function->function_definition_name,VALUE(parser));
         parser_eat(TYPE(parser),parser,NULL);
     }else{
-        parser_eat(TOKEN_EOF,parser,"%s : function name expected\n",ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR]);
+        if(PREV(parser).type != TOKEN_LFUNC){
+            parser_eat(TOKEN_EOF,parser,"%s : function name expected\n",ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR]);
+        }
     }
 
     bool isarrow = false;
@@ -652,7 +654,7 @@ ast_t *parser_parse_function_definition(parser_t *parser){
 
             if(TYPE(parser) != TOKEN_RPARENT )
                 get_function_definition_args(parser,function);
-
+            
             parser_eat(TOKEN_RPARENT,parser,"%s : `%s` :  you are missing `%s`\n",  
                 ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
                 function->function_definition_name,
@@ -958,6 +960,14 @@ ast_t *parser_parse_factor(parser_t *parser){
         func->type = AST_STRUCT;
         
         return func;
+    }
+
+    if(TYPE(parser) == TOKEN_LFUNC){
+        // assert(false && printf("Pas encore crée\n"));
+        ast_t * lfunc = NEW_OBJECT(AST_LFUNC,parser);
+        lfunc->value.as.lfuncValue = parser_parse_function_definition(parser);
+        lfunc->value.type = LFUNC;
+        return lfunc;
     }
 
 
