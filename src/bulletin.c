@@ -76,7 +76,8 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     }
 
     // Récupérer la chaîne de formatage (premier argument)
-    ast_t *format_string_ast = List_Ast_Get(args, 0);
+    ast_t *format_string_ast = visitor_visit(visitor,List_Ast_Get(args, 0));
+
     if (format_string_ast->type != AST_STRING) {
             Print_visitor_error(
                 node->line,

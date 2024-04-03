@@ -108,9 +108,11 @@ int main(int argc, char const *argv[]){
 		signal(SIGILL, handle_sigint);
 
 		newLexer(&lexer,argv[1]);
+	    __init_first_ast(); // la tête de l'ast
+	    ResetFirstScope();
 		ast_t *node = parser_parse(&lexer);
 		visitor_visit_code(node);
-
+	    clear_ceflo_clean();
 	}else{
 		printf("[CEFLO]\n");
 		printf("./Ceflo [args]\n");

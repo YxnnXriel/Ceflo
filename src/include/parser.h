@@ -75,6 +75,9 @@ ast_t *parser_parse_struct_definition(parser_t *parser);
 ast_t * parser_parse_obj_access(parser_t * parser , ast_t * prev_variable);
 ast_t *parser_parse_dot_access(parser_t * parser);
 
+ast_t * parser_parse_include(parser_t *parser);
+
+
 ast_t * makeAst(const char * chaine);
 ast_t *parser_parse_one(lexer_t *lexer);
 bool expectedAst(ast_t * node ,ast_t *parent,  uint8_t *expect, int lenght);

@@ -24,6 +24,7 @@
     #include "include/debug.h"
     #include "include/clear.h"
     #include "include/typer.h"
+    #include "include/parser.h"
 
 
 
@@ -184,13 +185,10 @@ void visitor_append_value(visitor_t * visitor , ast_t * value){
 
 
 int  visitor_visit_code(ast_t* node){
-    ResetFirstScope();
     visitor_t visitor;
 	newVisitor(&visitor);
 	visitor.global_scope->countScope = 0;
 	visitor_visit(&visitor,node);
-
-    clear_ceflo_clean();
 
     return 0;
 
@@ -251,6 +249,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_LIST_ASSIGNEMENT: return visitor_visit_list_assignement(visitor,node);break;
         case AST_LIST_ACCESS: return visitor_visit_list_access(visitor,node);break;
         case AST_OBJ_ACCESS:return visitor_visit_object_access(visitor,node);break;
+        case AST_INCLUDE : return visitor_visit_include(visitor,node);break;
         case AST_NOOP:
             return node;
         default:
@@ -300,7 +299,6 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
             if((noeud->is_return_value == true) 
                 &&
                 noeud->countScope - 1 != visitor->global_scope->countScope
-
             ){
                 if(visitor->global_scope->countScope == 0){
                     noeud->is_return_value =  false;
@@ -1581,7 +1579,6 @@ ast_t * visitor_visit_data(visitor_t * visitor,ast_t *node){
 
 ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
 
-    // printf("if - %d \n",visitor->global_scope->countScope);
 
     if(!node->if_expr)
         return visitor_visit(visitor,node->if_body);
@@ -1731,4 +1728,69 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     
 
     return value;
+}
+
+
+
+static int include_add_value(visitor_t *visitor , visitor_t * vs ,const char *chaine, ast_t * node){
+
+    int type = 0;
+    ast_t *get_element =  scope_found_element(vs->global_scope,chaine,&type);
+
+    if(get_element == NULL){
+        Print_visitor_error(
+            node->line,
+            node->colone,
+            node->variable_name,
+            "%s doesn't exist !\n",
+            chaine
+        );
+        clear_ceflo_clean();
+        exit(1);
+    }
+
+    scope_append_element(
+        visitor->global_scope,type,chaine,get_element
+    );
+            
+    return 0;
+}
+
+
+ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
+
+    // TODO: ajouter un correspondeur de fichier (pour les multiple inclusion)
+
+    lexer_t lex;
+	newLexer(&lex,node->variable_name);
+    ast_t * source = parser_parse(&lex);
+    
+    visitor_t vs;
+	newVisitor(&vs);
+	vs.global_scope->countScope = 0;
+	visitor_visit(&vs,source);
+
+    if(node->op.type == TOKEN_MULT){
+        // c'est que on vas prendre tous 
+        scope_cpy_with_scope_without_count(vs.global_scope,visitor->global_scope);
+    }else{
+        if(node->left->type == AST_VARIABLE){
+            // c'est une variable ou une fonction
+            const char *s = node->left->variable_name;
+            include_add_value(visitor,&vs,s,node);
+        }
+        if(node->left->type == AST_LIST){
+            // c'est une liste
+            list_t * list = node->left->value.as.listValue;
+            for (int i = 0; i < list->Size; i++){
+                ast_t * item = (ast_t*)List_Get(list,i);
+                const char *s = item->variable_name;
+                include_add_value(visitor,&vs,s,item);
+            }
+            
+        }
+    }
+
+
+    return node;
 }

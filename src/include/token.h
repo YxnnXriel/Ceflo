@@ -29,7 +29,8 @@ typedef enum{
         TOKEN_LFUNC , // lfunc
         TOKEN_MAIN , // main
         TOKEN_RETURN, // return
-        TOKEN_INCLUDE, // include
+        TOKEN_IMPORT, // import
+        TOKEN_FROM, // import
         TOKEN_STRUCT, // struct
         TOKEN_TRUE, // True
         TOKEN_FALSE, // False
@@ -101,7 +102,8 @@ static const char *TOKEN_TO_STRING[]={
     "lfunc",
     "main",
     "return",
-    "include",
+    "import",
+    "from",
     "struct",
     "true",
     "false",

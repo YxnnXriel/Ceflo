@@ -161,7 +161,18 @@ static void Scope_intern_cpy(stk_t *Table , scope_t *end, void (*func)(scope_t *
         func(
             end,
             item->key,
-            ast_copy((ast_t*)item->value,end)
+            ast_copy((ast_t*)item->value,NULL)
+        );
+    }
+} 
+
+static void Scope_intern_get(stk_t *Table , scope_t *end, void (*func)(scope_t *scope , const char *key , ast_t *value)){
+    for (int i = 0; i < Table->Size; i++){
+        hash_t* item = Hash_Get_by_index(Table,i,1);
+        func(
+            end,
+            item->key,
+            item->value
         );
     }
 } 
@@ -241,7 +252,18 @@ int scope_cpy_with_scope(scope_t *end , scope_t *ref){
     }
 
     return 1;
+}
 
+int scope_cpy_with_scope_without_count(scope_t * source , scope_t * destination){
+    if(source != NULL){
+        Scope_intern_get(&source->function_definition,destination,scope_append_function_definition);
+        Scope_intern_get(&source->variable_definition,destination,scope_append_variable_definition);
+        Scope_intern_get(&source->struct_definition,destination,scope_append_struct_definition);
+        
+        return 0;
+    }
+
+    return 1;
 }
 
 
@@ -276,6 +298,51 @@ void clearScope(){
     }
     
 }
+
+ast_t *scope_found_element(scope_t * scope, const char *element , int *type){
+
+    ast_t * value = scope_get_variable_definition(scope,element);
+
+    if(value != NULL){
+        *type = AST_VARIABLE;
+        return value;
+    }
+
+    value = scope_get_function_definition(scope,element);
+
+    if(value != NULL){
+        *type = AST_FUNCTION_DEFINITION;
+        return value;
+    }
+    
+    value = scope_get_struct_definition(scope,element);
+    
+    if(value != NULL){
+        *type = AST_STRUCT_DEFINITION;
+        return value;
+    }
+
+    return NULL;
+}
+
+
+ast_t * scope_append_element(scope_t * scope, int type ,const char *key , ast_t * value ){
+    switch (type){
+        case AST_VARIABLE:
+        case AST_VARIABLE_DEFINITION:
+            scope_append_variable_definition(scope,key,value);
+            break;
+        case AST_FUNCTION_DEFINITION:
+            scope_append_function_definition(scope,key,value);
+            break;
+        case AST_STRUCT_DEFINITION:
+            scope_append_struct_definition(scope,key,value);
+            break;
+    }
+
+    return value;
+}
+
 
 void freeSingleScope(scope_t *scope){
 

@@ -1159,8 +1159,9 @@ ast_t * ast_cpy_function_definition(ast_t *function , struct SCOPE_STRUCT * scop
 
 
     a->function_definition_body = ast_copy(function->function_definition_body,scope);
-    cpy_line(a,function);
 
+    cpy_line(a,function);
+    
 
     return a;
 }

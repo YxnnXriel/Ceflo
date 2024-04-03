@@ -29,6 +29,7 @@
 #define COLONE(parser) parser->lexer->colone
 #define TYPE(parser) parser->current.type
 #define VALUE(parser) parser->current.value
+#define EAT(parser) parser_eat(parser->current.type,parser,NULL) 
 
 static int *ScopeCount(){
     static int l;
@@ -141,6 +142,7 @@ void freeParser(parser_t * parser){
     freeToken(&parser->prev);
     freeToken(&parser->current);
     lexerFree(parser->lexer);
+
 }
 
 
@@ -183,8 +185,8 @@ int parser_eat(TokenEnum type, parser_t * parser, char *fmt , ...){
  */
 ast_t *parser_parse(lexer_t *lexer){
     parser_t parser;
-    __init_first_ast(); // la tête de l'ast
     newParser(&parser,lexer);
+    
     ast_t *node = parser_parse_statments(&parser);
     freeParser(&parser);
     return node;
@@ -274,15 +276,16 @@ ast_t *parser_parse_statment(parser_t *parser){
 
 
     switch(TYPE(parser)){
-        case TOKEN_VAR : return parser_parse_variable_definition(parser);
-        case TOKEN_CONST : return parser_parse_variable_definition(parser);
-        case TOKEN_FUNC : return parser_parse_function_definition(parser);
-        case TOKEN_STRUCT : return parser_parse_struct_definition(parser);
-        case TOKEN_RETURN : return parser_parse_return(parser);
-        case TOKEN_IF : return parser_parse_if(parser);
-        case TOKEN_WHILE : return parser_parse_while(parser);
-        case TOKEN_FOR : return parser_parse_for(parser);
-        case TOKEN_BREAK : return parser_parse_break(parser);
+        case TOKEN_VAR : return parser_parse_variable_definition(parser);break;
+        case TOKEN_CONST : return parser_parse_variable_definition(parser);break;
+        case TOKEN_FUNC : return parser_parse_function_definition(parser);break;
+        case TOKEN_STRUCT : return parser_parse_struct_definition(parser);break;
+        case TOKEN_RETURN : return parser_parse_return(parser);break;
+        case TOKEN_IF : return parser_parse_if(parser);break;
+        case TOKEN_WHILE : return parser_parse_while(parser);break;
+        case TOKEN_FOR : return parser_parse_for(parser);break;
+        case TOKEN_BREAK : return parser_parse_break(parser);break;
+        case TOKEN_FROM : return parser_parse_include(parser);break;
         case TOKEN_ID :
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
@@ -290,7 +293,7 @@ ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_STRING:
         case TOKEN_TRUE:
         case TOKEN_FALSE:
-            return parser_parse_expr(parser);
+            return parser_parse_expr(parser);break;
         default:
             return newAst(AST_NOOP);break;
 
@@ -682,7 +685,6 @@ ast_t *parser_parse_function_definition(parser_t *parser){
 
     ScopePlus();
 
-
     // TODO : make inline function
     
     parser_eat(TOKEN_LBRACKET,parser,"%s : unexpected `%s` for begin bodyfunction\n",
@@ -695,12 +697,13 @@ ast_t *parser_parse_function_definition(parser_t *parser){
         function->function_definition_body = parser_parse_statments(parser);
     }
 
-    ScopeMinus();
     parser_eat(TOKEN_RBRACKET,parser,"%s : unexpected `%s` for end bodyfunction\n",
         ERROR_TO_STRING[FUNCTION_DEFINITION_ERROR],
         TOKEN_TO_STRING[TOKEN_RBRACKET]
     );
+    
 
+    ScopeMinus();
     return function;
 
 }
@@ -1245,6 +1248,28 @@ ast_t *parser_parse_struct_definition(parser_t *parser){
 
     return ast_struct;
 }
+
+
+ast_t * parser_parse_include(parser_t *parser){
+
+    ast_t * include = NEW_OBJECT(AST_INCLUDE,parser);
+    EAT(parser);
+    if(TYPE(parser) == TOKEN_STRING){
+        allowChar(&include->variable_name,VALUE(parser));
+    }    
+    parser_eat(TOKEN_STRING,parser,"%s : include must be a str:path value ",ERROR_TO_STRING[SYNTAX_ERROR]);
+    parser_eat(TOKEN_IMPORT,parser,"%s : must be like `from <path:str> import ... ` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+
+    if(TYPE(parser) == TOKEN_MULT){
+        include->op = parser->current;
+        EAT(parser);
+    }else{
+        include->left = parser_parse_expr(parser);
+    }
+
+    return include;
+}   
+
 
 
 ast_t * makeAst(const char * chaine){

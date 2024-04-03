@@ -177,8 +177,10 @@ static TokenEnum lexer_precise_id(char *chaine ){
         return TOKEN_MAIN;
     if(cpm("return"))
         return TOKEN_RETURN;
-    if(cpm("include"))
-        return TOKEN_INCLUDE;
+    if(cpm("import"))
+        return TOKEN_IMPORT;
+    if(cpm("from"))
+        return TOKEN_FROM;
     if(cpm("struct"))
         return TOKEN_STRUCT;
     if(cpm("true"))

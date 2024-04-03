@@ -42,7 +42,9 @@ void scope_append_function_definition(scope_t *scope , const char *key , ast_t *
 ast_t *scope_get_struct_definition(scope_t * scope , const char *structdef);
 void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *value);
 int scope_cpy_with_scope(scope_t *end , scope_t *ref);
-
+int scope_cpy_with_scope_without_count(scope_t * source , scope_t * destination);
+ast_t *scope_found_element(scope_t * scope, const char *element , int *type);
+ast_t * scope_append_element(scope_t * scope, int type ,const char *key , ast_t * value );
 void Print_Scope(scope_t * scope , const char *chaine);
 
 

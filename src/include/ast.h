@@ -43,6 +43,7 @@
         AST(AST_FOR)  \
         AST(AST_BREAK)  \
         AST(AST_ASSIGNEMENT)  \
+        AST(AST_INCLUDE)  \
         AST(AST_STRUCT_DEFINITION)  \
         AST(AST_STRUCT)  \
         AST(AST_SELF)  \
@@ -265,6 +266,7 @@ typedef struct AST_STRUCT{
 
 
 
+    /* ======  INCLUDE ====== */
 
 
 

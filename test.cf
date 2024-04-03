@@ -1,11 +1,7 @@
+from "scanner.cf" import Scanner
 
+var sc = new Scanner();
 
+var i = sc.getInt("Entrer un nombre : ")
 
-
-var a = lfunc {
-    return [1,2,3]
-}
-
-var t = a[1]()[1]
-
-println(t)
+println(i)
