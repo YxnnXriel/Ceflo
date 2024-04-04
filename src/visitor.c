@@ -195,6 +195,29 @@ int  visitor_visit_code(ast_t* node){
 
 }
 
+static ast_t* dll_add_to_visitor(visitor_t *visitor,ast_t *hd,const char *chaine ){
+
+    ast_t *func_dll = newAst(AST_FUNCTION_DLL);
+    func_dll->value.as.dll_funcValue = dlsym(hd->dll_handle,chaine);
+    func_dll->value.type = DLL;
+
+    if(!func_dll->value.as.dll_funcValue){
+        // il y a une erreur
+        fprintf(stderr,"Erreur : impossible d'avoir %s \n",chaine);
+        clear_ceflo_clean();        
+        exit(EXIT_FAILURE);
+    }
+
+    scope_append_function_definition(
+        visitor->global_scope,
+        chaine,
+        func_dll
+    );
+
+    return func_dll;
+}
+
+
 static ast_t* visitor_visit_dll_import(visitor_t *visitor , ast_t* node){
 
     // permet d'importer les dll
@@ -212,26 +235,17 @@ static ast_t* visitor_visit_dll_import(visitor_t *visitor , ast_t* node){
     if(node->left->type == AST_VARIABLE){
         // on veut récuperer une fonction dans cette dll
         const char *chaine = node->left->variable_name;
-        ast_t *func_dll = newAst(AST_FUNCTION_DLL);
-        func_dll->value.as.dll_funcValue = (celfo_func_t)dlsym(hd->dll_handle,chaine);
-        func_dll->value.type = DLL;
-
-        if(!func_dll->value.as.dll_funcValue){
-            // il y a une erreur
-            fprintf(stderr,"Erreur : impossible d'ouvir %s \n",chaine);
-            clear_ceflo_clean();        
-            exit(EXIT_FAILURE);
-        }
-
-        scope_append_function_definition(
-            visitor->global_scope,
-            chaine,
-            func_dll
-        );
-
+        dll_add_to_visitor(visitor,hd,chaine);
     }
     else if(node->left->type == AST_LIST){
-        // on veut récuperer des fonctions qui sont dans une liste
+        
+        list_t * list = AS_LIST(node->left->value);
+
+        for (int i = 0; i < list->Size; i++){
+            ast_t * item = List_Get(list,i);
+            dll_add_to_visitor(visitor,hd,item->variable_name);
+        }
+
     }else{
         // il y a une erreur
     }
@@ -629,11 +643,13 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
     ast_t * init = NULL;
 
     obj->scope = newObj->self;
+    obj->scope->scope_parent = visitor->global_scope;
 
     //TODO: ecrire la methode getattr pour les object
 
     /*LOGIC**/
 
+    ast_t * value = NULL;
 
     for (int i = 0; i < structDef->struct_definition_item->Size; i++){
         ast_t *item = List_Get(structDef->struct_definition_item,i);
@@ -656,12 +672,14 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 
         }
 
+
+        value =  ast_copy(item,visitor->global_scope);
         visitor_visit(
             &vs,
-            ast_copy(item,vs.global_scope)
+            value
         );
     }
-
+    obj->scope->scope_parent = NULL;
 
     if(init != NULL){
 
@@ -1304,7 +1322,6 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * a
  */
 ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
 
-    // printf("ICI %s\n",node->function_call_name);
     ast_t * res = bulletin_switch_function(
         visitor,node,
         &node->function_call_args
@@ -1825,6 +1842,7 @@ ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
 	newVisitor(&vs);
 	vs.global_scope->countScope = 0;
 	visitor_visit(&vs,source);
+
 
     if(node->op.type == TOKEN_MULT){
         // c'est que on vas prendre tous 

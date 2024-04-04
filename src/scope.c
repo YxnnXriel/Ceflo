@@ -210,9 +210,10 @@ void Print_Scope(scope_t * scope , const char *chaine){
         String_Set(champ,"****FUNCTION****");
         // printf(" **** FUNCTION **** \n");
         for (int i = 0; i < scope->function_definition.Size; i++){
-            node = (ast_t*)Hash_Get_by_index(&scope->function_definition,i,0);
+            hash_t *item = Hash_Get_by_index(&scope->function_definition,i,1);
+            node = (ast_t*)item->value;
             if(node != NULL){
-                ListString_Append(list,node->function_definition_name);
+                ListString_Append(list,item->key);
                 // printf("    %s\n",node->function_definition_name); 
             }
         }
@@ -228,10 +229,11 @@ void Print_Scope(scope_t * scope , const char *chaine){
         String_Set(champ,"****STRUCT****");
         // printf(" **** STRUCT **** \n");
         for (int i = 0; i < scope->struct_definition.Size; i++){
-            node = (ast_t*)Hash_Get_by_index(&scope->struct_definition,i,0);
+            hash_t *item = Hash_Get_by_index(&scope->struct_definition,i,1);
+            node = (ast_t*) item->value;
             if(node != NULL)
                 // printf("    %s\n",node->struct_definition_name);
-                ListString_Append(list,node->struct_definition_name);
+                ListString_Append(list,item->key);
         }
         Table(champ,list);
     }

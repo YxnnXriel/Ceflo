@@ -1,3 +1,5 @@
-from lib.math import PI
+from lib.math import *
 
-println(PI)
+var a = Math.log10(23)
+
+println(a)
