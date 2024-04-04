@@ -47,6 +47,8 @@
         AST(AST_STRUCT_DEFINITION)  \
         AST(AST_STRUCT)  \
         AST(AST_SELF)  \
+        AST(AST_DLL)  \
+        AST(AST_FUNCTION_DLL)  \
         AST(AST_NOOP)  
 
     #define GENERATE_AST_ENUM(AST)  AST,
@@ -69,7 +71,8 @@ typedef enum{
     STRING,
     LIST,
     OBJECT,
-    LFUNC
+    LFUNC,
+    DLL,
 }type_ceflo;
 
 int type_ceflo_convert_to_type(const char *type);
@@ -96,6 +99,8 @@ typedef struct OBJECT_STRUCT {
 
 struct AST_STRUCT * GetInStruct(struct AST_STRUCT * str , const char * type , const char *name);
 
+// pour les fonctions dll
+typedef struct AST_STRUCT* (*celfo_func_t)(struct VISITOR_STRUCT *, struct AST_STRUCT *, struct LIST_AST_STRUCT *);
 
 
 typedef struct AST_TYPE_VALUE{
@@ -108,6 +113,7 @@ typedef struct AST_TYPE_VALUE{
         list_t *listValue;
         Obj_t ObjectValue;
         struct AST_STRUCT *lfuncValue;
+        celfo_func_t dll_funcValue; // la fonction dll
     }as;
 }Value_t;
 
@@ -267,7 +273,8 @@ typedef struct AST_STRUCT{
 
 
     /* ======  INCLUDE ====== */
-
+        bool is_dll;
+        void *dll_handle; // il contiendra l'ouverture de la dll, pas de copy possible
 
 
     /* ======  LIST ====== */
@@ -304,7 +311,7 @@ static const char *AST_TO_STRING[] ={
 // NEW AST
 ast_t *newAst(uint8_t type);
 ast_t *newAstWithLine(uint8_t type, int line , int colone);
-
+void addAstToDoublePile(ast_t *node);
 // CONVERT TYPE
 
 uint8_t type_ceflo_to_ast(uint8_t type);

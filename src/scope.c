@@ -115,7 +115,7 @@ void scope_append_function_definition(scope_t *scope , const char *key , ast_t *
         );
         exit(1);
     }else{
-        Hash_Append(&scope->function_definition,value->function_definition_name,value);   
+        Hash_Append(&scope->function_definition,key,value);   
     }
 
 }

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dlfcn.h>
 
 #include "include/visitor.h"
 #include "include/ast.h"
@@ -194,7 +195,49 @@ int  visitor_visit_code(ast_t* node){
 
 }
 
+static ast_t* visitor_visit_dll_import(visitor_t *visitor , ast_t* node){
 
+    // permet d'importer les dll
+
+    ast_t * hd = newAst(AST_DLL);
+
+    hd->dll_handle = dlopen(node->variable_name,RTLD_LAZY);
+
+    if(!hd->dll_handle){
+        fprintf(stderr,"Erreur : impossible d'ouvir %s \n",node->variable_name);
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
+    }
+
+    if(node->left->type == AST_VARIABLE){
+        // on veut récuperer une fonction dans cette dll
+        const char *chaine = node->left->variable_name;
+        ast_t *func_dll = newAst(AST_FUNCTION_DLL);
+        func_dll->value.as.dll_funcValue = (celfo_func_t)dlsym(hd->dll_handle,chaine);
+        func_dll->value.type = DLL;
+
+        if(!func_dll->value.as.dll_funcValue){
+            // il y a une erreur
+            fprintf(stderr,"Erreur : impossible d'ouvir %s \n",chaine);
+            clear_ceflo_clean();        
+            exit(EXIT_FAILURE);
+        }
+
+        scope_append_function_definition(
+            visitor->global_scope,
+            chaine,
+            func_dll
+        );
+
+    }
+    else if(node->left->type == AST_LIST){
+        // on veut récuperer des fonctions qui sont dans une liste
+    }else{
+        // il y a une erreur
+    }
+
+    return node;
+}
 
 
 //                          ===================================== $COMPOUND ==============================================
@@ -1315,6 +1358,16 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
         functionDef = functionDef->value.as.lfuncValue;
     }
 
+    if(functionDef->type == AST_FUNCTION_DLL){
+        ast_t * f = functionDef->value.as.dll_funcValue(
+            visitor,
+            node,
+            &node->function_call_args
+        );
+        addAstToDoublePile(f);
+        return f;
+    }
+
     // scope_t * newscope = newScope();
     // int visitorScopeCount = visitor->global_scope->countScope;
     // if(visitorScopeCount <= 1){
@@ -1760,6 +1813,9 @@ static int include_add_value(visitor_t *visitor , visitor_t * vs ,const char *ch
 ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
 
     // TODO: ajouter un correspondeur de fichier (pour les multiple inclusion)
+
+    if(node->is_dll)
+        return visitor_visit_dll_import(visitor,node);
 
     lexer_t lex;
 	newLexer(&lex,node->variable_name);

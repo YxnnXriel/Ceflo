@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dlfcn.h>
 
 #include "include/ast.h"
 #include "include/scope.h"
@@ -136,6 +137,9 @@ ast_t *newAst(uint8_t type){
     new->is_func_typer = false;
 
 
+    // INCLUDE
+    new->is_dll = false;
+
     // LIST
     new->ref_list = NULL;
     new->ref_list_index = -1;
@@ -168,7 +172,20 @@ ast_t *newAstWithLine(uint8_t type, int line , int colone){
     return new;
 }
 
+void addAstToDoublePile(ast_t *node){
+    if(prev == NULL){
 
+        node->next = NULL;
+        var = node;
+        prev = node;
+
+    }else{
+
+        var->prev = node;
+        node->next = var;
+        var = node;
+    }
+}
 
 
 int type_ceflo_convert_to_type(const char *type){
@@ -719,7 +736,12 @@ void freeAst(ast_t *node){
     if(node->struct_definition_item != NULL){
         free(node->struct_definition_item->Item);
         free(node->struct_definition_item);
-    }    
+    }
+
+    if(node->type == AST_DLL){
+        if(node->dll_handle != NULL)
+            dlclose(node->dll_handle);
+    }
 
 }
 
@@ -849,6 +871,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_OBJ] = {&ast_cpy_Value},
     [AST_NONE] = {&ast_cpy_Value},
     [AST_LIST] = {&ast_cpy_Value},
+    [AST_FUNCTION_DLL] = {&ast_cpy_Value},
     [AST_COMPOUND] = {&ast_cpy_compound},
     [AST_VARIABLE_DEFINITION] = {&ast_cpy_variable_definition},
     [AST_STRUCT_DEFINITION] = {&ast_cpy_struct_definition},
@@ -878,6 +901,7 @@ static void cpy_line(ast_t *a , ast_t *ast){
     a->colone = ast->colone;
     a->countScope = ast->countScope;
     a->is_for_obj = ast->is_for_obj;
+    a->is_dll = ast->is_dll;
 }
 
 static ast_t *ast_r_scope(ast_t *ast , struct SCOPE_STRUCT * scope){

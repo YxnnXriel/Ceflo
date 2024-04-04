@@ -1,7 +1,3 @@
-from lib.scanner import Scanner
+from lib.math import PI
 
-var sc = new Scanner();
-
-var i = sc.getInt("Entrer un nombre : ")
-
-println(i)
+println(PI)

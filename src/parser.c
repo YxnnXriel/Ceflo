@@ -1255,6 +1255,12 @@ ast_t * parser_parse_include(parser_t *parser){
     ast_t * include = NEW_OBJECT(AST_INCLUDE,parser);
     EAT(parser);
 
+     if(TYPE(parser) == TOKEN_AT_SIGN){
+        // on veut acceder à une dll
+        include->is_dll = true;
+        EAT(parser);
+    }
+    
     if(TYPE(parser) == TOKEN_STRING){
         allowChar(&include->variable_name,VALUE(parser));
         EAT(parser);
@@ -1283,6 +1289,9 @@ ast_t * parser_parse_include(parser_t *parser){
         strcat(chaine,".cf");
         allowChar(&include->variable_name,chaine);
     }
+  
+
+
     else{
         parser_eat(TOKEN_STRING,parser,"%s : include must be a str:path|id value ",ERROR_TO_STRING[SYNTAX_ERROR]);
     }
