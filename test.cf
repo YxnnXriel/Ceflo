@@ -1,4 +1,4 @@
-from "scanner.cf" import Scanner
+from lib.scanner import Scanner
 
 var sc = new Scanner();
 

@@ -1254,11 +1254,41 @@ ast_t * parser_parse_include(parser_t *parser){
 
     ast_t * include = NEW_OBJECT(AST_INCLUDE,parser);
     EAT(parser);
+
     if(TYPE(parser) == TOKEN_STRING){
         allowChar(&include->variable_name,VALUE(parser));
-    }    
-    parser_eat(TOKEN_STRING,parser,"%s : include must be a str:path value ",ERROR_TO_STRING[SYNTAX_ERROR]);
-    parser_eat(TOKEN_IMPORT,parser,"%s : must be like `from <path:str> import ... ` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+        EAT(parser);
+    }
+    else if(TYPE(parser) == TOKEN_ID){
+        // directe id, je crée le resolveur ici
+        char chaine[255];
+        chaine[0] = '\0';
+        
+        strcat(chaine,VALUE(parser));
+        EAT(parser);
+
+        if(TYPE(parser) == TOKEN_DOT){
+            while (TYPE(parser) == TOKEN_DOT){
+                EAT(parser);
+                if(TYPE(parser) == TOKEN_ID){
+                    strcat(chaine,"/");
+                    strcat(chaine,VALUE(parser));
+                    EAT(parser);
+                }
+                else
+                    break;
+            }
+        }
+
+        strcat(chaine,".cf");
+        allowChar(&include->variable_name,chaine);
+    }
+    else{
+        parser_eat(TOKEN_STRING,parser,"%s : include must be a str:path|id value ",ERROR_TO_STRING[SYNTAX_ERROR]);
+    }
+
+
+    parser_eat(TOKEN_IMPORT,parser,"%s : must be like `from <path:str|id> import ... ` ",ERROR_TO_STRING[SYNTAX_ERROR]);
 
     if(TYPE(parser) == TOKEN_MULT){
         include->op = parser->current;
