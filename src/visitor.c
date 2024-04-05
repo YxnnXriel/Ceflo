@@ -736,7 +736,26 @@ ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
         vs.global_scope->scope_parent = visitor->global_scope;
         
         if(right->type == AST_FUNCTION_CALL){
-            
+
+            // j'ai mis ça parce que si je pointe directement sur la structure, ça m'evite de 
+            // copier des fonctions qui peuvent être lourd dans la mémoire
+            // si c'est pas bon je peux simplement changer en scope_get_function
+            // ast_t * structt = getStruct(visitor->global_scope,self->obj_name);
+
+            // if(structt == NULL){
+            //     Print_visitor_error(
+            //         right->line,
+            //         right->colone,
+            //         "./Ceflo","la structure %s n'a pas été exporter correctement ou l'object n'est pas défini\n",
+            //         self->obj_name
+            //     );
+            // }
+
+
+            // ast_t *method = GetInStruct(
+            //     structt,"FUNC",right->function_call_name
+            // );
+
             ast_t *method = scope_get_function_definition(
                 self->self,
                 right->function_call_name
@@ -1873,7 +1892,7 @@ ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
         "export"
     );
 
-    if(export != NULL){
+    if(export != NULL && node->op.type != TOKEN_MULT){
         // printf("Oui je dois ajouter cette variable ici \n");
 
         ast_t * item = NULL;

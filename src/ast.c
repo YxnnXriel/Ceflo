@@ -1245,3 +1245,14 @@ ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     return a;
     
 }
+
+
+// API
+
+
+ast_t * makeNumber(double x){
+    ast_t * new = newAst(AST_NUMBER);
+    new->value.as.numberValue = x;
+    new->value.type = NUMBER;
+    return new;
+}

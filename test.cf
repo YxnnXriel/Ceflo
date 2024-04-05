@@ -1,5 +1,7 @@
 from lib.math import Math
 
-var a = Math.log10(90)
 
-println(a)
+
+
+println(Math.Pi)
+
