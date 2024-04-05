@@ -76,6 +76,8 @@ ast_t * parser_parse_obj_access(parser_t * parser , ast_t * prev_variable);
 ast_t *parser_parse_dot_access(parser_t * parser);
 
 ast_t * parser_parse_include(parser_t *parser);
+ast_t * parser_parse_export(parser_t *parser);
+
 
 
 ast_t * makeAst(const char * chaine);

@@ -307,6 +307,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_LIST_ACCESS: return visitor_visit_list_access(visitor,node);break;
         case AST_OBJ_ACCESS:return visitor_visit_object_access(visitor,node);break;
         case AST_INCLUDE : return visitor_visit_include(visitor,node);break;
+        case AST_EXPORT : return visitor_visit_export(visitor,node);break;
         case AST_NOOP:
             return node;
         default:
@@ -1834,10 +1835,12 @@ ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
     if(node->is_dll)
         return visitor_visit_dll_import(visitor,node);
 
+
     lexer_t lex;
 	newLexer(&lex,node->variable_name);
     ast_t * source = parser_parse(&lex);
-    
+
+
     visitor_t vs;
 	newVisitor(&vs);
 	vs.global_scope->countScope = 0;
@@ -1863,6 +1866,120 @@ ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
             }
             
         }
+    }
+
+    ast_t * export = scope_get_variable_definition(
+        vs.global_scope,
+        "export"
+    );
+
+    if(export != NULL){
+        // printf("Oui je dois ajouter cette variable ici \n");
+
+        ast_t * item = NULL;
+        ast_t * found = NULL;
+        int j = 0;
+        for (int i = 0; i < export->list_compound->Size; i++){
+            item = List_Get(export->list_compound,i);
+            // je verifie qu'il n'existe pas déja dans le visitor
+            found = scope_found_element(visitor->global_scope,item->variable_name,&j);
+            if(found != NULL){
+                continue;
+            }
+            
+            found = scope_found_element(vs.global_scope,item->variable_name,&j);
+            scope_append_element(visitor->global_scope,j,item->variable_name,found);
+        }
+        
+    }
+
+
+    return node;
+}
+
+
+static void verif_export(visitor_t * visitor , ast_t * node , ast_t * export , ast_t * export_variable){
+    ast_t * value = NULL;
+    int type = 0;
+    for (int i = 0; i < export->list_compound->Size; i++){
+        ast_t * variable = List_Get(export->list_compound,i);
+
+        if(variable->type != AST_VARIABLE){
+            Print_visitor_error(
+                node->line,
+                node->colone,
+                "./Ceflo",
+                "error type here, export work with id!\n"
+            );
+            clear_ceflo_clean();
+            exit(1);
+        }
+
+        value = scope_found_element(
+            visitor->global_scope,
+            variable->variable_name,
+            &type
+        );
+
+        if(value == NULL){
+            Print_visitor_error(
+                variable->line,
+                variable->colone,
+                "./ceflo",
+                "%s doesn't exist !\n",
+                variable->variable_name
+            );
+            clear_ceflo_clean();
+            exit(1);
+        }
+
+        if(export_variable != NULL){
+            // rechercher si elle existe dans cette export, sinon ajouter la
+            int k = 0;
+            for (int j = 0; j < export_variable->list_compound->Size; j++){
+                ast_t * item = List_Get(export_variable->list_compound,i);
+                if(strcmp(item->variable_name,variable->variable_name)==0){
+                    k = 1;
+                    break;
+                }
+            }
+
+            if(k == 0){
+                List_Append(export_variable->list_compound,variable);
+            }
+            
+        }
+    }
+
+}
+
+ast_t * visitor_visit_export(visitor_t * visitor,ast_t *node){
+
+    // verifie que ce visitor ne contient d'export , sinon je crée
+    // je parcours les différents élément pour voir si elle existe, sinon je panic
+    // si il existe et que on à une variable export , je verifie si elle n'est pas dans la liste, sinon je l'ajoute
+
+    int type = 0;
+    ast_t * export_variable = scope_found_element(
+        visitor->global_scope,
+        "export",
+        &type
+    );
+
+    ast_t * export = NULL;
+    ast_t * value = NULL;
+    if(export_variable == NULL){
+        // ici je vais ajouter cette liste comme référence
+        export = node;
+        verif_export(visitor,node,export,NULL);
+        scope_append_variable_definition(
+            visitor->global_scope,
+            "export",
+            export
+        );
+    }else{
+        export = node;
+        verif_export(visitor,node,export,export_variable);
     }
 
 

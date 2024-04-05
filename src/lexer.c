@@ -205,6 +205,8 @@ static TokenEnum lexer_precise_id(char *chaine ){
         return TOKEN_CONST;
     if(cpm("global"))
         return TOKEN_GLOBAL;
+    if(cpm("export"))
+        return TOKEN_EXPORT;
     else
         return TOKEN_ID;
 

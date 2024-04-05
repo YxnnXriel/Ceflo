@@ -31,6 +31,7 @@ typedef enum{
         TOKEN_RETURN, // return
         TOKEN_IMPORT, // import
         TOKEN_FROM, // import
+        TOKEN_EXPORT, // export
         TOKEN_STRUCT, // struct
         TOKEN_TRUE, // True
         TOKEN_FALSE, // False
@@ -104,6 +105,7 @@ static const char *TOKEN_TO_STRING[]={
     "return",
     "import",
     "from",
+    "export",
     "struct",
     "true",
     "false",

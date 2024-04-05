@@ -286,6 +286,7 @@ ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_FOR : return parser_parse_for(parser);break;
         case TOKEN_BREAK : return parser_parse_break(parser);break;
         case TOKEN_FROM : return parser_parse_include(parser);break;
+        case TOKEN_EXPORT : return parser_parse_export(parser);break;
         case TOKEN_ID :
         case TOKEN_INTEGER:
         case TOKEN_FLOAT:
@@ -1309,6 +1310,32 @@ ast_t * parser_parse_include(parser_t *parser){
     return include;
 }   
 
+
+ast_t * parser_parse_export(parser_t *parser){
+    ast_t * export = NEW_OBJECT(AST_EXPORT,parser);
+    EAT(parser);
+
+
+    parser_eat(TOKEN_DOUBLE_COLON,parser,"%s : unexpected token `::` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+
+    export->list_compound = __init__list__(sizeof(struct AST_STRUCT*));
+    parser_eat(TOKEN_LBRACE,parser,"%s : unexpected token `[` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+
+    if(TYPE(parser) != TOKEN_RBRACE){
+        ast_t * id = parser_parse_variable(parser);
+        List_Append(export->list_compound,id);
+        while (TYPE(parser) == TOKEN_COMA){
+            if(TYPE(parser) == TOKEN_COMA)
+                EAT(parser);
+            
+            id = parser_parse_variable(parser);
+            List_Append(export->list_compound,id);
+        }
+    }
+
+    parser_eat(TOKEN_RBRACE,parser,"%s : unexpected token `]` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+    return export;
+}
 
 
 ast_t * makeAst(const char * chaine){

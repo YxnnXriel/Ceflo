@@ -1,5 +1,5 @@
-from lib.math import *
+from lib.math import Math
 
-var a = Math.log10(23)
+var a = Math.log10(90)
 
 println(a)

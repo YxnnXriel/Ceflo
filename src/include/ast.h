@@ -44,6 +44,7 @@
         AST(AST_BREAK)  \
         AST(AST_ASSIGNEMENT)  \
         AST(AST_INCLUDE)  \
+        AST(AST_EXPORT)  \
         AST(AST_STRUCT_DEFINITION)  \
         AST(AST_STRUCT)  \
         AST(AST_SELF)  \
