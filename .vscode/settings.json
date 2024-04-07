@@ -25,6 +25,7 @@
         "stdlib.h": "c",
         "token.h": "c",
         "str.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "dlfcn.h": "c"
     }
 }

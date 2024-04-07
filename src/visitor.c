@@ -13,7 +13,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
+
+#ifdef LINUX
+#define LINUX
+    #include <dlfcn.h>
+#endif
 
 #include "include/visitor.h"
 #include "include/ast.h"
@@ -195,6 +199,9 @@ int  visitor_visit_code(ast_t* node){
 
 }
 
+
+#ifdef LINUX
+#define LINUX
 static ast_t* dll_add_to_visitor(visitor_t *visitor,ast_t *hd,const char *chaine ){
 
     ast_t *func_dll = newAst(AST_FUNCTION_DLL);
@@ -253,6 +260,7 @@ static ast_t* visitor_visit_dll_import(visitor_t *visitor , ast_t* node){
     return node;
 }
 
+#endif
 
 //                          ===================================== $COMPOUND ==============================================
 
@@ -1768,7 +1776,6 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 }
 
 
-
 static int include_add_value(visitor_t *visitor , visitor_t * vs ,const char *chaine, ast_t * node){
 
     int type = 0;
@@ -1794,13 +1801,18 @@ static int include_add_value(visitor_t *visitor , visitor_t * vs ,const char *ch
 }
 
 
+
 ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
 
     // TODO: ajouter un correspondeur de fichier (pour les multiple inclusion)
 
-    if(node->is_dll)
-        return visitor_visit_dll_import(visitor,node);
 
+    #ifdef LINUX
+    #define LINUX
+
+        if(node->is_dll)
+            return visitor_visit_dll_import(visitor,node);
+    #endif
 
     lexer_t lex;
 	newLexer(&lex,node->variable_name);

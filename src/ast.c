@@ -15,7 +15,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
+
+#ifdef LINUX
+#define LINUX
+    #include <dlfcn.h>
+#endif
+
 
 #include "include/ast.h"
 #include "include/scope.h"
@@ -811,10 +816,13 @@ void freeAst(ast_t *node){
         free(node->struct_definition_item);
     }
 
-    if(node->type == AST_DLL){
-        if(node->dll_handle != NULL)
-            dlclose(node->dll_handle);
-    }
+    #ifdef LINUX
+    #define LINUX
+        if(node->type == AST_DLL){
+            if(node->dll_handle != NULL)
+                dlclose(node->dll_handle);
+        }
+    #endif
 
 }
 

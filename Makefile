@@ -4,9 +4,10 @@ CCC = i686-w64-mingw32-gcc
 EXEC = Ceflo
 FILE = test.cf
 DEBUG = -DDEBUG_CEFLO
+LINUX = -DLINUX
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
-CFLAGS= -Wextra -std=c11 -pedantic -ggdb 
+CFLAGS= -Wextra -std=c11 -pedantic -ggdb $(LINUX)
 
 all : $(EXEC)
 %.o : %.c include/*.h
@@ -16,7 +17,7 @@ $(EXEC):$(OBJ)
 
 cls :
 	-rm src/*.o
-	-rm $(EXEC)
+	# -rm $(EXEC)
 
 publish :
 	cp ./$(EXEC)  CefloV2/Linux
