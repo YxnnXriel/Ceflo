@@ -31,6 +31,7 @@
         AST(AST_LIST)   \
         AST(AST_OBJ)   \
         AST(AST_LFUNC)   \
+        AST(AST_GENERIC)   \
         AST(AST_OBJ_ACCESS)   \
         AST(AST_LIST_ACCESS)   \
         AST(AST_LIST_ASSIGNEMENT)   \
@@ -74,9 +75,23 @@ typedef enum{
     OBJECT,
     LFUNC,
     DLL,
+    GENERIC,
 }type_ceflo;
 
 int type_ceflo_convert_to_type(const char *type);
+
+static const char *TYPE_CEFLO_TO_STRING[] ={
+    "none",
+    "bool",
+    "char",
+    "number",
+    "string",
+    "list",
+    "object",
+    "lfunc",
+    "dll",
+    "generic"
+};
 
 
 struct AST_STRUCT;
@@ -115,6 +130,7 @@ typedef struct AST_TYPE_VALUE{
         Obj_t ObjectValue;
         struct AST_STRUCT *lfuncValue;
         celfo_func_t dll_funcValue; // la fonction dll
+        void *GenericValue;
     }as;
 }Value_t;
 
@@ -338,6 +354,18 @@ void Value_incref(ast_t * value);
 bool Value_decref(ast_t * value);
 
 
+// EXPr
+
+
+
+// IO
+
+bool fprintlist(FILE* fic,ast_t * value);
+void fprintValueAst(FILE *fic,ast_t * value);
+bool fprintObj(FILE * fic,ast_t * value);
+
+
+
 void newList_Ast(list_ast_t *list);
 int List_Ast_Append(list_ast_t *list , ast_t *ast);
 ast_t * List_Ast_Get(list_ast_t *list , int index);
@@ -404,6 +432,8 @@ ast_t *ast_cpy_for(ast_t *ast , struct SCOPE_STRUCT * scope);
 // API
 
 ast_t * makeNumber(double x);
-
-
+ast_t * makeGeneric(void * x);
+ast_t * makeError();
+bool api_check_params_function(struct VISITOR_STRUCT * vs ,  ast_t * node,list_ast_t * args, uint8_t * pattern,int lenght);
+bool api_check_param_function(struct VISITOR_STRUCT * vs ,  ast_t * node,ast_t * args, uint8_t pattern , int position);
 #endif

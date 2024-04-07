@@ -4,6 +4,7 @@
 
     #include <stdbool.h>
     #include <stdint.h>
+    #include <stddef.h>
     #include "str.h"
 
     void allowChar(char ** chaine , const char *value);

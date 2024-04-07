@@ -15,6 +15,7 @@
 
                         #include "str.h"
                         #include "token.h"
+                        #include "common.h"
 
     typedef struct{
         char *fileCode;

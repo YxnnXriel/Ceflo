@@ -288,6 +288,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_RETURN:
         case AST_BREAK:
         case AST_LFUNC:
+        case AST_GENERIC:
             return visitor_visit_data(visitor,node);break;
         case AST_COMPOUND: return visitor_visit_compound(visitor,node);break;
         case AST_STRUCT_DEFINITION: return visitor_visit_struct_definition(visitor,node);break;
@@ -362,6 +363,7 @@ ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
                     noeud->is_return_value =  false;
                 }
                 else{
+                    // noeud->is_return_value =  false;
                     return noeud ;
                 }
             }else{
@@ -652,12 +654,19 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
 
     ast_t * value = NULL;
 
+
     for (int i = 0; i < structDef->struct_definition_item->Size; i++){
         ast_t *item = List_Get(structDef->struct_definition_item,i);
+        
         if(item->type == AST_FUNCTION_DEFINITION){
-            if(strcmp("__init__",item->function_definition_name) == 0 && init == NULL){
-                if(node->function_call_args.size == item->function_defintion_args.size)
+            if(strcmp("__init__",item->function_definition_name) == 0){
+                if(init != NULL)
+                    continue;
+
+                if(node->function_call_args.size == item->function_defintion_args.size){
                     init = item;
+                }
+
                 continue;
             }
 
@@ -670,17 +679,18 @@ ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
                 newObj->__cast__ = item;
                 continue;
             }
-
         }
 
 
-        value =  ast_copy(item,visitor->global_scope);
+        value =  ast_copy(item,NULL);
+        
         visitor_visit(
             &vs,
             value
         );
     }
     obj->scope->scope_parent = NULL;
+
 
     if(init != NULL){
 
@@ -1150,9 +1160,6 @@ ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method ,
             exit(1);
         }
 
-
-
-
         // printf("[%s]\n",func->function_definition_name);
 
         for (int i = 0; i < (int) args->size; i++){
@@ -1396,24 +1403,20 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     }
 
     if(functionDef->type == AST_FUNCTION_DLL){
+
         ast_t * f = functionDef->value.as.dll_funcValue(
             visitor,
             node,
             &node->function_call_args
         );
         addAstToDoublePile(f);
+        if(f->type == AST_NOOP){
+            clear_ceflo_clean();
+            exit(1);
+        }
         return f;
     }
 
-    // scope_t * newscope = newScope();
-    // int visitorScopeCount = visitor->global_scope->countScope;
-    // if(visitorScopeCount <= 1){
-    //     newscope->countScope = functionDef->function_definition_body->countScope + visitorScopeCount;
-    // }
-    
-    // je faisait une copie , c'est plus valid
-    // ast_t *newFunction = ast_copy(functionDef,newscope);
-    
     if(node->function_call_args.size != functionDef->function_defintion_args.size){
         Print_visitor_error(
             node->line,
@@ -1430,71 +1433,6 @@ ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
     }
 
     return visitor_visit_function(visitor,functionDef,&node->function_call_args);
-    // for (int i = 0; i < (int) node->function_call_args.size; i++){
-        
-    //     ast_t *args = List_Ast_Get(&functionDef->function_defintion_args,i);
-
-    //     char * variable_name = args->variable_name;
-    //     ast_t * value =  visitor_visit(visitor,List_Ast_Get(&node->function_call_args,i));;
-    //     ast_t * expr = List_Ast_Get(&node->function_call_args,i);
-
-    //     if(args->variable_definition_static_type != NONE){
-
-    //         ast_t *res = typer_caste_value(args->variable_definition_static_type + 4,&value);
-    //         if(res == NULL && args->variable_definition_static_type + 4 == AST_OBJ ){
-    //             res = typer_caste_value_try_obj(AST_OBJ,&value,args);
-    //         }
-    //         if(res == NULL){
-    //             Print_visitor_error(
-    //                 args->line,
-    //                 args->colone,
-    //                 "./Ceflo",
-    //                 "casting du type impossible !\n"
-    //             );
-
-    //             clear_ceflo_clean();
-    //             exit(1);
-    //         }
-    //     }
-
-        
-
-    //     scope_append_variable_definition(
-    //         newscope,
-    //         variable_name,
-    //         value
-    //     );
-    // }
-
-    // visitor_t visit;
-    // newVisitorWithScope(&visit,newscope);
-    // // je faisait une copie or je pouvais parcourir cette fonction avec une nouvelle porter de definition de varaible
-    // visit.global_scope->countScope = functionDef->function_definition_body->countScope; 
-    // // visit.global_scope->countScope = newscope->countScope;
-    // visit.global_scope->scope_parent = visitor->global_scope;
-
-    // ast_t *returnValue =  visitor_visit(&visit,functionDef->function_definition_body);   
-    
-    // freeSingleScope(newscope);
-    // // freeSingleAst(newFunction);
-
-    // returnValue = is_function_return_type(visitor,functionDef,returnValue);
-
-    // if(returnValue == NULL){
-    //     Print_visitor_error(
-    //         node->line,
-    //         node->colone,
-    //         "./Ceflo",
-    //         "func %s : retourne une value precise !\n",
-    //         functionDef->function_definition_name
-    //     );
-    //     clear_ceflo_clean();
-    //     exit(1);
-    // }
-
-
-
-    // return returnValue;
 }
 
 
@@ -1531,6 +1469,7 @@ void visitor_visit_tree(visitor_t *visitor,Value_t * value, Value_t * left , tok
         case NONE:
             performe_visit_tree_none(value,left,op,right);
             break;
+
         default :
             Print_visitor_error(
                 0,
@@ -1560,7 +1499,6 @@ ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
 
     ast_t *left = visitor_visit(visitor,node->left);
     ast_t *right = visitor_visit(visitor,node->right);
-
 
     visitor_visit_tree(
         visitor,
@@ -1726,14 +1664,17 @@ ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
 
     while (visitor_visit_evaluate_expr(visitor_visit(&vsFor,node->for_condition))){
         ast_t *res =  visitor_visit(&vsFor,node->for_body);
-        if(res->is_return_value)
+        if(res->is_return_value){
+            res->is_return_value = false;
             return res;
+        }
         if(res->type == AST_BREAK){
             break;
         }
         visitor_visit(&vsFor,node->for_solve);
     }
 
+    
     freeSingleScope(scope);
     return node;
 }
@@ -1767,12 +1708,9 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
     ast_t * variable = visitor_visit(visitor,node->assignement_left);
 
-
-
     scope_t *scope = variable->scope;
 
     ast_t * value = visitor_visit(visitor,node->assignement_value);
-
 
     if(node->op.type != TOKEN_ID){
         ast_t * binop = newAst(AST_BINOP);
@@ -1781,6 +1719,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
         binop->op = node->op;
         value =  visitor_visit(visitor,binop);
     }
+
 
     if(variable->variable_definition_static_type != NONE){
         ast_t * res = typer_caste_value(variable->variable_definition_static_type + 4,&value);
@@ -1817,7 +1756,7 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
     );
     
 
-    return value;
+    return node;
 }
 
 

@@ -4,6 +4,7 @@
 #include "include/value_expr.h"
 
 
+
 void performe_visit_tree_char(Value_t * value, Value_t * left , token_t * op, Value_t * right){
         switch (right->type){
             case NUMBER:

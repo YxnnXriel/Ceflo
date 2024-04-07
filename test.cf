@@ -1,7 +1,6 @@
-from lib.math import Math
+from lib.file import STD
 
+var IO = new STD();
 
-
-
-println(Math.Pi)
+file_fprintf(IO.stdout,"bonjour")
 

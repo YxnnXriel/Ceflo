@@ -3,6 +3,7 @@
 #include "include/scope.h"
 #include "include/ast.h"
 #include "include/error.h"
+#include "include/clear.h"
 
 
 static scope_t *current_scope;
@@ -101,19 +102,20 @@ void scope_append_function_definition(scope_t *scope , const char *key , ast_t *
     if(stk_val != NULL){
         printf("MultipleFunctionDefinition : <%s>\n",stk_val->function_definition_name);
         Print_visitor_error(
-            0,
-            0,
+            stk_val->line,
+            stk_val->colone,
             "./Ceflo",
             "Deja Definit ici \n",0
         );
 
         Print_visitor_error(
-            0,
-            0,
+            value->line,
+            value->colone,
             "./Ceflo",
             "Redefinit encore la\n",0
         );
-        exit(1);
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
     }else{
         Hash_Append(&scope->function_definition,key,value);   
     }
@@ -137,19 +139,20 @@ void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *va
     if(stk_val != NULL){
         printf("MultipleStructDefinition : <%s>\n",stk_val->struct_definition_name);
         Print_visitor_error(
-            0,
-            0,
+            stk_val->line,
+            stk_val->colone,
             "./Ceflo",
             "Deja Definit ici \n",0
         );
 
         Print_visitor_error(
-            0,
-            0,
+            value->line,
+            value->colone,
             "./Ceflo",
             "Redefinit encore la\n",0
         );
-        exit(1);
+        clear_ceflo_clean();
+        exit(EXIT_FAILURE);
     }else{
         Hash_Append(&scope->struct_definition,value->struct_definition_name,value);   
     }

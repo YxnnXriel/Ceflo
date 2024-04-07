@@ -221,6 +221,8 @@ uint8_t type_ceflo_to_ast(uint8_t type){
         case STRING: return AST_STRING;
         case LIST: return AST_LIST;
         case OBJECT: return AST_OBJ;
+        case LFUNC: return AST_LFUNC;
+        case GENERIC: return AST_GENERIC;
         default : return AST_OBJ;
     }
 }
@@ -234,6 +236,7 @@ uint8_t ast_type_to_ceflo(uint8_t type){
         case AST_STRING: return STRING;
         case AST_LIST: return LIST;
         case AST_OBJ: return OBJECT;
+        case AST_GENERIC : return GENERIC;
         default : return OBJECT;
     }
 }
@@ -407,6 +410,34 @@ bool printObj(ast_t * value){
     return false;
 }
 
+bool fprintObj(FILE * fic,ast_t * value){
+    ast_t *str_func = NULL; 
+
+    if(value->value.type == OBJECT && value->value.as.ObjectValue.__str__ != NULL){
+        visitor_t visi;
+        Obj_t * self = &value->value.as.ObjectValue;
+        visi.global_scope = self->self;
+        str_func =  value->value.as.ObjectValue.__str__;
+        
+        if(!str_func->is_define_self){
+            self = NULL;
+        }
+
+        fprintValueAst(
+            fic,
+            visitor_visit_method(
+                NULL,
+                self,
+                str_func,
+                NULL
+            )
+        );
+        return true;
+    }
+
+    return false;
+}
+
 
 /**
  * @brief print list Value
@@ -433,6 +464,21 @@ bool printlist(ast_t * value){
     return true;
 
 }
+
+bool fprintlist(FILE* fic,ast_t * value){
+    if(value->value.as.listValue->Size == 0){
+        fprintf(fic,"Vide !");
+    }else{
+        for (int i = 0; i < value->value.as.listValue->Size; i++){
+            ast_t * child = List_Get(value->value.as.listValue,i);
+            fprintValueAst(fic,child);
+        }
+    }
+    printf(" ]");
+    return true;
+
+}
+
 
 
 bool printlistByeValue(Value_t * value){
@@ -481,6 +527,33 @@ void printValueAst(ast_t * value){
             }break;
             default:
                 printf("<%p>",(void *)value);
+            break;
+    }
+    
+}
+
+void fprintValueAst(FILE *fic,ast_t * value){
+
+    if(value == NULL)
+        return;
+
+    switch (value->type){
+            case AST_NONE : fprintf(fic,"none");break;
+            case AST_CHAR : fprintf(fic,"%c",value->value.as.charValue);break;
+            case AST_NUMBER : fprintf(fic,"%g",value->value.as.numberValue);break;
+            case AST_STRING : fprintf(fic,"%s",value->value.as.stringValue->str);break;
+            case AST_BOOL : fprintf(fic,"%s",value->value.as.booleanValue == 1 ? "true" : "false");break;
+            case AST_LIST: fprintlist(fic,value);break;
+            case AST_OBJ:{
+                if(printObj(value) == false){
+                    fprintf(fic,"obj");
+                    if(value->value.as.ObjectValue.obj_name != NULL)
+                        fprintf(fic,"(%s)",value->value.as.ObjectValue.obj_name);
+                    fprintf(fic,":<%p>",(void *)value);
+                }
+            }break;
+            default:
+                fprintf(fic,"<%p>",(void *)value);
             break;
     }
     
@@ -869,6 +942,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_NUMBER] = {&ast_cpy_Value},
     [AST_STRING] = {&ast_cpy_Value},
     [AST_OBJ] = {&ast_cpy_Value},
+    [AST_GENERIC] = {&ast_cpy_Value},
     [AST_NONE] = {&ast_cpy_Value},
     [AST_LIST] = {&ast_cpy_Value},
     [AST_FUNCTION_DLL] = {&ast_cpy_Value},
@@ -891,7 +965,6 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_LIST_ACCESS] = {&ast_cpy_list_access},
     [AST_LIST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
     [AST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
-
     [AST_NOOP] = {NULL }
 };
 
@@ -1063,6 +1136,8 @@ ast_t *ast_cpy_Value(ast_t * ast, struct SCOPE_STRUCT * scope){
 
         newValue(&a->value,LFUNC);
         a->value.as.lfuncValue = ast_copy(ast->value.as.lfuncValue,scope);
+    }else if (ast->type == AST_GENERIC){
+        a->value = ast->value;
     }else{
         a->value = ast->value;
     }
@@ -1255,4 +1330,66 @@ ast_t * makeNumber(double x){
     new->value.as.numberValue = x;
     new->value.type = NUMBER;
     return new;
+}
+
+ast_t * makeGeneric(void * x){
+    ast_t * new = newAst(AST_GENERIC);
+    new->value.as.GenericValue = x;
+    new->value.type = GENERIC;
+    return new;
+}
+
+ast_t * makeError(){
+    ast_t * new = newAst(AST_NOOP);
+    return new;
+}
+
+
+
+bool api_check_param_function(struct VISITOR_STRUCT * vs ,  ast_t * node,ast_t * args, uint8_t pattern , int position){
+
+    args = visitor_visit(vs,args);
+    uint8_t type = type_ceflo_to_ast(pattern);
+    if(args->type != type){
+        fprintf(
+            stderr,
+            "%s : argument %d must be %s type\n",
+            node->function_call_name,
+            position,
+            TYPE_CEFLO_TO_STRING[pattern]
+        );
+        return false;
+    }
+
+    return true;
+}
+
+
+bool api_check_params_function(struct VISITOR_STRUCT * vs ,  ast_t * node,list_ast_t * args, uint8_t * pattern,int lenght){
+    if(lenght != (int)args->size){
+        fprintf(stderr,"%s : missing arguments, there is %ld argument but this function take %d argument\n",
+            node->function_call_name,
+            args->size,
+            lenght
+        );
+        return false;
+    }
+
+    for (int i = 0; i < lenght; i++){
+        ast_t * item = List_Ast_Get(args,i);
+        item = visitor_visit(vs,item);
+        uint8_t type = type_ceflo_to_ast(pattern[i]);
+        
+        if(item->type != type && type != AST_NONE){
+            fprintf(stderr,
+            "%s : argument %d must be %s type\n",
+                node->function_call_name,
+                i+1,
+                TYPE_CEFLO_TO_STRING[pattern[i]]
+            );
+            return false;
+        }
+    }
+
+    return true;
 }
