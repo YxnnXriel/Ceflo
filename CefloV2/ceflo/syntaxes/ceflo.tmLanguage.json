@@ -1,0 +1,202 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "CeFlo",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#reserved-words"
+		},{
+			"include": "#operators"
+		},
+		{
+			"include": "#Nombre"
+		},
+		{
+			"include": "#types"	
+		},
+		{
+			"include": "#function-definition"
+		},
+		{
+			"include": "#annotations"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+			{
+				"name": "keyword.control.untitled.ceflo",
+				"match": "\\b(if|else|while|for|return|break|continue|var|func)\\b"
+			},
+			{
+				"name": "comment.line.ceflo",
+				"match": "//.*$"
+			},
+			{
+				"name": "comment.block.ceflo",
+				"begin": "/\\*",
+				"end": "\\*/"
+			},
+			{
+				"name" : "keyword.operator.ceflo",
+				"match": "\\b(and|or)\\b"
+			},		
+			{
+				"name": "keyword.type.ceflo",
+				"match": "\\b(bool|char|int|float|str|lfunc)\\b"
+			},
+			{
+				"name" : "constant.language.ceflo",
+				"match": "\\b(true|false|none)\\b"
+			},
+			{
+				"name": "keyword.control.preprocessor.ceflo",
+				"match": "\\b(from|import|export)\\b"
+
+			},
+			{
+				"name": "keyword.control.additional.ceflo",
+				"match": "\\b(switch|case|default)\\b"
+			},
+			{
+                "name": "keyword.control.new.ceflo",
+                "match": "\\bnew\\b"
+            },
+			{
+				"name": "variable.language.ceflo",
+				"match": "\\b(self)\\b"
+			},
+			{
+				"name": "keyword.control.class.ceflo",
+				"match": "\\b(struct)\\b"
+			}
+			
+		]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.ceflo",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"name": "constant.character.escape.ceflo",
+							"match": "\\."
+						}
+					]
+				},
+				{
+					"name" : "string.quoted.single.ceflo",
+					"begin": "'",
+					"end": "'",
+					"patterns": [
+						{
+							"name": "constant.character.escape.ceflo",
+							"match": "\\."
+						}
+					]
+				},
+				{
+					"name": "string.regexp.ceflo",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"name": "constant.character.ceflo",
+							"match": "\\{[^{}]+\\}"
+						},
+						{
+							"name": "constant.character.escape.ceflo",
+							"match": "\\."
+						}
+					]
+				}
+			]
+		},
+		"reserved-words" :{
+			"patterns": [
+			{
+				"name":"entity.name.function.member.ceflo",
+				"match": "\\b(println|print|input|printf)\\b"
+			},{
+				"name": "entity.name.function.special-method.ceflo",
+				"match": "\\b(__init__|__str__)\\b"
+			},
+			{
+                "name": "entity.name.function.method.ceflo",
+                "match": "\\.length\\(\\)"
+            },
+			{
+                "name": "entity.name.function.method.ceflo",
+                "match": "\\.append\\(\\)"
+            },
+            {
+                "name": "entity.name.function.method.ceflo",
+                "match": "\\.remove\\(\\)"
+            },
+            {
+                "name": "entity.name.function.method.ceflo",
+                "match": "\\.sort\\(\\)"
+            }		
+		]
+		},
+		"operators":{
+			"patterns": [
+				{
+					"match": "%=|\\+=|-=|\\*=|(?<!\\()/=",
+					"name":"keyword.operator.ceflo"
+				},
+				{
+					"match": "!=|<=|>=|==|<|>",
+					"name":"keyword.operator.ceflo"
+				},{
+					"match": "&&|::|@",
+					"name":"keyword.operator.ceflo"
+				},{
+					"match": "%|\\*|/|-|\\+",
+					"name":"keyword.operator.ceflo"
+				}
+				
+			]
+		},
+		"Nombre": {
+			"name": "constant.numeric.ceflo",
+			"match": "\\b[\\d]+\\b"
+		},
+		"types": {
+			"patterns": [
+				{
+					"name": "keyword.type.ceflo",
+					"match": "\\b(bool|char|int|float|str|lfunc)\\b"
+				}
+			]
+		},
+		"function-definition": {
+			"patterns": [
+				{
+					"name": "entity.name.function.ceflo",
+					"match": "\\b([a-zA-Z_]+[a-zA-Z0-9_]*)\\s*\\("
+				},
+				{
+					"name": "entity.name.function.ceflo",
+					"match": "\\bfunc\\s+([a-zA-Z_]+[a-zA-Z0-9_]*)\\s*->\\s*([a-zA-Z_]+[a-zA-Z0-9_]*)\\s*,\\s*([a-zA-Z_]+[a-zA-Z0-9_]*)\\s*:\\s*([a-zA-Z_]+[a-zA-Z0-9_]*)\\s*\\{.*?\\}"
+				}
+			]
+		},
+		"annotations": {
+			"patterns": [
+				{
+					"name": "meta.annotation.ceflo",
+					"match": "@([a-zA-Z_]+[a-zA-Z0-9_]*)\\(\\)"
+				}
+			]
+		}
+	},
+	"scopeName": "source.cf"
+}

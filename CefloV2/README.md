@@ -28,6 +28,38 @@ Remarquez que nous sommes actuellement dans la version 2 du langage, également 
 
 Avant de l'essayer, il est recommandé de parcourir les exemples rapides fournis pour se familiariser avec le langage. Les exemples proposés couvrent les bases de la programmation ainsi que des éléments avancés, déjà intégrés dans certains cas.
 
+
+
+## Installation des fichiers
+
+### Installation sous Linux
+
+1. **Ajout au chemin d'environnement :**
+   - Ajoutez le répertoire `bin/Linux` au chemin d'environnement de votre système.
+   - Dans ce répertoire, vous trouverez également le dossier `lib`. Ajoutez également ce chemin à votre variable d'environnement.
+   - Exemple (bash) :
+     ```bash
+     export PATH=$PATH:/chemin/vers/le/dossier/bin/Linux
+     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/chemin/vers/le/dossier/bin/Linux/lib
+     ```
+
+### Installation sous Windows
+
+1. **Ajout au chemin d'environnement :**
+   - Ajoutez le répertoire `bin/Win` au chemin d'environnement de votre système.
+   - Exemple (PowerShell) :
+     ```powershell
+     $env:Path += ";C:\chemin\vers\le\dossier\bin\Win"
+     ```
+
+## Tester l'exécutable :
+
+- Dans votre terminal, exécutez la commande suivante pour tester l'exécutable :
+  ```cmd 
+    ceflo
+  ```
+
+
 ## Conclusion
 
 CeFlo v2 offre un potentiel prometteur pour les développeurs, malgré son état de développement. Nous continuons à évaluer sa fiabilité et à travailler sur son amélioration continue.
