@@ -1,10 +1,5 @@
 
-/*
-    Tranquille, la fonction main sera proposé en alternative, mais il n est pas disponible pour cette version de CeFlo.
-
-*/ 
 
 
-// NB : vous pouvez ajouter des ';' à la fin des déclarations, ça marche vu que sont créateur fait partie de la sainte paroisse du langage C.
-
-println("Hi Mom !")
+// Affiche le message "Hi Mom !" sur la sortie standard.
+println("Hi Mom !")  // Nul besoin d'importer plusieurs modules, simplement "print" suffit :)

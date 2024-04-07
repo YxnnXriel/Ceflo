@@ -965,6 +965,7 @@ cpy_ast_t list_cpy_ast[] = {
     [AST_LIST_ACCESS] = {&ast_cpy_list_access},
     [AST_LIST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
     [AST_ASSIGNEMENT] = {&ast_cpy_variable_assignement},
+    [AST_TERNARY] = {&ast_cpy_ternary},
     [AST_NOOP] = {NULL }
 };
 
@@ -1321,6 +1322,19 @@ ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope){
     
 }
 
+ast_t * ast_cpy_ternary(ast_t *ast,struct SCOPE_STRUCT *scope){
+    ast_t * a = newAst(ast->type);
+    a->if_expr = ast_copy(a->if_expr,scope);
+    a->if_other = ast_copy(a->if_other,scope);
+    a->else_body = ast_copy(a->else_body,scope);
+
+        cpy_line(a,ast);
+
+    return a;
+}   
+
+
+
 
 // API
 
@@ -1336,6 +1350,13 @@ ast_t * makeGeneric(void * x){
     ast_t * new = newAst(AST_GENERIC);
     new->value.as.GenericValue = x;
     new->value.type = GENERIC;
+    return new;
+}
+
+ast_t * makeString(const char *str){
+    ast_t * new = newAst(AST_STRING);
+    new->value.as.stringValue = new_String(str);
+    new->value.type = STRING;
     return new;
 }
 

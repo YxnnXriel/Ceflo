@@ -56,6 +56,7 @@ typedef enum{
         TOKEN_DOUBLE_COLON , // ::
         TOKEN_DOT , // .
         TOKEN_SEMI, // ;
+        TOKEN_MARK, // ?
         TOKEN_COMA, // , 
         TOKEN_LPARENT,  // (
         TOKEN_RPARENT,  // )
@@ -130,6 +131,7 @@ static const char *TOKEN_TO_STRING[]={
     "::",
     ".",
     ";",
+    "?",
     ",",
     "(",
     ")",

@@ -1,37 +1,41 @@
-//                                                                  CEFLOv2
+
+// Les fonctions et les méthodes suivent la même syntaxe de déclaration.
+// Observez et essayez 
 
 
-/*
-
-    Comme pour les variables, les fonctions peuvent retourner n importe quelle valeur (des mises à jour seront disponibles pour gérer les données).
-    Voici des exemples de déclaration de fonctions et d appel de fonction :
-*/
-
-
-// une procedure
-func hello(){
+// Définition d'une procédure qui ne retourne aucune valeur.
+func SayHello() {
     println("Hello !")
 }
 
-// appel de la procédure
-hello()
-
-
-// une fonction
-func return2(){
-    return '2';
+// On peut également la déclarer sans les parenthèses.
+func SayGoodBye {
+    println("Good bye !")
 }
 
-
-println("la fonction return2 retourne : ",return2());
-
-
-func add(a,b){
-    return a+b;
+// Définition d'une fonction qui retourne une valeur.
+func GiveMePlusOne(x) {
+    return x + 1;
 }
 
-println(add(1,2));
+// On peut également l'écrire sans les parenthèses, bien que cela soit un peu plus complexe, mais on s'y habitue ;)
+func GiveMePlusTwo -> x {
+    return x + 2
+}
 
-// oui oui !!
-println(add("j'ai ",2) ," pains"); //  ==>  j'ai 2 pains
+// Si vous avez plusieurs arguments, vous pouvez les séparer par des virgules.
+func AddValue -> x, y {
+    return x + y
+}
 
+// Pour retourner un type spécifique, ajoutez simplement `:` après les arguments et spécifiez le type désiré.
+func SubValue -> x, y : int {
+    return x - y
+}
+
+// Si vous voulez préciser le type d'une variable.
+func MultValue(x::int, y) : int {
+    return x * y
+}
+
+println(MultValue("90", 34))

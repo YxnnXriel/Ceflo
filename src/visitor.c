@@ -300,6 +300,7 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
         case AST_BINOP: return visitor_visit_binop(visitor,node);break;
         case AST_UNOP: return visitor_visit_unop(visitor,node);break;
         case AST_IF: return visitor_visit_if(visitor,node);break;
+        case AST_TERNARY: return visitor_visit_ternary(visitor,node);break;
         case AST_WHILE: return visitor_visit_while(visitor,node);break;
         case AST_FOR: return visitor_visit_for(visitor,node);break;
         case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);break;
@@ -1623,6 +1624,13 @@ ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
     }
 
     return node;
+}
+
+ast_t * visitor_visit_ternary(visitor_t * visitor,ast_t *node){
+
+    return visitor_visit_evaluate_expr(visitor_visit(visitor,node->if_expr)) ?
+        visitor_visit(visitor,node->if_other):
+        visitor_visit(visitor,node->else_body);
 }
 
 /**

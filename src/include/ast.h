@@ -40,6 +40,7 @@
         AST(AST_RETURN)  \
         AST(AST_UNOP)  \
         AST(AST_IF)  \
+        AST(AST_TERNARY)  \
         AST(AST_WHILE)  \
         AST(AST_FOR)  \
         AST(AST_BREAK)  \
@@ -427,11 +428,13 @@ ast_t *ast_cpy_variable_assignement(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t *ast_cpy_list_access(ast_t *ast , struct SCOPE_STRUCT * scope);
 ast_t * ast_cpy_struct_definition(ast_t *ast,struct SCOPE_STRUCT *scope);
 ast_t *ast_cpy_for(ast_t *ast , struct SCOPE_STRUCT * scope);
+ast_t * ast_cpy_ternary(ast_t *ast,struct SCOPE_STRUCT *scope);
 
 
 // API
 
 ast_t * makeNumber(double x);
+ast_t * makeString(const char *str);
 ast_t * makeGeneric(void * x);
 ast_t * makeError();
 bool api_check_params_function(struct VISITOR_STRUCT * vs ,  ast_t * node,list_ast_t * args, uint8_t * pattern,int lenght);

@@ -100,3 +100,30 @@ struct AST_STRUCT *file_fprintf(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*nod
 
     return makeNumber(1);
 }
+
+struct AST_STRUCT *file_fgetline(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
+
+        uint8_t check = GENERIC;
+
+    ast_t * arg1 =  visitor_visit(vs, List_Ast_Get(args,0));
+    
+    api_check_param_function(
+        vs,
+        node,
+        arg1,
+        check,
+        1
+    );
+
+    FILE * fic = arg1->value.as.GenericValue;
+
+    ast_t * line = NULL;
+
+    char buffer[BUFSIZ];
+
+    fgets(buffer,BUFSIZ-1,fic);
+
+    line = makeString(buffer);
+
+    return line;
+}

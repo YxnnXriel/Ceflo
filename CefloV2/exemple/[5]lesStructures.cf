@@ -1,95 +1,81 @@
+// Les structures
 
-//                                                                  CEFLOv2
+// Elles ont le comportement d'objets, mais ce ne sont pas des objets comme dans les langages tels que Java.
+// Observons.
 
-
-/*
-    La déclaration d une structure se fait comme suite :
-*/
-
-
-struct maStructure {
-    var l
+// Définition d'une structure simple.
+struct Point {
+    var x
+    var y
 }
 
-// simplement !!
-
-
-// Avec la clé new, on peut créer une instance de structure
-var structure = new maStructure();
-
-
-
-
-
-/*
-    On peut créer un crée une fonction qui va nous aider à initialiser les variables 
-    de la structure un peu comme un constructeur ou on peut directement donner des valeurs par défaut.
-    Voici deux exemples de structure :
-*/
-
-// Initialiser avec des valeurs par défaut
-struct Personnage{
-    var Nom = "Tim"
-    var PointDeVie = 100
-    var Attack = 12
-    var Defense = 7
+// On peut aussi initialiser des valeurs par défaut.
+struct Game {
+    var gameOver = false;
 }
 
-// avec "constructeur"
+struct Arme {
+    var name
+    var degaArme::int  // Je peux aussi préciser le type de la variable.
+}
 
-struct Article{
-    var Nom_Article;
-    var Prix
-    var Qte
+// On peut également ajouter des fonctions et surtout initialiser des valeurs via une fonction d'initialisation.
+struct Personnage {
+    var name
+    var vie::int = 100
+    var pts::int
+    var arme::Arme
 
-
-    // la fonction __init__ sera appeler pour initialiser chaque variable
-    func __init__(nom,prix,qte){
-        Nom_Article = Nom_Article
-        Prix = prix
-        Qte = qte
+    // La fonction d'initialisation doit être cette méthode.
+    // Vous pouvez la surcharger, cela fonctionne aussi bien.
+    // Notez aussi l'ajout de self, c'est un pointeur sur l'objet lui-même, donc vous pouvez accéder aux éléments avec self.
+    func __init__(self) {
+        self.name = "Inconnu"
+        self.pts = 0
+        self.arme = none
     }
 
-}
+    // Une deuxième surcharge, et oui :)
+    func __init__(self, name) {
+        self.name = name
+        self.pts = 0
+        self.arme = new Arme()
+        self.arme.degaArme = 10
+    }
 
+    func __init__(self, name, arme) {
+        self.name = name
+        self.pts = 0
+        self.arme = arme
+    }
 
-var P1 = new Personnage(); // Tous les champs de P1 seront par défaut tous les éléments initialisés de base dans la structure Personnage.
+    // Cette fonction est utilisée pour le rendu, ce n'est pas une représentation.
+    // Exemple : si vous voulez afficher directement l'instance, cette fonction sera appelée.
+    func __str__(self) {
+        return self.name
+    }
 
-var Art1 = new Article("Pomme de terre",1500,3); // Le constructeur va initialiser les valeurs avec les données passées en argument.
+    // Nous n'avons pas encore ajouté la fonctionnalité de variable par référence.
+    // Elle est juste pour les listes.
+    func Attaque(self, cible::Personnage) {
+        println(self, " attaque ", cible)
+        cible.vie -= self.arme.degaArme
+        self.pts += self.arme.degaArme
 
-
-
-
-
-
-
-
-/*
-    Comment afficher le tous ?
-- vous pouvez définir une fonction qui sera appelée lors de l affichage
-- vous pouvez afficher chaque valeur vous-même en précisant son attribut avec '.'
-    exemples :
-*/
-
-
-
-struct MaDeuxiemeStructure{
-    var T = "MaDeuxiemeStructure"
-
-    // Elle sera appelée pour afficher la structure
-    func __str__(){
-        return T;
+        println("   vie ", cible, " = ", cible.vie)
+        println("   pts ", cible, " = ", cible.pts)
+        println("   vie ", self, " = ", self.vie)
+        println("   pts ", self, " = ", self.pts)
     }
 }
 
-var t = new MaDeuxiemeStructure()
+// On définit un objet comme ça.
+// NB : tous les attributs sont publics, la notion de privée n'existe pas ici.
+var P1 = new Personnage("O-riane")
+var P2 = new Personnage("Oprhée")
+var P3 = new Personnage("Yann Ariel")
 
+// Si je veux accéder aux attributs, je le fais comme ceci.
+P1.Attaque(P2)
 
-println(t) // ==> MaDeuxiemeStructure
-
-
-println(Art1.Nom_Article) // ==> Pomme de terre
-
-
-
-
+// Merci d'avoir suivi ce petit tutoriel.

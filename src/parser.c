@@ -273,8 +273,6 @@ ast_t *parser_parse_compound(parser_t *parser){
  */
 ast_t *parser_parse_statment(parser_t *parser){
 
-
-
     switch(TYPE(parser)){
         case TOKEN_VAR : return parser_parse_variable_definition(parser);break;
         case TOKEN_CONST : return parser_parse_variable_definition(parser);break;
@@ -871,6 +869,26 @@ ast_t *parser_parse_expr(parser_t *parser){
         binop->right = parser_parse_expression(parser);
         value = binop; 
     }
+
+
+    if(TYPE(parser) == TOKEN_MARK){
+        EAT(parser);
+        ast_t * ternary = NEW_OBJECT(AST_TERNARY,parser);
+        ternary->if_expr = value;
+        ternary->if_other = parser_parse_expr(parser);
+
+        if(TYPE(parser) == TOKEN_COLON){
+            parser_eat(TOKEN_COLON,parser,"%s: there is ternary exporession here, put colon here\n",ERROR_TO_STRING[SYNTAX_ERROR],parser->current.value);
+            ternary->else_body = parser_parse_expr(parser);
+        }else{
+            ternary->else_body = NEW_OBJECT(AST_NONE,parser);
+        }   
+
+
+        value = ternary;
+    }
+
+    
     
     return value;
 
@@ -912,8 +930,7 @@ ast_t *parser_parse_expression(parser_t *parser){
         value = binop; 
     }
     
-    
-    
+
     return value;
 }
 
