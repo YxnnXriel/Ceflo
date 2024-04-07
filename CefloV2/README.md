@@ -36,7 +36,7 @@ Avant de l'essayer, il est recommandé de parcourir les exemples rapides fournis
 
 1. **Ajout au chemin d'environnement :**
    - Ajoutez le répertoire `bin/Linux` au chemin d'environnement de votre système.
-   - Dans ce répertoire, vous trouverez également le dossier `lib`. Ajoutez également ce chemin à votre variable d'environnement.
+2.   - Dans ce répertoire, vous trouverez également le dossier `lib`. Ajoutez également ce chemin à votre variable d'environnement.
    - Exemple (bash) :
      ```bash
      export PATH=$PATH:/chemin/vers/le/dossier/bin/Linux
@@ -58,6 +58,9 @@ Avant de l'essayer, il est recommandé de parcourir les exemples rapides fournis
   ```cmd 
     ceflo
   ```
+### Intégration avec Visual Studio Code
+
+Si vous utilisez Visual Studio Code, copiez le dossier `ceflo` qui se trouve dans le répertoire dans le dossier `.vscode/extension`.
 
 
 ## Conclusion
