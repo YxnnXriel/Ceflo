@@ -37,7 +37,7 @@ ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef);
 void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value);
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef);
 void scope_append_function_definition(scope_t *scope , const char *key , ast_t *value);
-
+void scope_modif_variable_definition(scope_t * scope , const char *key , ast_t * value);
 
 ast_t *scope_get_struct_definition(scope_t * scope , const char *structdef);
 void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *value);

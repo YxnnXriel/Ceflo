@@ -884,7 +884,6 @@ ast_t *parser_parse_expr(parser_t *parser){
             ternary->else_body = NEW_OBJECT(AST_NONE,parser);
         }   
 
-
         value = ternary;
     }
 

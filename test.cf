@@ -1,49 +1,12 @@
-func Rule30(row) {
-    var new_row = []
-    var size = row.lenght()
-    for var i = 0; i < size; i += 1 {
-        var left = (i > 0) ? row[i - 1] : 0
-        var center = row[i]
-        var right = (i < size - 1) ? row[i + 1] : 0
 
-        var new_cell = ((left != (center and right)) != 0) ? 1 : 0
-        new_row.append(new_cell)
+
+
+
+func fiboLoop(n){
+    if n == 0 or n == 1{
+        return 1
     }
-    return new_row
+    return n * fiboLoop(n-1)
 }
 
-func Rule110(row) {
-    var new_row = []
-    var size = row.lenght()
-    for var i = 0; i < size; i+=1 {
-        var left = (i > 0) ? row[i - 1] : 0
-        var center = row[i]
-        var right = (i < size - 1) ? row[i + 1] : 0
-
-        var new_cell = (left != center) or (center != right) ? 1 : 0
-        new_row.append(new_cell)
-    }
-    return new_row
-}
-
-
-func PrintRow(row) {
-    var size = row.lenght()
-    for var i = 0; i < size; i += 1 {
-        print(row[i])
-    }
-    println()
-}
-
-var initial_row = []
-for var i = 0; i < 50; i += 1 {
-    initial_row.append(0)
-}
-initial_row[25] = 1
-
-PrintRow(initial_row)
-
-for var j = 0; j < 25; j += 1 {
-    initial_row = Rule30(initial_row)
-    PrintRow(initial_row)
-}
+println(fiboLoop(9))

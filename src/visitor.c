@@ -284,6 +284,9 @@ ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
     // if(node->type == AST_FUNCTION_CALL){
     //     printf("=== %s === \n",node->function_call_name);
     // }
+    // if(node->type == AST_VARIABLE){
+    //     printf("=== %s === \n",node->variable_name);
+    // }
 
 
     switch (node->type){
@@ -1666,20 +1669,12 @@ ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
 
 
 ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
-    scope_t * scope = newScope();
-    visitor_t vsFor;
-    newVisitorWithScope(&vsFor,scope);
-    scope->scope_parent = visitor->global_scope;
-
-    visitor_visit(
-        &vsFor,
-        node->for_init
-    );
-
-
-
-    while (visitor_visit_evaluate_expr(visitor_visit(&vsFor,node->for_condition))){
-        ast_t *res =  visitor_visit(&vsFor,node->for_body);
+ 
+    for (ast_t * i = visitor_visit(visitor,node->for_init) ; 
+        visitor_visit_evaluate_expr(visitor_visit(visitor,node->for_condition)); 
+        visitor_visit(visitor,node->for_solve))
+    {
+        ast_t *res =  visitor_visit(visitor,node->for_body);
         if(res->is_return_value){
             res->is_return_value = false;
             return res;
@@ -1687,11 +1682,9 @@ ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
         if(res->type == AST_BREAK){
             break;
         }
-        visitor_visit(&vsFor,node->for_solve);
+
     }
 
-    
-    freeSingleScope(scope);
     return node;
 }
 
@@ -1715,18 +1708,18 @@ ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
 
 static void visitor_visit_assignement_value(ast_t * node , ast_t *value){
     value->is_for_variable = node->is_for_variable;
-    if(node->variable_definition_static_type != NONE)
-        value->variable_definition_static_type = node->variable_definition_static_type;
-
+    value->scope = NULL;
+    value->variable_definition_static_type = node->variable_definition_static_type;
 }
 
 ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
+
+    ast_t * value = visitor_visit(visitor,node->assignement_value);
 
     ast_t * variable = visitor_visit(visitor,node->assignement_left);
 
     scope_t *scope = variable->scope;
 
-    ast_t * value = visitor_visit(visitor,node->assignement_value);
 
     if(node->op.type != TOKEN_ID){
         ast_t * binop = newAst(AST_BINOP);
@@ -1765,7 +1758,9 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
     visitor_visit_assignement_value(variable,value);
 
-    scope_append_variable_definition(
+
+
+    scope_modif_variable_definition(
         scope,
         variable->assignement_variable_name,
         value

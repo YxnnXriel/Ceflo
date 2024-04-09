@@ -17,7 +17,7 @@ $(EXEC):$(OBJ)
 
 cls :
 	-rm src/*.o
-	# -rm $(EXEC)
+	-rm $(EXEC)
 
 publish :
 	cp ./$(EXEC)  CefloV2/bin/Linux

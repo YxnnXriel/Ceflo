@@ -26,6 +26,8 @@
         "token.h": "c",
         "str.h": "c",
         "cstdlib": "c",
-        "dlfcn.h": "c"
+        "dlfcn.h": "c",
+        "parser.h": "c",
+        "debug.h": "c"
     }
 }

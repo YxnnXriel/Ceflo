@@ -73,6 +73,10 @@ void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *
     }
 }
 
+void scope_modif_variable_definition(scope_t * scope , const char *key , ast_t * value){
+    Hash_Modif(&scope->variable_definition,key,value);
+}
+
 
 
 ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef){
