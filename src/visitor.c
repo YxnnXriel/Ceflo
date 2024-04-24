@@ -1669,12 +1669,16 @@ ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
 
 
 ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
- 
-    for (ast_t * i = visitor_visit(visitor,node->for_init) ; 
-        visitor_visit_evaluate_expr(visitor_visit(visitor,node->for_condition)); 
-        visitor_visit(visitor,node->for_solve))
+    
+    visitor_t vs;
+    newVisitor(&vs);
+    vs.global_scope->scope_parent = visitor->global_scope;
+
+    for (ast_t * i = visitor_visit(&vs,node->for_init) ; 
+        visitor_visit_evaluate_expr(visitor_visit(&vs,node->for_condition)); 
+        visitor_visit(&vs,node->for_solve))
     {
-        ast_t *res =  visitor_visit(visitor,node->for_body);
+        ast_t *res =  visitor_visit(&vs,node->for_body);
         if(res->is_return_value){
             res->is_return_value = false;
             return res;
@@ -1684,6 +1688,8 @@ ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
         }
 
     }
+
+    freeSingleScope(vs.global_scope);
 
     return node;
 }

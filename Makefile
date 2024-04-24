@@ -9,6 +9,8 @@ SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
 CFLAGS= -Wextra -std=c11 -pedantic -ggdb $(LINUX)
 
+TEST=/home/prog/Bureau/PROG/ceflo_ast/bin
+
 all : $(EXEC)
 %.o : %.c include/*.h
 	$(CC) $(CFLAGS) -o $@ -c $< -lm
@@ -20,8 +22,8 @@ cls :
 	-rm $(EXEC)
 
 publish :
-	cp ./$(EXEC)  CefloV2/bin/Linux
-	cp ./$(EXEC).exe  CefloV2/bin/Win
+	cp ./$(EXEC)  $(TEST)/Linux
+	cp ./$(EXEC).exe  $(TEST)/Win
 
 
 test :

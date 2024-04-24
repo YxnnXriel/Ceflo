@@ -1,12 +1,20 @@
+// from lib.math import Math
+
+
+// for var i = 0; i < 123; i +=1 {
+//     println(Math.log10(i))
+// }
 
 
 
 
-func fiboLoop(n){
-    if n == 0 or n == 1{
-        return 1
-    }
-    return n * fiboLoop(n-1)
+func sayMyName(name,x,other){
+    println(name)
+    println(other)
 }
 
-println(fiboLoop(9))
+
+
+
+
+
