@@ -957,6 +957,7 @@ ast_t *parser_parse_term(parser_t *parser){
 
 ast_t *parser_parse_factor(parser_t *parser){
 
+
     if(parser->current.type == TOKEN_MINUS){
         ast_t * unop = NEW_OBJECT(AST_UNOP,parser);
         unop->op = parser->current;
@@ -1078,7 +1079,7 @@ ast_t *parser_parse_if(parser_t *parser){
 
     ast_if->if_expr = parser_parse_expr(parser);
     
-    parser_eat(TOKEN_LBRACKET,parser,"%s : you have forgotten block for if `{}` ",ERROR_TO_STRING[SYNTAX_ERROR]);
+    parser_eat(TOKEN_LBRACKET,parser,"%s : you have missing block for if `{}` ",ERROR_TO_STRING[SYNTAX_ERROR]);
     if(parser->current.type != TOKEN_RBRACKET){
         ast_if->if_body = parser_parse_statments(parser);
     }

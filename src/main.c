@@ -66,10 +66,9 @@
  * - reparer la fonction __init__ 				- OK
  * - Nettoyer et optimiser le codes de certain partie - ?
  * - trouver l'erreur avec le retour du pointeur self - OK
+ * - Modifier le typer_type
  */ 
 
-
-//  abjimk
 
 /*
 	l'api pour l'interpréteur vas fonctionner comme ceci :

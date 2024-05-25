@@ -913,7 +913,9 @@ ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
     value->countScope = visitor->global_scope->countScope;
 
     if(node->variable_definition_static_type != NONE){
-        ast_t *res = typer_caste_value(node->variable_definition_static_type + 4,&value);
+        uint8_t type = type_ceflo_to_ast(node->variable_definition_static_type);
+
+        ast_t *res = typer_caste_value(type,value);
 
         if(res == NULL){
             Print_visitor_error(
@@ -1063,7 +1065,7 @@ static ast_t *is_function_return_type(visitor_t *visitor, ast_t *function , ast_
     if(function->function_definition_return_type != NONE){
         if(function->function_definition_return_type != OBJECT){
             uint8_t type = type_ceflo_to_ast(function->function_definition_return_type);
-            ast_t *res =  typer_caste_value(type, &value);
+            ast_t *res =  typer_caste_value(type, value);
             return res;
         }else{
 
@@ -1187,7 +1189,9 @@ ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method ,
             // printf("       {%s} ",variable_name);
      
             if(args1->variable_definition_static_type != NONE){
-                ast_t *res = typer_caste_value(args1->variable_definition_static_type + 4,&value);
+                uint8_t type = type_ceflo_to_ast(args1->variable_definition_static_type);
+
+                ast_t *res = typer_caste_value(type,value);
 
                 if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
                     res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
@@ -1296,7 +1300,9 @@ ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * a
             value = visitor_visit(visitor,val);
 
             if(args1->variable_definition_static_type != NONE){
-                    ast_t *res = typer_caste_value(args1->variable_definition_static_type + 4,&value);
+                    uint8_t type = type_ceflo_to_ast(args1->variable_definition_static_type);
+
+                    ast_t *res = typer_caste_value(type,value);
 
                     if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
                         res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
@@ -1737,7 +1743,8 @@ ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
 
 
     if(variable->variable_definition_static_type != NONE){
-        ast_t * res = typer_caste_value(variable->variable_definition_static_type + 4,&value);
+        uint8_t type = type_ceflo_to_ast(variable->variable_definition_static_type );
+        ast_t * res = typer_caste_value(type,value);
 
         if(res == NULL){
             Print_visitor_error(

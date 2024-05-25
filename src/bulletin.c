@@ -121,7 +121,7 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
 
                 ast_t * cpy = ast_copy(res,NULL);
 
-                ast_t *str_value = typer_caste_value(AST_STRING,&cpy);
+                ast_t *str_value = typer_caste_value(AST_STRING,cpy);
                 
                 ListString_Append(list,str_value->value.as.stringValue->str);
                 i = end_index;

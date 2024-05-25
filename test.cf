@@ -1,20 +1,26 @@
-// from lib.math import Math
 
 
-// for var i = 0; i < 123; i +=1 {
-//     println(Math.log10(i))
-// }
+func patron10(m, n){
+    var l = "";
 
+    for var i = 0; i < m ; i+=1 {
+        l += '.'
+    }
 
+    for var i = 0 ; i < n ; i+=1 {
+        if (i+1 )% 10 == 0 or i == 0 {
+            if i == 0{
+                l += @str(0)
+            }else{
+                l += @str(i+1)
+            }
+        }else{
+            l += '+';
+        }
+    }
 
-
-func sayMyName(name,x,other){
-    println(name)
-    println(other)
+    println(l)
 }
 
 
-
-
-
-
+patron10(10, 23)

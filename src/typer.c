@@ -140,6 +140,9 @@ double convertirEnDouble(const char *chaine) {
 }
 
 
+	// cp ./$(EXEC)  $(TEST)/Linux
+	// cp ./$(EXEC).exe  $(TEST)/Win
+
 ast_t * typer_caste_value_try_obj( uint8_t to , ast_t **value , ast_t *obj){
 
     if(to == AST_OBJ){
@@ -177,36 +180,32 @@ ast_t *typer_caste_value_new(ast_t *value,uint8_t to){
     return value;
 }
 
-ast_t * typer_caste_value( uint8_t to , ast_t **value){
-
+ast_t * typer_caste_value( uint8_t to , ast_t *value){
 
     char str[50];
-    ast_t *new = *value;
+    ast_t *new = NULL;
     uint8_t type_ast = ast_type_to_ceflo(to);
 
     if(to == AST_BOOL){
 
         #define NEW_BOOL new->type = AST_BOOL
         #define NBOOL new->value.as.booleanValue 
-        switch ((*value)->type){
-            case AST_BOOL:return new;
+        switch (value->type){
+            case AST_BOOL:return value;
             case AST_CHAR:
-                // typer_verif(*value);
-                NEW_BOOL;NBOOL = AS_CHAR((*value)->value);
+                new = newAst(AST_BOOL);
+                NEW_BOOL;NBOOL = AS_CHAR(value->value);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
             case AST_NUMBER: 
-                // typer_verif(*value);
-                NEW_BOOL;NBOOL = AS_NUMBER((*value)->value);
+                new = newAst(AST_BOOL);
+                NEW_BOOL;NBOOL = AS_NUMBER(value->value);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
             case AST_STRING :
-                // typer_verif(*value);
-                NEW_BOOL;NBOOL = strlen(AS_STRING((*value)->value));
+                new = newAst(AST_BOOL);
+                NEW_BOOL;NBOOL = strlen(AS_STRING(value->value));
                 new->value.type = type_ast;
-                // save_free();
                 return new;
         }
         #undef NEW_BOOL
@@ -216,25 +215,22 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
     if(to == AST_CHAR){
         #define NEW_CHAR new->type = AST_CHAR
         #define NCHAR new->value.as.charValue 
-        switch ((*value)->type){
+        switch (value->type){
             case AST_BOOL:
-                // typer_verif(*value);
-                NEW_CHAR;NCHAR = AS_BOOL((*value)->value);
+                new = newAst(AST_CHAR);
+                NEW_CHAR;NCHAR = AS_BOOL(value->value);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
-            case AST_CHAR: return *value;
+            case AST_CHAR: return value;
             case AST_NUMBER:
-                // typer_verif(*value);
-                NEW_CHAR;NCHAR = AS_NUMBER((*value)->value);
+                new = newAst(AST_CHAR);
+                NEW_CHAR;NCHAR = AS_NUMBER(value->value);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
             case AST_STRING : 
-                // typer_verif(*value);
-                NEW_CHAR;NCHAR = strlen(AS_STRING((*value)->value));
+                new = newAst(AST_CHAR);
+                NEW_CHAR;NCHAR = strlen(AS_STRING(value->value));
                 new->value.type = type_ast;
-                // save_free();
                 return new;
             
         }
@@ -246,30 +242,27 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
     if(to == AST_NUMBER){
         #define NEW_NUMBER new->type = AST_NUMBER
         #define NNUMBER new->value.as.numberValue 
-        switch ((*value)->type){
+        switch (value->type){
             case AST_BOOL:
-                // typer_verif(*value);
-                NEW_NUMBER;NNUMBER = AS_BOOL((*value)->value);
+                new = newAst(AST_NUMBER);
+                NEW_NUMBER;NNUMBER = AS_BOOL(value->value);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
             case AST_CHAR:
-                // typer_verif(*value);
-                NEW_NUMBER;NNUMBER = AS_CHAR((*value)->value);
+                new = newAst(AST_NUMBER);
+                NEW_NUMBER;NNUMBER = AS_CHAR(value->value);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
-            case AST_NUMBER: return *value;
+            case AST_NUMBER: return value;
             case AST_STRING : 
-                // typer_verif(*value);
+                new = newAst(AST_NUMBER);
                 NEW_NUMBER;
-                if(estToutNombre(AS_STRING((*value)->value))){
-                    NNUMBER = convertirEnDouble(AS_STRING((*value)->value));
+                if(estToutNombre(AS_STRING(value->value))){
+                    NNUMBER = convertirEnDouble(AS_STRING(value->value));
                 }else{
-                    NNUMBER = strlen(AS_STRING((*value)->value));
+                    NNUMBER = strlen(AS_STRING(value->value));
                 }
                 new->value.type = type_ast;
-                // save_free();
                 return new;
         }
         #undef NEW_NUMBER
@@ -280,25 +273,22 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
     if(to == AST_STRING){
         #define NEW_STRING new->type = AST_STRING
         #define NSTRING new->value.as.stringValue 
-        switch ((*value)->type){
+        switch (value->type){
             case AST_BOOL:
-                // typer_verif(*value);
-                NEW_STRING;NSTRING = new_String(AS_BOOL((*value)->value) <= 1 ? "true":"false");
+                new = newAst(AST_STRING);
+                NEW_STRING;NSTRING = new_String(AS_BOOL(value->value) <= 1 ? "true":"false");
                 new->value.type = type_ast;
-                // save_free();
                 return new;
             case AST_CHAR:
-                // typer_verif(*value);
-                NEW_STRING;NSTRING = new_String(&(*value)->value.as.charValue);
+                new = newAst(AST_STRING);
+                NEW_STRING;NSTRING = new_String(&value->value.as.charValue);
                 new->value.type = type_ast;
-                // save_free();
                 return new;
-            case AST_STRING: return new;
+            case AST_STRING: return value;
             case AST_NUMBER : 
-                // typer_verif(*value);
-                sprintf(str,"%g",AS_NUMBER((*value)->value));
+                new = newAst(AST_STRING);
+                sprintf(str,"%g",AS_NUMBER(value->value));
                 NEW_STRING;NSTRING = new_String(str);
-                // save_free();
                 new->value.type = type_ast;
                 return new;
             
@@ -310,27 +300,24 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
 
 
     if(to == AST_LIST){
-        if((*value)->type == AST_LIST)
+        if(value->type == AST_LIST)
             return new;
 
-        typer_verif(*value);
+        typer_verif(value);
 
         list_t *list = __init__list__(sizeof(ast_t*));
-        ast_t *cpy = ast_copy(new,NULL);
+        ast_t *cpy = ast_copy(value,NULL);
         List_Append(list,cpy);
         save_free();
         
-        (*value)->value.as.listValue = list;
-        (*value)->value.type = LIST;
-        (*value)->type =  AST_LIST;
+        value->value.as.listValue = list;
+        value->value.type = LIST;
+        value->type =  AST_LIST;
         
 
-        return new;
+        return value;
 
     
-
-
-
         // ast_t *list = newAst(AST_LIST);
         // newValue(&list->value,LIST);
         // AS_LIST(list->value) = __init__list__(sizeof(ast_t*));
@@ -339,8 +326,8 @@ ast_t * typer_caste_value( uint8_t to , ast_t **value){
         //     new
         // );
 
-        // (*value)->value.as.listValue = AS_LIST(list->value);
-        // (*value)->value.type = type_ast;
+        // value->value.as.listValue = AS_LIST(list->value);
+        // value->value.type = type_ast;
         // // new->value.type = type_ast;
         // return list;
     }
@@ -360,7 +347,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         int args_size = args->size;
         ast_t * args1 = visitor_visit(visitor,List_Ast_Get(args,0)); 
 
-    if(strcmp("int",typer_name) == 0 || 
+    if(strcmp("int",typer_name) == 0 ||
     strcmp("float",typer_name) == 0){
         if(args_size > 1){
             return NULL;
@@ -369,7 +356,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_NUMBER);
         
-        new = typer_caste_value(AST_NUMBER,&args1);
+        new = typer_caste_value(AST_NUMBER,args1);
         AS_NUMBER(new->value) = strcmp("float",typer_name) != 0 ? 
         (int)AS_NUMBER(new->value):AS_NUMBER(new->value);
 
@@ -383,7 +370,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_CHAR);
         
-        new = typer_caste_value(AST_CHAR,&args1);
+        new = typer_caste_value(AST_CHAR,args1);
         return new;
     }
 
@@ -394,7 +381,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_BOOL);
         
-        new = typer_caste_value(AST_BOOL,&args1);
+        new = typer_caste_value(AST_BOOL,args1);
         return new;
     }
 
@@ -405,7 +392,7 @@ ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
         if(args_size == 0)
             return newAst(AST_STRING);
         
-        new = typer_caste_value(AST_STRING,&args1);
+        new = typer_caste_value(AST_STRING,args1);
         return new;
     }
     

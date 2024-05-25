@@ -203,7 +203,7 @@ ast_t *Value_String_format(visitor_t *visitor , string_t * str , ast_t * value){
         if(String_index(str,i) == '{'){
             if(i+1 != str->lenght && String_index(str,i+1) == '}'){
                 ast_t * item = visitor_visit(visitor,List_Ast_Get(&value->function_call_args,n));
-                typer_caste_value(AST_STRING,&item);
+                item = typer_caste_value(AST_STRING,item);
                 strcat(buffer,AS_STRING(item->value));
                 i++;
                 n++;
