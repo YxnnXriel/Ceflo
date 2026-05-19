@@ -344,8 +344,11 @@ void modifValue(ast_t ** ref  , ast_t * new);
 void newObject(Obj_t * object);
 bool ObjectIsSame(Obj_t *self , const char *name);
 void printValueAst(ast_t * value);
+size_t sprintValueAst(char *buf, size_t size, ast_t *value);
+
 bool printObj(ast_t * value);
 bool printlist(ast_t * value);
+size_t sprintlist(char *str, size_t size, ast_t *value);
 bool printlistByeValue(Value_t * value);
 bool printlistByeList(list_t * list);
 struct AST_STRUCT * findObjAttr(Obj_t * obj,const char *name);

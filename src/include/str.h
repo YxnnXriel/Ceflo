@@ -25,6 +25,8 @@
 
 
         String new_String(const char *str);
+        String new_String_Set(char *str);
+
         char String_index(String str , int index);
         char * String_index_ptr(String str , int index);
 

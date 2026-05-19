@@ -42,6 +42,37 @@ String new_String(const char *str){
 
 
 /**
+ * @brief Constructeur de String
+ * 
+ * @param str 
+ * @return string 
+ */
+ 
+String new_String_Set(char *str){
+
+    String st = calloc(1,sizeof(*st));
+    size_t lenght = strlen(str);
+    if(st == NULL){
+        fprintf(stderr,"line :%d , files :%s , function : %s\n",
+            __LINE__,
+            __FILE__,
+            __func__
+        );
+        exit(1);
+    }
+    if(str != NULL){
+        st->str = str;
+        st->lenght = strlen(st->str);
+    }else{
+        st->str = NULL;
+        st->lenght = 0;
+    }
+
+    return st;    
+}
+
+
+/**
  * @brief Donne le caractère actuelle
  * 
  * @param str 

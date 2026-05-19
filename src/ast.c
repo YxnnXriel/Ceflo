@@ -470,6 +470,37 @@ bool printlist(ast_t * value){
 
 }
 
+size_t sprintlist(char *str, size_t size, ast_t *value) {
+    if (!str || size == 0 || !value)
+        return 0;
+
+    size_t pos = 0;
+
+    pos += snprintf(str + pos, size - pos, "[ ");
+
+    if (value->value.as.listValue->Size == 0) {
+        pos += snprintf(str + pos, size - pos, "Vide !");
+    } else {
+
+        for (int i = 0; i < value->value.as.listValue->Size; i++) {
+
+            ast_t *child =
+                List_Get(value->value.as.listValue, i);
+
+            pos += sprintValueAst(str + pos, size - pos, child);
+
+            if (i != value->value.as.listValue->Size - 1) {
+                pos += snprintf(str + pos, size - pos, " , ");
+            }
+        }
+    }
+
+    pos += snprintf(str + pos, size - pos, " ]");
+
+    return pos;
+}
+
+
 bool fprintlist(FILE* fic,ast_t * value){
     if(value->value.as.listValue->Size == 0){
         fprintf(fic,"Vide !");
@@ -536,6 +567,75 @@ void printValueAst(ast_t * value){
     }
     
 }
+
+
+/**
+ * @brief SPrint Value
+ * 
+ * @param value 
+ * @param visitor 
+ */
+size_t sprintValueAst(char *buf, size_t size, ast_t *value) {
+    if (!buf || size == 0 || !value)
+        return 0;
+
+    size_t pos = 0;
+
+    switch (value->type) {
+
+        case AST_NONE:
+            pos += snprintf(buf + pos, size - pos, "none");
+            break;
+
+        case AST_CHAR:
+            pos += snprintf(buf + pos, size - pos, "%c",
+                            value->value.as.charValue);
+            break;
+
+        case AST_NUMBER:
+            pos += snprintf(buf + pos, size - pos, "%g",
+                            value->value.as.numberValue);
+            break;
+
+        case AST_STRING:
+            pos += snprintf(buf + pos, size - pos, "%s",
+                            value->value.as.stringValue->str);
+            break;
+
+        case AST_BOOL:
+            pos += snprintf(buf + pos, size - pos, "%s",
+                            value->value.as.booleanValue ? "true" : "false");
+            break;
+
+        case AST_LIST:
+            pos += sprintlist(buf + pos, size - pos, value);
+            break;
+
+        case AST_OBJ:
+            if (printObj(value)) {
+                pos += snprintf(buf + pos, size - pos, "obj");
+            } else {
+                const char *name = value->value.as.ObjectValue.obj_name;
+
+                if (name)
+                    pos += snprintf(buf + pos, size - pos,
+                                    "obj(%s):<%p>", name, (void*)value);
+                else
+                    pos += snprintf(buf + pos, size - pos,
+                                    "obj:<%p>", (void*)value);
+            }
+            break;
+
+        default:
+            pos += snprintf(buf + pos, size - pos,
+                            "<%p>", (void*)value);
+            break;
+    }
+
+    return pos;
+}
+
+
 
 void fprintValueAst(FILE *fic,ast_t * value){
 

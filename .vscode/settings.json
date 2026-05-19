@@ -29,5 +29,56 @@
         "dlfcn.h": "c",
         "parser.h": "c",
         "debug.h": "c"
+    },
+"editor.tokenColorCustomizations": {
+  "textMateRules": [
+    {
+      "scope": [
+        "punctuation.definition.interpolation.begin.ceflo",
+        "punctuation.definition.interpolation.end.ceflo"
+      ],
+      "settings": { "foreground": "#9D4EDD", "fontStyle": "bold" }
+    },
+    {
+      "scope": "meta.interpolation.ceflo",
+      "settings": { "foreground": "#C77DFF" }
+    },
+    {
+      "scope": "entity.name.function.definition.ceflo",
+      "settings": { "foreground": "#FFB627", "fontStyle": "bold" }
+    },
+    {
+      "scope": "entity.name.function.call.ceflo",
+      "settings": { "foreground": "#FFD166" }
+    },
+    {
+      "scope": "entity.name.function.method.ceflo",
+      "settings": { "foreground": "#FFD166" }
+    },
+    {
+      "scope": "entity.name.function.builtin.ceflo",
+      "settings": { "foreground": "#4CC9F0", "fontStyle": "italic" }
+    },
+    {
+      "scope": "entity.name.type.struct.ceflo",
+      "settings": { "foreground": "#06D6A0", "fontStyle": "bold" }
+    },
+    {
+      "scope": "variable.other.definition.ceflo",
+      "settings": { "foreground": "#E0AAFF" }
+    },
+    {
+      "scope": "variable.other.ceflo",
+      "settings": { "foreground": "#CDB4DB" }
+    },
+    {
+      "scope": "variable.other.property.ceflo",
+      "settings": { "foreground": "#E0AAFF" }
+    },
+    {
+      "scope": "variable.parameter.ceflo",
+      "settings": { "foreground": "#F72585", "fontStyle": "italic" }
     }
+  ]
+}
 }

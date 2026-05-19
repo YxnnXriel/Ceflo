@@ -1,0 +1,25 @@
+{
+  "name": "ceflo",
+  "displayName": "CeFlo",
+  "description": "Ceflo Interpreter",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "ceflo",
+      "aliases": ["CeFlo", "ceflo"],
+      "extensions": [".cf",".ceflo"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "ceflo",
+      "scopeName": "source.cf",
+      "path": "./syntaxes/ceflo.tmLanguage.json"
+    }]
+  }
+}

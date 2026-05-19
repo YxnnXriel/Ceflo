@@ -60,6 +60,33 @@ static char *substring(const char *str, int start, int end,char *sub) {
     return sub;
 }
 
+static void append(char **out, size_t *len, size_t *cap, const char *s) {
+    size_t add = strlen(s);
+
+    if (*len + add + 1 > *cap) {
+        *cap *= 2;
+        *out = realloc(*out, *cap);
+    }
+
+    memcpy(*out + *len, s, add);
+    *len += add;
+    (*out)[*len] = '\0';
+}
+
+static char unescape_char(char c) {
+    switch (c) {
+        case 'n': return '\n';
+        case 't': return '\t';
+        case 'r': return '\r';
+        case '0': return '\0';
+        case '\\': return '\\';
+        case '\'': return '\'';
+        case '"': return '"';
+        default: return c;  // Non reconnu, garder tel quel
+    }
+}
+
+
 
 ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
     // Vérifier que la liste d'arguments contient au moins deux éléments (chaîne de formatage et au moins une valeur à insérer)
@@ -89,28 +116,32 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
         exit(EXIT_FAILURE);
     }
     String f = format_string_ast->value.as.stringValue;
-    listString_t *list = new_ListString();
-    const char *format_string = f->str;
+
+
+    size_t cap = 256;
+    size_t len = 0;
+    char *out = malloc(cap);
+    out[0] = '\0';
 
     for (int i = 0; i < f->lenght; i++){
-
-        if(f->str[i] == '{'){
+        if (f->str[i] == '$' && f->str[i+1] == '{') {
+            i +=2;
+            char expr[128]; // contient l'expression qui se trouve au millieu par exemple : ${Appel(23)} -> Appel(23)
+            size_t e = 0;
             
-            int end_index = i + 1;
-            int begin_index = end_index;
-            while (format_string[end_index] != '}' && format_string[end_index] != '%' && format_string[end_index] != '\0') {
-                end_index++;
+            while (f->str[i] != '}' && f->str[i] != '\0') {
+                expr[e++] = f->str[i++];
             }
-            if(format_string[end_index] == '%'){
-                ListString_Append_char(list,'{');
-                i++;
-            }
-            else if (format_string[end_index] == '}') {
-                char sub[255];
-                char *t = substring(format_string,begin_index,end_index,sub);
-                ast_t * res = makeAst(t);
+
+            expr[e] = '\0';
+
+            if (f->str[i] == '}') {
+                char sub[256];
+
+                // Lancer des flags pour permettre de pouvoir agrandir la taille du bufffer
+                ast_t * res = makeAst(expr);
                 if(expectedAst(res,node,EXPECTED_DEFAULT,EXPECTED_DEFAULT_LENGHT) == 0){
-                    ListString_Clear(list);
+                    free(out);
                     clear_ceflo_clean();
                     exit(EXIT_FAILURE);                  
                 }
@@ -119,30 +150,34 @@ ast_t *bulletin_format(visitor_t *visitor, ast_t *node, list_ast_t *args) {
                     res = visitor_visit(visitor,res);
                 }
 
-                ast_t * cpy = ast_copy(res,NULL);
-
-                ast_t *str_value = typer_caste_value(AST_STRING,cpy);
+                if(res == NULL){
+                    free(out);
+                    clear_ceflo_clean();
+                    exit(EXIT_FAILURE);    
+                }
                 
-                ListString_Append(list,str_value->value.as.stringValue->str);
-                i = end_index;
+                sprintValueAst(sub,255,res);
+                append(&out, &len, &cap, sub);
             }
             else {
                 // Si le placeholder n'est pas fermé, afficher un message d'erreur
+                free(out);
                 fprintf(stderr, "Erreur : placeholder non fermé dans la chaîne de formatage.\n");
-                ListString_Clear(list);
                 clear_ceflo_clean();
                 exit(EXIT_FAILURE);    
             }
         }else{
-            ListString_Append_char(list,f->str[i]);
+            char tmp[2] = { f->str[i], '\0' };
+            if(tmp[0] == '\\'){
+               i++;
+               tmp[0] = unescape_char(f->str[i]);
+            }
+            append(&out, &len, &cap, tmp);
         }
     }
     
-    String value = String_Remont(list,"");
-    ListString_Clear(list);
-    
     ast_t *count = newAst(AST_STRING);
-    count->value.as.stringValue = value;
+    count->value.as.stringValue = new_String_Set(out);
     count->value.type = STRING;
     return count;
 }

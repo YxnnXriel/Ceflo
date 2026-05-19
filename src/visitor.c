@@ -1025,8 +1025,10 @@ ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
             node->variable_name
         );
 
-        clear_ceflo_clean();
-        exit(1);
+        // clear_ceflo_clean();
+        // exit(1);
+
+        return NULL;
 
 }
 
