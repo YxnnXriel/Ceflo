@@ -25,7 +25,7 @@
 			"patterns": [
 				{
 					"name": "keyword.control.ceflo",
-					"match": "\\b(if|else|while|for|in|return|break|continue|var|const|func)\\b"
+					"match": "\\b(if|else|match|case|while|for|in|return|break|continue|var|const|func)\\b"
 				},
 				{
 					"name": "comment.line.ceflo",

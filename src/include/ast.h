@@ -48,6 +48,8 @@
         AST_BREAK,
         AST_CONTINUE,
         AST_IF,
+        AST_MATCH,               // if_expr : le sujet, list_compound : les AST_CASE, else_body
+        AST_CASE,                // list_compound : les valeurs, if_body : le bloc
         AST_WHILE,
         AST_FOR,
         AST_FOR_IN,              // for var a, b in c : for_init, for_condition (c), for_body
@@ -100,7 +102,7 @@
         /* ======  return ====== */
             struct AST_STRUCT *return_expr;
 
-        /* ======  if, ternary ====== */
+        /* ======  if, ternary, match, case ====== */
             struct AST_STRUCT *if_expr;
             struct AST_STRUCT *if_body;
             struct AST_STRUCT *if_other;

@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `}` attendu
+match 1 { case 1 { } else { } else { } }

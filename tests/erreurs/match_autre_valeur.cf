@@ -1,0 +1,5 @@
+// attendu: erreur: ce match ne traite pas 3
+enum Couleur { ROUGE, VERT, BLEU }
+match 3 {
+    case Couleur.ROUGE { }
+}

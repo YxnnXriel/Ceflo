@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `else` se place après le dernier `case`
+match 1 { case 1 { } else { } case 2 { } }

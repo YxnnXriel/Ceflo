@@ -1,0 +1,155 @@
+// match : ordre, valeurs, else, portées, boucles, fonctions et énumérations.
+
+// --- le premier cas qui correspond, et un seul
+func nom(n) {
+    match n {
+        case 1 { return "un" }
+        case 2, 3 { return "deux ou trois" }
+        case "a" { return "texte" }
+        case none { return "rien" }
+        else { return "autre" }
+    }
+}
+println(nom(1), " | ", nom(2), " | ", nom(3), " | ", nom("a"), " | ", nom(none), " | ", nom(9))
+
+match 1 {
+    case 1 { println("sans chute dans le suivant") }
+    case 2 { println("jamais") }
+}
+
+// --- sans else, sans énumération : il ne se passe rien
+match 5 { case 1 { println("jamais") } }
+match "x" { case "y" { println("jamais") } }
+println("suite")
+
+// --- le sujet est calculé une seule fois, les valeurs s'arrêtent au premier trouvé
+var appels = 0
+func compte(x) { appels += 1; return x }
+match compte(2) {
+    case compte(1), compte(2), compte(3) { println("trouvé") }
+    case compte(4) { println("jamais") }
+}
+println(appels)
+
+// --- le même == que partout
+match 'A' { case 65 { println("char et number") } }
+match 'a' { case "a" { println("char et str") } }
+match true { case 1 { println("bool et number") } }
+match [1, 2] { case [1, 2] { println("listes égales") } }
+
+// --- les valeurs sont des expressions
+var age = 15
+match true {
+    case age < 13 { println("enfant") }
+    case age < 18 { println("ado") }
+    else { println("adulte") }
+}
+var cible = 4
+match 2 + 2 { case cible { println("variable") } }
+match 3 { case 1 + 2 { println("calcul") } }
+match { a: 1 }.a { case 1 { println("map en sujet") } }
+var t = { a: 1 }
+match t { case t { println("même map") } }
+
+// --- portées : chaque bloc a la sienne
+var x = "dehors"
+match 1 {
+    case 1 {
+        var x = "dedans"
+        println(x)
+    }
+}
+println(x)
+match 1 {
+    case 2 { }
+    else {
+        var x = "else"
+        println(x)
+    }
+}
+println(x)
+
+// --- break et continue concernent la boucle
+for var i = 0; i < 5; i += 1 {
+    match i {
+        case 1 { continue }
+        case 3 { break }
+    }
+    println(i)
+}
+
+// --- imbriqué
+match 1 {
+    case 1 {
+        match 2 {
+            case 2 { println("imbriqué") }
+        }
+    }
+}
+
+// --- point-virgules et une seule ligne
+match 1 { case 2 { }; case 1 { println("point-virgule") }; else { }; }
+
+// --- une valeur qu'on modifie dans un cas ne relance rien
+var v = 1
+match v {
+    case 1 { v = 2; println("v = ", v) }
+    case 2 { println("jamais") }
+}
+
+// --- lfunc
+var f = lfunc(n) {
+    match n { case 0 { return "zéro" } else { return "pas zéro" } }
+}
+println(f(0), " ", f(1))
+
+// --- énumérations
+enum Couleur { ROUGE, VERT, BLEU }
+enum Taille { PETIT }
+
+func decrit(c::Couleur) : str {
+    match c {
+        case Couleur.ROUGE { return "rouge" }
+        case Couleur.VERT, Couleur.BLEU { return "froid" }
+        case none { return "aucune" }
+    }
+    return "?"
+}
+println(decrit(Couleur.ROUGE), " ", decrit(Couleur.BLEU), " ", decrit(none))
+
+match Couleur.BLEU {
+    case Couleur.ROUGE { println("jamais") }
+    else { println("else couvre le reste") }
+}
+match Couleur.BLEU {
+    case Couleur.ROUGE { println("jamais") }
+    else { }
+}
+for var c in Couleur.values() {
+    match c {
+        case Couleur.ROUGE { println("R") }
+        case Couleur.VERT { println("V") }
+        case Couleur.BLEU { println("B") }
+    }
+}
+// Un élément ne vaut pas sa valeur, ni un élément d'une autre énumération.
+match Couleur.ROUGE {
+    case 0 { println("jamais") }
+    case Taille.PETIT { println("jamais") }
+    else { println("identité") }
+}
+
+// --- le GC garde le sujet et les valeurs pendant les blocs
+struct Boite {
+    var n::int = 0
+    func __init__(n) { self.n = n }
+}
+var total = 0
+for var i = 0; i < 3000; i += 1 {
+    match new Boite(i % 3).n {
+        case 0 { var a = "x" * 100; total += a.lenght() }
+        case 1 { var b = [1, 2, 3]; total += b.lenght() }
+        else { total += 1 }
+    }
+}
+println(total)

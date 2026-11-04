@@ -28,6 +28,7 @@ instruction    = definition_var
                | definition_struct
                | definition_enum
                | si
+               | choix
                | tant_que
                | pour
                | retour
@@ -63,6 +64,8 @@ element         = ID [ "=" ( CHAINE | [ "-" ] NOMBRE ) ] ;
 (* ------------------------ contrôle ---------------------- *)
 
 si             = "if" expression bloc [ "else" ( si | bloc ) ] ;
+choix          = "match" expression "{" cas { cas } [ "else" bloc ] "}" ;
+cas            = "case" expression { "," expression } bloc ;
 tant_que       = "while" expression bloc ;
 pour           = "for" [ definition_var | affectation ] ";"
                        [ expression ] ";"
@@ -119,7 +122,7 @@ CARACTERE  = "'" ( caractère | échappement ) "'" ;
 échappement = "\n" | "\t" | "\r" | "\a" | "\b" | "\0" | "\\" | '\"' | "\'" ;
 ```
 
-- **Mots réservés :** `for in while if else var const func lfunc return import from export struct enum true false none or and new continue break`
+- **Mots réservés :** `for in while if else match case var const func lfunc return import from export struct enum true false none or and new continue break`
 - **Commentaires :** `// jusqu'à la fin de la ligne` et `/* sur plusieurs lignes */`
 - **Script :** une première ligne `#!...` est ignorée.
 
@@ -205,6 +208,30 @@ t["nouvelle"] = true
 - **Modifier un map dans sa boucle :** ses clés sont relevées avant le premier tour. Une clé enlevée est sautée, une clé ajoutée n'est pas parcourue, et une valeur changée se lit à jour.
 - **Modifier une liste dans sa boucle :** sa taille est relue à chaque tour. Un élément ajouté est donc parcouru.
 - Une chaîne ne change jamais : c'est celle du départ qui est parcourue.
+
+### Choisir avec `match`
+
+```go
+match code {
+    case Http.OK {
+        println("tout va bien")
+    }
+    case Http.INTROUVABLE, Http.ERREUR {
+        println("problème")
+    }
+    else {
+        println("autre chose")
+    }
+}
+```
+
+- **Ordre :** le sujet est calculé une seule fois. Les valeurs sont calculées de haut en bas et s'arrêtent à la première égale au sujet. Seul ce `case` s'exécute : on ne tombe jamais dans le suivant.
+- **Valeurs :** une valeur est une expression, comparée avec le même `==` que partout. `'A'` correspond donc à `case 65`. Avec `match true`, chaque `case` est une condition.
+- **Doublons :** un nombre, un texte, un caractère, `true`, `false`, `none` ou `a.b` écrit deux fois dans un `match` est une erreur.
+- **`else` :** il est facultatif, et se place après le dernier `case`.
+- **Portée :** chaque bloc a la sienne, comme celui d'un `if`.
+- **`break` et `continue` :** ils concernent la boucle autour du `match`, et sont une erreur s'il n'y en a pas.
+- **Rien ne correspond :** sans `else`, il ne se passe rien. Mais si le sujet ou une valeur est un élément d'énumération, c'est une erreur : `ce match ne traite pas Couleur.BLEU`. Cela vaut aussi pour `none`, qui se traite avec `case none`. Pour ignorer le reste, on écrit `else { }`.
 
 ### Portées
 

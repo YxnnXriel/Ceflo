@@ -125,6 +125,8 @@ static TokenEnum lexer_precise_id(const char *chaine){
         {"while",TOKEN_WHILE},
         {"if",TOKEN_IF},
         {"else",TOKEN_ELSE},
+        {"match",TOKEN_MATCH},
+        {"case",TOKEN_CASE},
         {"var",TOKEN_VAR},
         {"const",TOKEN_CONST},
         {"func",TOKEN_FUNC},

@@ -11,7 +11,7 @@ const path = require("path");
 const { execFileSync } = require("child_process");
 
 const KEYWORDS = [
-    "for", "in", "while", "if", "else", "var", "const", "func", "lfunc", "return", "import", "from",
+    "for", "in", "while", "if", "else", "match", "case", "var", "const", "func", "lfunc", "return", "import", "from",
     "export", "struct", "enum", "true", "false", "none", "or", "and", "new", "continue", "break",
 ];
 const KEYWORD_SET = new Set(KEYWORDS);
@@ -403,7 +403,7 @@ class Reader {
         }
 
         // Du code à moitié écrit : on s'arrête au `}`, ou à la prochaine instruction s'il manque.
-        const stops = ["var", "const", "func", "struct", "enum", "if", "for", "while", "from", "export"];
+        const stops = ["var", "const", "func", "struct", "enum", "if", "match", "for", "while", "from", "export"];
         while (this.token !== undefined && !isOp(this.token, "}") && !stops.some((word) => isWord(this.token, word))) this.i += 1;
         if (isOp(this.token, "}")) this.i += 1;
     }
@@ -779,7 +779,7 @@ function expressionStop(module, from) {
         const isOpener = token.type === "op" && "([{".includes(token.value);
 
         if (depth === 0 && i > from) {
-            const endsValue = previous.type !== "op" ? !KEYWORD_SET.has(previous.value) || ["true", "false", "none"].includes(previous.value) :
+            const endsValue = previous.type !== "op" ? previous.type !== "id" || !KEYWORD_SET.has(previous.value) || ["true", "false", "none"].includes(previous.value) :
                 ")]}".includes(previous.value);
             const startsValue = token.type !== "op" ? !isWord(token, "and") && !isWord(token, "or") : false;
             const newLine = module.text.slice(previous.end, token.start).includes("\n");
@@ -1237,6 +1237,100 @@ function chainStart(tokens, end) {
     return 0;
 }
 
+// Les morceaux de `match sujet { case a, b { } else { } }`. null si ce n'est pas encore écrit.
+function matchParts(module, index) {
+    const tokens = module.tokens;
+    const open = expressionStop(module, index + 1);
+    if (open === index + 1 || !isOp(tokens[open], "{")) return null;
+
+    const parts = { open, values: [], hasElse: false, closed: false };
+    let i = open + 1;
+    while (i < tokens.length) {
+        if (isOp(tokens[i], "}")) {
+            parts.closed = true;
+            return parts;
+        }
+        if (isWord(tokens[i], "else")) {
+            parts.hasElse = true;
+            i = isOp(tokens[i + 1], "{") ? closingOf(tokens, i + 1, Infinity) : i + 1;
+        } else if (isWord(tokens[i], "case")) {
+            let start = i + 1;
+            let stop = expressionStop(module, start);
+            parts.values.push({ start, stop });
+            while (isOp(tokens[stop], ",")) {
+                start = stop + 1;
+                stop = expressionStop(module, start);
+                parts.values.push({ start, stop });
+            }
+            i = isOp(tokens[stop], "{") ? closingOf(tokens, stop, Infinity) : stop;
+        } else {
+            i += 1;
+        }
+    }
+    return parts;
+}
+
+// Le `match` dont fait partie le `case` à cet indice : on remonte en sautant les blocs déjà fermés.
+function matchOfCase(tokens, caseIndex) {
+    let depth = 0;
+    for (let i = caseIndex - 1; i >= 0; i--) {
+        if (tokens[i].type !== "op") continue;
+        if ("}])".includes(tokens[i].value)) depth += 1;
+        if ("{[(".includes(tokens[i].value)) {
+            if (depth === 0) {
+                for (let j = i - 1; j >= 0 && !isOp(tokens[j], ";"); j--) {
+                    if (isWord(tokens[j], "match")) return j;
+                }
+                return -1;
+            }
+            depth -= 1;
+        }
+    }
+    return -1;
+}
+
+// Les éléments déjà écrits dans ce `match`, comme `C.A` : leur nom dans l'énumération.
+function coveredMembers(module, parts, enumeration, scope) {
+    const covered = new Set();
+    for (const value of parts.values) {
+        const type = typeOfExpression(module, value.start, scope, 0, value.stop);
+        if (type.kind === "enumItem" && type.member && type.enumeration.name === enumeration.name) {
+            covered.add(module.tokens[value.stop - 1].value);
+        }
+    }
+    return covered;
+}
+
+// case |   et   case a, |     Les éléments que ce match ne traite pas encore.
+function caseCompletions(module, last, scope) {
+    const tokens = module.tokens;
+    let caseIndex = last;
+    while (caseIndex >= 0 && !isWord(tokens[caseIndex], "case")) {
+        if (!(isName(tokens[caseIndex]) || isOp(tokens[caseIndex], ".") || isOp(tokens[caseIndex], ","))) return null;
+        caseIndex -= 1;
+    }
+    if (caseIndex < 0) return null;
+
+    const matchIndex = matchOfCase(tokens, caseIndex);
+    if (matchIndex < 0) return null;
+
+    const parts = matchParts(module, matchIndex);
+    if (parts === null) return null;
+
+    const subject = typeOfExpression(module, matchIndex + 1, scope, 0, parts.open);
+    if (subject.kind !== "enumItem") return null;
+
+    const covered = coveredMembers(module, parts, subject.enumeration, scope);
+    return [...subject.enumeration.members.keys()]
+        .filter((name) => !covered.has(name))
+        .map((name) => ({
+            label: `${subject.enumeration.name}.${name}`,
+            kind: "enumMember",
+            detail: subject.enumeration.name,
+            sort: "0",
+        }));
+}
+
 function typeCompletions(module, scope) {
     const items = TYPES.map((name) => ({ label: name, kind: "type", detail: "type" }));
     const enums = visibleSymbols(module, scope, Infinity)
@@ -1477,6 +1571,11 @@ function complete(text, offset, options = {}) {
     if (isWord(previous, "var") || isWord(previous, "const") || isWord(previous, "func") || isWord(previous, "struct") || isWord(previous, "enum")) return [];
     if (insideEnum(tokens, last)) return [];
 
+    if (isWord(previous, "case") || isOp(previous, ",")) {
+        const items = caseCompletions(module, last, scope);
+        if (items !== null) return items;
+    }
+
     // Ces caractères n'ouvrent une liste que dans les cas vus plus haut.
     if (trigger !== undefined && trigger !== null && trigger !== ".") return [];
 
@@ -1569,7 +1668,8 @@ function diagnose(text, options = {}) {
 
         for (let i = 0; i < tokens.length; i++) {
             if (importContext(tokens, i) !== null) continue;
-            if (isOp(tokens[i], ".")) checkMember(module, i, report);
+            if (isWord(tokens[i], "match")) checkMatch(module, i, errors);
+            else if (isOp(tokens[i], ".")) checkMember(module, i, report);
             else if (isOp(tokens[i], "(")) checkCall(module, i, report, checkValue, scopeOf);
             else if (tokens[i].type === "op" && !module.definitionEquals.has(i) &&
                      ["=", "+="].includes(tokens[i].value)) checkAssignment(module, i, report, checkValue, scopeOf);
@@ -1579,6 +1679,38 @@ function diagnose(text, options = {}) {
     }
 
     return errors.sort((a, b) => a.start - b.start);
+}
+
+// match c { case C.A { } }   : C.B n'est pas traité. Un avertissement et non une erreur :
+// cette valeur n'arrivera peut-être jamais à l'exécution. Une valeur inconnue pourrait
+// couvrir le reste : on ne dit alors rien.
+function checkMatch(module, index, errors) {
+    const tokens = module.tokens;
+    const parts = matchParts(module, index);
+    if (parts === null || !parts.closed || parts.hasElse) return;
+
+    const scope = module.scopeAt(tokens[index].start);
+    const subject = typeOfExpression(module, index + 1, scope, 0, parts.open);
+    let enumeration = subject.kind === "enumItem" ? subject.enumeration : null;
+
+    for (const value of parts.values) {
+        const type = typeOfExpression(module, value.start, scope, 0, value.stop);
+        if (type.kind === "none") continue;
+        if (type.kind !== "enumItem" || !type.member) return;
+        if (enumeration === null) enumeration = type.enumeration;
+    }
+    if (enumeration === null) return;
+
+    const covered = coveredMembers(module, parts, enumeration, scope);
+    const missing = [...enumeration.members.keys()].filter((name) => !covered.has(name));
+    if (missing.length === 0) return;
+
+    errors.push({
+        message: `ce match ne traite pas ${missing.map((name) => `${enumeration.name}.${name}`).join(", ")}`,
+        start: tokens[index].start,
+        end: tokens[index].end,
+        severity: "warning",
+    });
 }
 
 // p.x   : le type de p est sûr, et il n'a pas de x

@@ -114,6 +114,12 @@ enum Couleur { ROUGE, VERT, BLEU }
 var teinte::Couleur = Couleur.VERT
 println(teinte.name, " ", teinte.value)
 
+// match : le premier cas qui correspond, sans `break` à écrire
+match teinte {
+    case Couleur.ROUGE { println("chaud") }
+    case Couleur.VERT, Couleur.BLEU { println("froid") }
+}
+
 // Les fichiers et le système
 from os import [lire_lignes, dossier, commande]
 println(dossier("."))

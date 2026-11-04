@@ -712,6 +712,84 @@ static ast_t *parser_parse_if(parser_t *parser){
     return ast_if;
 }
 
+// Deux valeurs écrites à l'identique : le deuxième `case` ne pourrait jamais servir.
+static bool parser_same_case_value(ast_t *a, ast_t *b){
+    if(a->type != b->type)
+        return false;
+
+    switch(a->type){
+        case AST_NONE: return true;
+        case AST_BOOL: return a->bool_value == b->bool_value;
+        case AST_CHAR: return a->char_value == b->char_value;
+        case AST_NUMBER:
+        case AST_STRING: return parser_enum_same_value(a,b);
+        case AST_OBJ_ACCESS:
+            return a->left->type == AST_VARIABLE && b->left->type == AST_VARIABLE &&
+                strcmp(a->left->variable_name,b->left->variable_name) == 0 &&
+                strcmp(a->variable_name,b->variable_name) == 0;
+        default: return false;
+    }
+}
+
+static void parser_check_case_value(parser_t *parser, list_t *values, ast_t *value){
+    for(int i = 0; i < values->Size; i++){
+        ast_t *other = List_Get(values,i);
+        if(parser_same_case_value(other,value)){
+            error_syntax(parser->lexer->fileName,value->line,value->colone,
+                "cette valeur est déjà testée à la ligne %d",other->line);
+        }
+    }
+}
+
+// case a, b { }
+static ast_t *parser_parse_case(parser_t *parser, ast_t *match){
+    ast_t *ast_case = parser_new_node(parser,AST_CASE);
+    ast_case->list_compound = newList();
+    parser_advance(parser);
+
+    do{
+        ast_t *value = parser_parse_expr(parser);
+        for(int i = 0; i < match->list_compound->Size; i++)
+            parser_check_case_value(parser,((ast_t*)List_Get(match->list_compound,i))->list_compound,value);
+        parser_check_case_value(parser,ast_case->list_compound,value);
+        List_Append(ast_case->list_compound,value);
+    }while(parser_match(parser,TOKEN_COMA));
+
+    ast_case->if_body = parser_parse_block(parser);
+    return ast_case;
+}
+
+// match sujet { case a { } case b, c { } else { } }
+static ast_t *parser_parse_match(parser_t *parser){
+    ast_t *match = parser_new_node(parser,AST_MATCH);
+    parser_advance(parser);
+
+    match->if_expr = parser_parse_expr(parser);
+    match->list_compound = newList();
+
+    parser_eat(parser,TOKEN_LBRACKET);
+    while(true){
+        if(parser_match(parser,TOKEN_SEMI))
+            continue;
+        if(TYPE(parser) != TOKEN_CASE)
+            break;
+        List_Append(match->list_compound,parser_parse_case(parser,match));
+    }
+
+    if(match->list_compound->Size == 0)
+        parser_error_here(parser,"un `match` contient au moins un `case`");
+
+    if(parser_match(parser,TOKEN_ELSE)){
+        match->else_body = parser_parse_block(parser);
+        while(parser_match(parser,TOKEN_SEMI)){ }
+        if(TYPE(parser) == TOKEN_CASE)
+            parser_error_here(parser,"`else` se place après le dernier `case`");
+    }
+    parser_eat(parser,TOKEN_RBRACKET);
+
+    return match;
+}
+
 static ast_t *parser_parse_while(parser_t *parser){
     ast_t *ast_while = parser_new_node(parser,AST_WHILE);
     parser_advance(parser);
@@ -929,6 +1007,7 @@ static ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_ENUM: return parser_parse_enum_definition(parser);
         case TOKEN_RETURN: return parser_parse_return(parser);
         case TOKEN_IF: return parser_parse_if(parser);
+        case TOKEN_MATCH: return parser_parse_match(parser);
         case TOKEN_WHILE: return parser_parse_while(parser);
         case TOKEN_FOR: return parser_parse_for(parser);
         case TOKEN_BREAK: return parser_parse_loop_jump(parser,AST_BREAK);

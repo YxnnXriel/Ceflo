@@ -1,0 +1,6 @@
+// attendu: erreur: ce match ne traite pas none
+enum Couleur { ROUGE, VERT, BLEU }
+enum Http { OK = 200 }
+match @Http(999) {
+    case Http.OK { }
+}

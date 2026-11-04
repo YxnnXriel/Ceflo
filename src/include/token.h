@@ -20,6 +20,8 @@
     TOKEN(TOKEN_WHILE, "while")              \
     TOKEN(TOKEN_IF, "if")                    \
     TOKEN(TOKEN_ELSE, "else")                \
+    TOKEN(TOKEN_MATCH, "match")              \
+    TOKEN(TOKEN_CASE, "case")                \
     TOKEN(TOKEN_VAR, "var")                  \
     TOKEN(TOKEN_CONST, "const")              \
     TOKEN(TOKEN_FUNC, "func")                \

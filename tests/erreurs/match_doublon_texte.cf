@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: cette valeur est déjà testée à la ligne 2
+match "a" { case "a" { } case "a" { } }

@@ -482,6 +482,31 @@ static value_t *visitor_visit_if(visitor_t *visitor, ast_t *node){
     return NULL;
 }
 
+/**
+ * @brief le premier `case` qui correspond s'exécute. Avec une énumération, ne rien
+ *        trouver sans `else` est une erreur : c'est sûrement un élément oublié.
+ */
+static value_t *visitor_visit_match(visitor_t *visitor, ast_t *node){
+    value_t *subject = visitor_visit(visitor,node->if_expr);
+    bool has_enum = subject->type == ENUM_VALUE;
+
+    for(int i = 0; i < node->list_compound->Size; i++){
+        ast_t *ast_case = List_Get(node->list_compound,i);
+        for(int j = 0; j < ast_case->list_compound->Size; j++){
+            value_t *value = visitor_visit(visitor,List_Get(ast_case->list_compound,j));
+            has_enum = has_enum || value->type == ENUM_VALUE;
+            if(Value_equals(subject,value))
+                return visitor_visit(visitor,ast_case->if_body);
+        }
+    }
+
+    if(node->else_body != NULL)
+        return visitor_visit(visitor,node->else_body);
+    if(has_enum)
+        visitor_error(node,"ce match ne traite pas %s",AS_STRING(Value_to_string(visitor,subject))->str);
+    return NULL;
+}
+
 static value_t *visitor_visit_ternary(visitor_t *visitor, ast_t *node){
     return Value_is_true(visitor_visit(visitor,node->if_expr)) ?
         visitor_visit(visitor,node->if_other) :
@@ -1013,6 +1038,8 @@ static value_t *visitor_dispatch(visitor_t *visitor, ast_t *node){
         case AST_BREAK: visitor->signal = SIGNAL_BREAK; return NULL;
         case AST_CONTINUE: visitor->signal = SIGNAL_CONTINUE; return NULL;
         case AST_IF: return visitor_visit_if(visitor,node);
+        case AST_MATCH: return visitor_visit_match(visitor,node);
+        case AST_CASE: return NULL;     // lu par visitor_visit_match
         case AST_WHILE: return visitor_visit_while(visitor,node);
         case AST_FOR: return visitor_visit_for(visitor,node);
         case AST_FOR_IN: return visitor_visit_for_in(visitor,node);

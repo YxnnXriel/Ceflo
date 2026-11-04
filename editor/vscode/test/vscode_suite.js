@@ -149,6 +149,17 @@ const CAS = {
         if (erreurs.length !== 1) return `${erreurs.length} erreurs`;
         return (document.getText(erreurs[0].range) === "ROSE" && erreurs[0].message === "`Couleur` n'a pas de valeur `ROSE`") || JSON.stringify(erreurs[0]);
     },
+    "un match incomplet est souligné en jaune": async () => {
+        const { document, erreurs } = await erreursDe("enum C { A, B }\nmatch C.A { case C.A { } }\n");
+        if (erreurs.length !== 1) return `${erreurs.length} erreurs`;
+        const erreur = erreurs[0];
+        return (document.getText(erreur.range) === "match" && erreur.message === "ce match ne traite pas C.B" &&
+            erreur.severity === vscode.DiagnosticSeverity.Warning) || JSON.stringify(erreur);
+    },
+    "case propose les éléments pas encore traités": async () => {
+        const noms = (await propositions("enum C { A, B }\nmatch C.A {\n    case C.A { }\n    case |\n}", " ")).map(nom);
+        return (noms.length === 1 && noms[0] === "C.B") || noms.join(",");
+    },
     "rien dans un commentaire": async () => {
         const items = await propositions("var a = 1\n// a|");
         return items.length === 0 || `des propositions dans un commentaire : ${items.map(nom).join(",")}`;

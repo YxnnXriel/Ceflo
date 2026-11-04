@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe:
+match { case 1 { } }

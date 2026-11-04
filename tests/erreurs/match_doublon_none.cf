@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: cette valeur est déjà testée à la ligne 2
+match 1 { case none { } case none { } }

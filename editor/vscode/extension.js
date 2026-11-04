@@ -47,7 +47,8 @@ function showErrors(document, collection) {
     if (document.languageId !== "ceflo") return;
     collection.set(document.uri, diagnose(document.getText(), analysisOptions(document)).map((error) => {
         const range = new vscode.Range(document.positionAt(error.start), document.positionAt(error.end));
-        const diagnostic = new vscode.Diagnostic(range, error.message, vscode.DiagnosticSeverity.Error);
+        const severity = error.severity === "warning" ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error;
+        const diagnostic = new vscode.Diagnostic(range, error.message, severity);
         diagnostic.source = "ceflo";
         return diagnostic;
     }));

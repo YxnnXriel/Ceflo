@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: un `match` contient au moins un `case`
+match 1 { println(1) }

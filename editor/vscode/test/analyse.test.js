@@ -637,6 +637,85 @@ test("les énumérations", (t) => {
     ]);
 });
 
+test("match", (t) => {
+    const C = "enum C { A, B, D }\n";
+    const avertissements = (source, options) => diagnose(source, options)
+        .filter((e) => e.severity === "warning")
+        .map((e) => [source.slice(e.start, e.end), e.message]);
+
+    // Un élément oublié : en jaune, sur le mot `match`.
+    assert.deepStrictEqual(avertissements(`${C}match C.A { case C.A { } }`), [["match", "ce match ne traite pas C.B, C.D"]]);
+    assert.deepStrictEqual(avertissements(`${C}func f(c::C) { match c { case C.A, C.B { } } }`), [["match", "ce match ne traite pas C.D"]]);
+    assert.deepStrictEqual(avertissements(`${C}func f(c) { match c { case C.A { } case C.B { } } }`), [["match", "ce match ne traite pas C.D"]]);
+    assert.deepStrictEqual(avertissements(`${C}func f(c::C) { match c { case none { } case C.A { } case C.B { } } }`), [["match", "ce match ne traite pas C.D"]]);
+    assert.strictEqual(diagnose(`${C}match C.A { case C.A { } }`)[0].severity, "warning");
+
+    // Rien à dire.
+    const justes = [
+        `${C}match C.A { case C.A { } case C.B { } case C.D { } }`,
+        `${C}match C.A { case C.A, C.B, C.D { } }`,
+        `${C}match C.A { case C.A { } else { } }`,
+        `${C}func f(c::C, d::C) { match c { case C.A { } case d { } } }`,
+        `${C}func f(c) { match c { case 1 { } } }`,
+        "match 1 { case 1 { } }",
+        'match "if" { case "if" { } case "else" { } }',
+        "var a = 1\nmatch true { case a < 1 { } case a > 1 { } }",
+        `${C}match C.A { case C.A { match 1 { case 1 { } } } case C.B { } case C.D { } }`,
+        `${C}match C.A {`,
+        `${C}match C.A { case C.A {`,
+        `${C}match`,
+        "match { a: 1 }.a { case 1 { } }",
+    ];
+    for (const source of justes) assert.deepStrictEqual(diagnose(source), [], source);
+
+    // Un `match` imbriqué ne compte pas les cas de celui qui l'entoure.
+    assert.deepStrictEqual(avertissements(`${C}match C.A { case C.A { match C.B { case C.B { } } } case C.B { } case C.D { } }`),
+        [["match", "ce match ne traite pas C.A, C.D"]]);
+
+    // Les erreurs habituelles continuent de s'appliquer.
+    assert.deepStrictEqual(erreurs(`${C}match C.A { case C.ROSE { } else { } }`), [["ROSE", "`C` n'a pas de valeur `ROSE`"]]);
+    assert.deepStrictEqual(erreurs("match 1 { case 1 { var a::int = \"x\" } }"), [['"x"', "`a` est de type int, pas str"]]);
+
+    // case : les éléments pas encore traités
+    assert.deepStrictEqual(labels(`${C}var c::C\nmatch c { case | }`), ["C.A", "C.B", "C.D"]);
+    assert.deepStrictEqual(labels(`${C}var c::C\nmatch c { case C.A, | }`), ["C.B", "C.D"]);
+    assert.deepStrictEqual(labels(`${C}var c::C\nmatch c {\n    case C.A { }\n    case |\n}`), ["C.B", "C.D"]);
+    assert.deepStrictEqual(labels(`${C}var c::C\nmatch c { case C.A { } case C.B { println(1) } case | }`), ["C.D"]);
+    assert.strictEqual(run(`${C}match C.A { case | }`)[0].kind, "enumMember");
+    assert.deepStrictEqual(labels(`${C}match C.A { case C.| }`), ["A", "B", "D", "values"]);
+    includes("var x = 1\nmatch x { case | }", ["x", "println"]);
+    includes(`${C}var c::C\nmatch c { case C.A { c.| } }`, ["name", "value"]);
+    includes(`${C}var liste = [1, |]`, ["C"]);
+    includes("ma|", ["match", "case"]);
+
+    // Coupé n'importe où, le code ne casse ni la complétion ni les erreurs.
+    const source = `${C}match C.A {\n    case C.A, C.B { println(1) }\n    case "x", none { }\n    else { }\n}\n`;
+    for (let i = 0; i <= source.length; i++) {
+        complete(source.slice(0, i), i);
+        diagnose(source.slice(0, i));
+    }
+
+    // À travers un import.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ceflo-"));
+    t.after(() => fs.rmSync(dir, { recursive: true }));
+    fs.writeFileSync(path.join(dir, "reseau.cf"), "enum Http { OK = 200, NON = 404 }\n");
+    const options = { filePath: path.join(dir, "ici.cf"), root: dir };
+    assert.deepStrictEqual(avertissements("from reseau import [Http]\nmatch Http.OK { case Http.OK { } }", options),
+        [["match", "ce match ne traite pas Http.NON"]]);
+});
+
+test("ce que match signale arrive vraiment à l'exécution", { skip: !fs.existsSync(path.join(RACINE, "Ceflo")) }, (t) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ceflo-"));
+    t.after(() => fs.rmSync(dir, { recursive: true }));
+    const script = path.join(dir, "cas.cf");
+
+    fs.writeFileSync(script, "enum C { A, B }\nmatch C.B { case C.A { } }\n");
+    const resultat = spawnSync(path.join(RACINE, "Ceflo"), [script], { encoding: "utf8" });
+    assert.strictEqual(resultat.status, 1);
+    assert.strictEqual(resultat.stderr.split("\n")[0], "erreur: ce match ne traite pas C.B");
+    assert.strictEqual(diagnose(fs.readFileSync(script, "utf8"))[0].message, "ce match ne traite pas C.B");
+});
+
 test("la description de os suit l'interpréteur", { skip: !fs.existsSync(path.join(RACINE, "src/os.c")) }, () => {
     const source = fs.readFileSync(path.join(RACINE, "src/os.c"), "utf8");
     const list = source.slice(source.indexOf("Os_List[]"), source.indexOf("{NULL,NULL}"));

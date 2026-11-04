@@ -17,6 +17,7 @@ make editor
 | `from outils import ` ou `import [` | les noms publics du module, ou les fonctions de la bibliothèque native |
 | `from os import ` | les fonctions du module `os`, avec leur description |
 | `Couleur.` et `Couleur.ROUGE.` | les éléments de l'énumération et `values`, puis `name` et `value` |
+| `case ` dans un `match` sur une énumération | les éléments pas encore traités |
 | `new ` | les structures |
 | `::`, `@`, `func f() : ` | les types, les structures et les énumérations |
 | ailleurs | les variables visibles, les fonctions, les structures, les énumérations, `println`... et les mots du langage |
@@ -40,7 +41,9 @@ p.rien()                // `Point` n'a pas de méthode `rien`
 
 Il vérifie les types déclarés (variables, attributs, paramètres, retours), le nombre d'arguments d'un appel, les attributs et les méthodes, les constantes, et les éléments des énumérations.
 
-Le code juste ne doit jamais être souligné. Tout ce qui peut changer à l'exécution est donc ignoré : une variable sans type réaffectée, un élément de liste, un attribut sans type, le retour d'une fonction sans `: type`.
+Un `match` sur une énumération qui oublie des éléments et n'a pas de `else` est souligné en jaune : le programme s'arrêtera seulement si l'un d'eux arrive.
+
+Le code juste ne doit jamais être souligné en rouge. Tout ce qui peut changer à l'exécution est donc ignoré : une variable sans type réaffectée, un élément de liste, un attribut sans type, le retour d'une fonction sans `: type`.
 
 ## Le code
 

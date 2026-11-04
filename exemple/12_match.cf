@@ -1,0 +1,43 @@
+// match choisit le premier `case` qui correspond. Il n'y a pas de `break` à écrire.
+
+enum Commande { AJOUTER, RETIRER, AFFICHER }
+
+var panier = []
+
+func execute(commande::Commande, article) {
+    match commande {
+        case Commande.AJOUTER { panier.append(article) }
+        case Commande.RETIRER {
+            for var i, nom in panier {
+                if nom == article {
+                    panier.remove(i)
+                    return
+                }
+            }
+        }
+        case Commande.AFFICHER { println(panier) }
+    }
+}
+
+execute(Commande.AJOUTER, "pain")
+execute(Commande.AJOUTER, "riz")
+execute(Commande.RETIRER, "pain")
+execute(Commande.AFFICHER, none)
+
+// Plusieurs valeurs pour un même cas, et un `else` pour le reste.
+func jour(n) {
+    match n {
+        case 6, 7 { return "week-end" }
+        case 1, 2, 3, 4, 5 { return "semaine" }
+        else { return "ce jour n'existe pas" }
+    }
+}
+println(jour(6), ", ", jour(2), ", ", jour(9))
+
+// Avec `match true`, chaque cas est une condition.
+var age = 15
+match true {
+    case age < 13 { println("enfant") }
+    case age < 18 { println("ado") }
+    else { println("adulte") }
+}
