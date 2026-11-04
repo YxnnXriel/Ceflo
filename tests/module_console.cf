@@ -1,0 +1,10 @@
+// Sans terminal (entrée vide) : rien n'attend et rien ne plante.
+from console import [kbhit]
+from console import [getch, getchar, clrscr, sleep]
+
+println(kbhit())
+println(getch())
+println(getchar())
+sleep(1)
+clrscr()
+println("fin")

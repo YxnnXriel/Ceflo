@@ -1,4 +1,4 @@
-from console import [getch , clrscr , kbhit]
+from console import [getch , clrscr , kbhit , sleep]
 
 
 enum Direction{
@@ -32,7 +32,7 @@ struct Game {
         self.WIDTH = width;
         self.HEIGHT = height;
 
-        self.player = new Point(@int(width /2) , @int(height /2));
+        self.player = new Point(@int(height /2) , @int(width /2));
     }
 
     func Draw(self){
@@ -62,7 +62,7 @@ struct Game {
         }
     }
     func input(self){
-        if(!kbhit()){
+        if(kbhit()){
             match @char(getch()){
                 case 'z' { self.direction = Direction.UP }
                 case 's' { self.direction = Direction.DOWN }
@@ -95,6 +95,7 @@ struct Game {
             Draw();
             input();
             logic();
+            sleep(100);
             clrscr();
         }
     }

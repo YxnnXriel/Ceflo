@@ -937,24 +937,27 @@ static void visitor_import_dll(visitor_t *visitor, ast_t *node){
 
 #endif
 
-
+// `from os import ...` sans fichier os.cf : le module compilé dans l'interpréteur.
 static scope_t *visitor_standard_module(visitor_t *visitor, const char *path){
 
     void (*define_all)(scope_t *) = NULL;
-    
+    const char *key = NULL; // Hash_Set garde ce pointeur : pas `path`, qui sera libéré.
+
     if(strcmp(path,"os.cf") == 0){
         define_all = os_define_all;
+        key = "os.cf";
     }
     else if(strcmp(path, "console.cf") == 0){
         define_all = console_define_all;
+        key = "console.cf";
     }else{
-        define_all = NULL;
+        return NULL;
     }
 
     scope_t *scope = newScope(visitor->builtins);
     gc_root(scope);
     define_all(scope);
-    Hash_Set(&modules , path, scope);
+    Hash_Set(&modules, key, scope);
     return scope;
 }
 

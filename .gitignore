@@ -6,3 +6,4 @@ Ceflo_stress
 Ceflo_val
 *.vsix
 test.cf
+*.dSYM/
