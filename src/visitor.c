@@ -35,6 +35,7 @@
 #include "include/typer.h"
 #include "include/bulletin.h"
 #include "include/os.h"
+#include "include/console.h"
 
 
 
@@ -936,15 +937,24 @@ static void visitor_import_dll(visitor_t *visitor, ast_t *node){
 
 #endif
 
-// `from os import ...` sans fichier os.cf : le module compilé dans l'interpréteur.
+
 static scope_t *visitor_standard_module(visitor_t *visitor, const char *path){
-    if(strcmp(path,"os.cf") != 0)
-        return NULL;
+
+    void (*define_all)(scope_t *) = NULL;
+    
+    if(strcmp(path,"os.cf") == 0){
+        define_all = os_define_all;
+    }
+    else if(strcmp(path, "console.cf") == 0){
+        define_all = console_define_all;
+    }else{
+        define_all = NULL;
+    }
 
     scope_t *scope = newScope(visitor->builtins);
     gc_root(scope);
-    os_define_all(scope);
-    Hash_Set(&modules,"os.cf",scope);
+    define_all(scope);
+    Hash_Set(&modules , path, scope);
     return scope;
 }
 

@@ -1,0 +1,114 @@
+from console import [getch , clrscr , kbhit]
+
+
+enum Direction{
+    STOP,
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+}
+
+struct Point {
+    var x;
+    var y;
+    func __init__(self,x, y){
+        self.x = x;
+        self.y = y;
+    }
+}
+
+
+struct Game {
+    var WIDTH :: int; 
+    var HEIGHT :: int;
+
+    var game_over :: bool = false;
+    var player :: Point;
+    var direction :: Direction = Direction.STOP;
+    var fruit :: Point;
+
+    func __init__(self, width, height){
+        self.WIDTH = width;
+        self.HEIGHT = height;
+
+        self.player = new Point(@int(width /2) , @int(height /2));
+    }
+
+    func Draw(self){
+        for var i = 0 ; i < WIDTH ; i +=1 {
+            if i < WIDTH -1 {
+                print("#")
+            }else{
+                println("#")
+            }
+        }
+
+        for var i = 0 ; i < HEIGHT ; i +=1 {
+            for var j = 0 ; j < WIDTH ; j +=1 {
+                if j == 0 {print("#")}
+                else if i == self.player.x and j == self.player.y { print("O")}
+                else if j == WIDTH -1 {print("#")}
+                else {print(" ")}
+            }
+            println("");
+        }
+        for var i = 0 ; i < WIDTH ; i +=1 {
+            if i < WIDTH -1 {
+                print("#")
+            }else{
+                println("#")
+            }
+        }
+    }
+    func input(self){
+        if(!kbhit()){
+            match @char(getch()){
+                case 'z' { self.direction = Direction.UP }
+                case 's' { self.direction = Direction.DOWN }
+                case 'q' { self.direction = Direction.LEFT }
+                case 'd' { self.direction = Direction.RIGHT }
+            }
+        }
+    }
+
+    func logic(self){
+        match self.direction {
+            case Direction.UP {
+                self.player.x -=1;
+            }
+            case Direction.DOWN {
+                self.player.x +=1;
+            }
+            case Direction.LEFT {
+                self.player.y -= 1;
+            }
+            case Direction.RIGHT {
+                self.player.y +=1;
+            }
+            case Direction.STOP{}
+        }
+    }
+
+    func play(self){
+        while(!self.game_over){
+            Draw();
+            input();
+            logic();
+            clrscr();
+        }
+    }
+}
+
+
+func main(args){
+    if(args.lenght() >= 3){
+        var xgame = new Game(@int(args[1]) , @int(args[2]));
+        xgame.play();
+    }
+}
+
+
+
+
+
