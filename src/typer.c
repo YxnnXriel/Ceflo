@@ -1,480 +1,187 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "include/Value.h"
+#include <math.h>
+
 #include "include/typer.h"
-#include "include/ast.h"
-#include "include/clear.h"
+#include "include/error.h"
 
-struct typer {
-    uint8_t type;
-    list_t *list;
-    Obj_t *obj;
-    string_t *str;
-    ast_t * lfunc;
-};
+/**
+ * @brief lit le nombre écrit dans une chaîne. CeFlo donne sa longueur à une
+ *        chaîne qui n'est pas un nombre : `@int("abc")` vaut 3.
+ */
+static double typer_string_to_number(string_t *str){
+    char *end = NULL;
+    double number = strtod(str->str,&end);
 
+    while(end != NULL && isspace((unsigned char)*end))
+        end++;
 
-#define TYPE_TABLE_PRIORITY_COUNT 7
+    if(str->lenght == 0 || end == str->str || *end != '\0')
+        return str->lenght;
 
-static int type_table_priority[TYPE_TABLE_PRIORITY_COUNT] = 
-                    {AST_BOOL, AST_CHAR , AST_NUMBER,AST_STRING,
-                    AST_LIST,AST_OBJ,AST_NONE};
+    return number;
+}
 
-struct typer type;
-
-static void typer_verif(ast_t * val){
-    if(val->type == AST_LIST){
-        type.type = val->type;
-        type.list = AS_LIST(val->value);
-    }
-    if(val->type == AST_STRING){
-        type.type = val->type;
-        type.str = val->value.as.stringValue;
-    }
-    if(val->type == AST_OBJ){
-        type.type = val->type;
-        type.obj = &val->value.as.ObjectValue;
-    }
-    if(val->type == AST_LFUNC){
-        type.type = val->type;
-        type.lfunc = val->value.as.lfuncValue;
+static value_t *typer_to_number(value_t *value){
+    switch(value->type){
+        case NUMBER: return value;
+        case BOOL:
+        case CHAR: return makeNumber(Value_as_double(value));
+        case STRING: return makeNumber(typer_string_to_number(AS_STRING(value)));
+        default: return NULL;
     }
 }
 
-static void save_free(){
+static value_t *typer_to_int(value_t *value){
+    value = typer_to_number(value);
+    return value != NULL ? makeNumber(trunc(AS_NUMBER(value))) : NULL;
+}
 
-    if(type.type == AST_LIST){
-        free(type.list->Item);
-        free(type.list);
-    }
-    if(type.type == AST_STRING){
-        String_free(type.str);
-    }
-
-    if(type.type == AST_OBJ){
-        free_obj(type.obj);
-    }
-    if(type.type == AST_LFUNC){
-        freeSingleAst(type.lfunc);
+static value_t *typer_to_char(value_t *value){
+    switch(value->type){
+        case CHAR: return value;
+        case NUMBER: return makeChar(Value_number_to_char(AS_NUMBER(value)));
+        case BOOL: return makeChar((char)AS_BOOL(value));
+        case STRING: return makeChar(AS_STRING(value)->str[0]);
+        default: return NULL;
     }
 }
 
-
-static bool estToutNombre(const char *chaine) {
-    if (chaine == NULL || *chaine == '\0') {
-        return false;
-    }
-
-    while (*chaine) {
-        if (!isdigit(*chaine)) {
-            if(*chaine == '_' || *chaine == '.'){
-                chaine++;
-                continue;
-            }else{
-                return false;
-            }
-
-        }
-        chaine++;
-    }
-
-    return true;
+static value_t *typer_to_list(value_t *value){
+    if(value->type == LIST)
+        return value;
+    value_t *list = makeList();
+    Value_list_append(list,value);
+    return list;
 }
 
-double convertirEnDouble(const char *chaine) {
-    if (chaine == NULL || *chaine == '\0') {
-        return 0.0;
-    }
-
-    // Variables pour stocker le résultat et le signe
-    double resultat = 0.0;
-    double decimale = 0.0;
-    bool estNegatif = false;
-    bool separateurDecimaleTrouve = false;
-
-    // Parcourt la chaîne caractère par caractère
-    while (*chaine) {
-        if (*chaine == '_') {
-            // Ignorer le caractère underscore
-            chaine++;
-            continue;
-        }
-        if (*chaine == '-') {
-            // Gérer le signe négatif
-            estNegatif = true;
-        } else if (*chaine == '.') {
-            // Gérer la partie décimale
-            if (separateurDecimaleTrouve) {
-                // Si un séparateur décimal a déjà été trouvé, la chaîne est invalide
-                return 0.0;
-            }
-            separateurDecimaleTrouve = true;
-        } else if (*chaine >= '0' && *chaine <= '9') {
-            // Convertir les chiffres en nombre
-            if (separateurDecimaleTrouve) {
-                // Si c'est la partie décimale, ajouter au résultat décimal
-                decimale = decimale * 10 + (*chaine - '0');
-            } else {
-                // Si c'est la partie entière, ajouter au résultat
-                resultat = resultat * 10 + (*chaine - '0');
-            }
-        } else {
-            // Si un caractère non numérique est rencontré, la chaîne est invalide
-            return 0.0;
-        }
-        chaine++;
-    }
-
-    // Appliquer le signe négatif si nécessaire
-    if (estNegatif) {
-        resultat = -resultat;
-        decimale = -decimale;
-    }
-
-    // Ajouter la partie décimale au résultat
-    resultat += decimale / 10;
-
-    return resultat;
-}
-
-
-	// cp ./$(EXEC)  $(TEST)/Linux
-	// cp ./$(EXEC).exe  $(TEST)/Win
-
-ast_t * typer_caste_value_try_obj( uint8_t to , ast_t **value , ast_t *obj){
-
-    if(to == AST_OBJ){
-        if((*value)->type == AST_OBJ){
-            if(strcmp((*value)->value.as.ObjectValue.obj_name , obj->variable_definition_static_type_name) == 0){
-                return *value;
-            }
-        }
-    }
-    return NULL;
-}
-
-
-ast_t *typer_caste_value_new(ast_t *value,uint8_t to){
-    
-    uint8_t type_ast = to - 4; 
-
-    switch (to){
-        case AST_NUMBER:
-            value->value.type = type_ast;
-            switch (value->type){
-                case AST_NUMBER:
-                    return value;
-                case AST_STRING:
-                    if(estToutNombre(AS_STRING(value->value))){
-                        value->value.as.numberValue = convertirEnDouble(AS_STRING(value->value));
-                    }else{
-                        value->value.as.numberValue = strlen(AS_STRING((value)->value));
-                    }
-                break;
-            }
-        break;
-    }
-
-    return value;
-}
-
-ast_t * typer_caste_value( uint8_t to , ast_t *value){
-
-    char str[50];
-    ast_t *new = NULL;
-    uint8_t type_ast = ast_type_to_ceflo(to);
-
-    if(to == AST_BOOL){
-
-        #define NEW_BOOL new->type = AST_BOOL
-        #define NBOOL new->value.as.booleanValue 
-        switch (value->type){
-            case AST_BOOL:return value;
-            case AST_CHAR:
-                new = newAst(AST_BOOL);
-                NEW_BOOL;NBOOL = AS_CHAR(value->value);
-                new->value.type = type_ast;
-                return new;
-            case AST_NUMBER: 
-                new = newAst(AST_BOOL);
-                NEW_BOOL;NBOOL = AS_NUMBER(value->value);
-                new->value.type = type_ast;
-                return new;
-            case AST_STRING :
-                new = newAst(AST_BOOL);
-                NEW_BOOL;NBOOL = strlen(AS_STRING(value->value));
-                new->value.type = type_ast;
-                return new;
-        }
-        #undef NEW_BOOL
-        #undef NBOOL
-    }
-
-    if(to == AST_CHAR){
-        #define NEW_CHAR new->type = AST_CHAR
-        #define NCHAR new->value.as.charValue 
-        switch (value->type){
-            case AST_BOOL:
-                new = newAst(AST_CHAR);
-                NEW_CHAR;NCHAR = AS_BOOL(value->value);
-                new->value.type = type_ast;
-                return new;
-            case AST_CHAR: return value;
-            case AST_NUMBER:
-                new = newAst(AST_CHAR);
-                NEW_CHAR;NCHAR = AS_NUMBER(value->value);
-                new->value.type = type_ast;
-                return new;
-            case AST_STRING : 
-                new = newAst(AST_CHAR);
-                NEW_CHAR;NCHAR = strlen(AS_STRING(value->value));
-                new->value.type = type_ast;
-                return new;
-            
-        }
-        #undef NEW_CHAR
-        #undef NCHAR
-
-    }
-    
-    if(to == AST_NUMBER){
-        #define NEW_NUMBER new->type = AST_NUMBER
-        #define NNUMBER new->value.as.numberValue 
-        switch (value->type){
-            case AST_BOOL:
-                new = newAst(AST_NUMBER);
-                NEW_NUMBER;NNUMBER = AS_BOOL(value->value);
-                new->value.type = type_ast;
-                return new;
-            case AST_CHAR:
-                new = newAst(AST_NUMBER);
-                NEW_NUMBER;NNUMBER = AS_CHAR(value->value);
-                new->value.type = type_ast;
-                return new;
-            case AST_NUMBER: return value;
-            case AST_STRING : 
-                new = newAst(AST_NUMBER);
-                NEW_NUMBER;
-                if(estToutNombre(AS_STRING(value->value))){
-                    NNUMBER = convertirEnDouble(AS_STRING(value->value));
-                }else{
-                    NNUMBER = strlen(AS_STRING(value->value));
-                }
-                new->value.type = type_ast;
-                return new;
-        }
-        #undef NEW_NUMBER
-        #undef NNUMBER
-
-    }
-
-    if(to == AST_STRING){
-        #define NEW_STRING new->type = AST_STRING
-        #define NSTRING new->value.as.stringValue 
-        switch (value->type){
-            case AST_BOOL:
-                new = newAst(AST_STRING);
-                NEW_STRING;NSTRING = new_String(AS_BOOL(value->value) <= 1 ? "true":"false");
-                new->value.type = type_ast;
-                return new;
-            case AST_CHAR:
-                new = newAst(AST_STRING);
-                NEW_STRING;NSTRING = new_String(&value->value.as.charValue);
-                new->value.type = type_ast;
-                return new;
-            case AST_STRING: return value;
-            case AST_NUMBER : 
-                new = newAst(AST_STRING);
-                sprintf(str,"%g",AS_NUMBER(value->value));
-                NEW_STRING;NSTRING = new_String(str);
-                new->value.type = type_ast;
-                return new;
-            
-        }
-        #undef NEW_STRING
-        #undef NSTRING
-
-    }
-
-
-    if(to == AST_LIST){
-        if(value->type == AST_LIST)
-            return new;
-
-        typer_verif(value);
-
-        list_t *list = __init__list__(sizeof(ast_t*));
-        ast_t *cpy = ast_copy(value,NULL);
-        List_Append(list,cpy);
-        save_free();
-        
-        value->value.as.listValue = list;
-        value->value.type = LIST;
-        value->type =  AST_LIST;
-        
-
+// Vers une structure : on garde les objets du bon type et `none`, sinon on demande à __cast__.
+static value_t *typer_to_struct(visitor_t *visitor, ast_t *node, value_t *value, value_t *structure){
+    if(value->type == NONE)
+        return value;
+    if(value->type == OBJECT && value->as.ObjectValue.structure == structure)
         return value;
 
-    
-        // ast_t *list = newAst(AST_LIST);
-        // newValue(&list->value,LIST);
-        // AS_LIST(list->value) = __init__list__(sizeof(ast_t*));
-        // List_Append(
-        //     AS_LIST(list->value),
-        //     new
-        // );
+    ast_t *cast = GetFunctionInStruct(structure->as.structValue.definition,"__cast__");
+    if(cast == NULL)
+        return NULL;
 
-        // value->value.as.listValue = AS_LIST(list->value);
-        // value->value.type = type_ast;
-        // // new->value.type = type_ast;
-        // return list;
-    }
+    value_t *function = makeFunction(cast,structure->as.structValue.closure);
+    value_t *result = visitor_call(visitor,node,function,&value,1);
 
-
-    // fprintf(stderr,"Il y a une erreur \n");
-    // clear_ceflo_clean();
-    // exit(EXIT_FAILURE);    
-
-    return NULL;
-
+    if(result->type != OBJECT || result->as.ObjectValue.structure != structure)
+        return NULL;
+    return result;
 }
 
-ast_t *typer_typer(visitor_t *visitor ,const char *typer_name,list_ast_t *args){
-
-        ast_t * new = NULL;
-        int args_size = args->size;
-        ast_t * args1 = visitor_visit(visitor,List_Ast_Get(args,0)); 
-
-    if(strcmp("int",typer_name) == 0 ||
-    strcmp("float",typer_name) == 0){
-        if(args_size > 1){
-            return NULL;
-        }
-
-        if(args_size == 0)
-            return newAst(AST_NUMBER);
-        
-        new = typer_caste_value(AST_NUMBER,args1);
-        AS_NUMBER(new->value) = strcmp("float",typer_name) != 0 ? 
-        (int)AS_NUMBER(new->value):AS_NUMBER(new->value);
-
-        return args1;
-    }
-
-    if(strcmp("char",typer_name) == 0){
-
-        if(args_size > 1)return NULL;
-
-        if(args_size == 0)
-            return newAst(AST_CHAR);
-        
-        new = typer_caste_value(AST_CHAR,args1);
-        return new;
-    }
-
-    if(strcmp("bool",typer_name) == 0){
-
-        if(args_size > 1)return NULL;
-
-        if(args_size == 0)
-            return newAst(AST_BOOL);
-        
-        new = typer_caste_value(AST_BOOL,args1);
-        return new;
-    }
-
-    if(strcmp("str",typer_name) == 0){
-        // essaie prochainement de faire une mise à jour sur la concatenation
-        if(args_size > 1)return NULL;
-
-        if(args_size == 0)
-            return newAst(AST_STRING);
-        
-        new = typer_caste_value(AST_STRING,args1);
-        return new;
-    }
-    
-    if(strcmp("list",typer_name) == 0){
-
-        new = newAst(AST_LIST);
-        new->value.as.listValue = __init__list__(sizeof(ast_t*));
-
-        for (int i = 0; i < (int)args->size; i++){
-            List_Append(
-                AS_LIST(new->value),
-                // args->list[i] 
-                visitor_visit(visitor,List_Ast_Get(args,i))
-                // a revoir !
-            );
-        }
-
-        return new;
-    }
-    else{
-
-        /**
-         * TODO: rechercher dans les structures et trouver ça réprésentation
-         * 
-         */
-        ast_t *func = newAst(AST_STRUCT);
-        allowChar(&func->function_call_name,typer_name);
-        func->function_call_args = List_Ast_Cpy(args);
-
-        return visitor_visit(
-            visitor,
-            func
-        );
-    }
-
+static value_t *typer_find_struct(visitor_t *visitor, const char *type_name){
+    hash_t *item = scope_lookup(visitor->scope,type_name);
+    if(item == NULL || ((value_t*)item->value)->type != STRUCT)
+        return NULL;
+    return item->value;
 }
 
-/*
-    bool - > char -> number -> string -> list -> obj  
-*/
+static value_t *typer_caste_value(visitor_t *visitor, ast_t *node, value_t *value, const char *type_name){
+    if(strcmp(type_name,"int") == 0)
+        return typer_to_int(value);
+    if(strcmp(type_name,"float") == 0 || strcmp(type_name,"number") == 0)
+        return typer_to_number(value);
+    if(strcmp(type_name,"bool") == 0)
+        return value->type == BOOL ? value : makeBool(Value_is_true(value));
+    if(strcmp(type_name,"char") == 0)
+        return typer_to_char(value);
+    if(strcmp(type_name,"str") == 0 || strcmp(type_name,"string") == 0)
+        return Value_to_string(visitor,value);
+    if(strcmp(type_name,"list") == 0)
+        return typer_to_list(value);
+    if(strcmp(type_name,"map") == 0)
+        return value->type == MAP ? value : NULL;
 
+    value_t *structure = typer_find_struct(visitor,type_name);
+    if(structure == NULL)
+        visitor_error(node,"le type `%s` n'existe pas",type_name);
 
-static int getpriority(uint8_t type){
-    for (int i = 0; i < TYPE_TABLE_PRIORITY_COUNT; i++){
-        if(type_table_priority[i] == type)
-            return i;
+    return typer_to_struct(visitor,node,value,structure);
+}
+
+static bool typer_is_whole(value_t *value){
+    return value->type == NUMBER && AS_NUMBER(value) == trunc(AS_NUMBER(value));
+}
+
+bool typer_has_type(visitor_t *visitor, ast_t *node, value_t *value, const char *type_name){
+    if(strcmp(type_name,"int") == 0)
+        return typer_is_whole(value);
+    if(strcmp(type_name,"float") == 0 || strcmp(type_name,"number") == 0)
+        return value->type == NUMBER;
+    if(strcmp(type_name,"bool") == 0)
+        return value->type == BOOL;
+    if(strcmp(type_name,"char") == 0)
+        return value->type == CHAR;
+    if(strcmp(type_name,"str") == 0 || strcmp(type_name,"string") == 0)
+        return value->type == STRING;
+    if(strcmp(type_name,"list") == 0)
+        return value->type == LIST;
+    if(strcmp(type_name,"map") == 0)
+        return value->type == MAP;
+
+    value_t *structure = typer_find_struct(visitor,type_name);
+    if(structure == NULL)
+        visitor_error(node,"le type `%s` n'existe pas",type_name);
+
+    // Un objet peut ne pas encore exister : `var Job::Metier` vaut none.
+    return value->type == NONE || (value->type == OBJECT && value->as.ObjectValue.structure == structure);
+}
+
+const char *typer_type_name(value_t *value){
+    if(value->type == NUMBER)
+        return typer_is_whole(value) ? "int" : "float";
+    return Value_type_name(value);
+}
+
+value_t *typer_default_value(visitor_t *visitor, ast_t *node, const char *type_name){
+    if(strcmp(type_name,"int") == 0 || strcmp(type_name,"float") == 0 || strcmp(type_name,"number") == 0)
+        return makeNumber(0);
+    if(strcmp(type_name,"bool") == 0)
+        return makeBool(false);
+    if(strcmp(type_name,"char") == 0)
+        return makeChar('\0');
+    if(strcmp(type_name,"str") == 0 || strcmp(type_name,"string") == 0)
+        return makeString("");
+    if(strcmp(type_name,"list") == 0)
+        return makeList();
+    if(strcmp(type_name,"map") == 0)
+        return makeMap();
+
+    if(typer_find_struct(visitor,type_name) == NULL)
+        visitor_error(node,"le type `%s` n'existe pas",type_name);
+
+    return makeNone();
+}
+
+value_t *typer_typer(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    const char *type_name = node->function_call_name;
+
+    if(strcmp(type_name,"list") == 0){
+        value_t *list = makeList();
+        for(int i = 0; i < argc; i++)
+            Value_list_append(list,args[i]);
+        return list;
     }
-    return -1;
+
+    // @Point(1, 2) : une structure se construit comme avec `new`, sauf si elle a un __cast__
+    value_t *structure = typer_find_struct(visitor,type_name);
+    if(structure != NULL && (argc != 1 || GetFunctionInStruct(structure->as.structValue.definition,"__cast__") == NULL))
+        return visitor_new_object(visitor,node,structure,args,argc);
+
+    if(argc == 0)
+        return typer_default_value(visitor,node,type_name);
+
+    Value_check_args(node,type_name,argc,1);
+
+    value_t *result = typer_caste_value(visitor,node,args[0],type_name);
+    if(result == NULL)
+        visitor_error(node,"impossible de convertir %s en %s",Value_type_name(args[0]),type_name);
+
+    return result;
 }
-
-
-ast_t * typer_value_expr(ast_t * left , token_t * op , ast_t * right){
-    // cette fonction vas permettre de verifer qui à la priorité et faire un caste 
-    // sur la valeur à le faire
-
-
-    // ast_t ** priority_at = getpriority(left->type) >= getpriority(right->type) ? &left:&right;
-    // // ast_t ** unpriority_at = getpriority(left) >= getpriority(right) ? &right:&left;
-    
-    // ast_t * value = newAst((*priority_at)->type);
-
-    // switch (op->type){
-    //     case TOKEN_PLUS:
-    //         add_value(&left->value,&right->value,&value->value);
-    //         return value;
-    //     break;
-        
-    //     case TOKEN_MINUS:
-    //         minus_value(&left->value,&right->value,&value->value);
-
-    //         if(!Value_verif_is_none(&value->value))
-    //             value->type = AST_NONE; // appeler les erreurs ici , MinusExprErreur
-
-
-    //         return value;
-    //     break;
-    
-    // }
-
-
-    // return left;
-
-    
-}
-

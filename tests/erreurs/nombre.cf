@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: nombre mal formé
+var a = 12abc

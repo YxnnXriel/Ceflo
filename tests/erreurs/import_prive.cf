@@ -1,0 +1,2 @@
+// attendu: erreur: `secret` n'est pas exporté par `../modules/outils.cf`
+from "../modules/outils.cf" import secret

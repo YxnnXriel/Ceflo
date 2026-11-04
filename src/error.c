@@ -1,59 +1,103 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
-#include <math.h>
+
 #include "include/error.h"
+#include "include/ast.h"
 
+typedef struct SOURCE_STRUCT{
+    char *name;
+    char *code;
+    struct SOURCE_STRUCT *next;
+}source_t;
 
-void Print_error(lexer_t * lexer , char *fmt, ...){
-    printf("%s:%d:%d: ","./Ceflo",lexer->line,lexer->colone);
-    va_list args;
-    va_start(args,fmt);
-    vprintf(fmt,args);
-    va_end(args);
+static source_t *sources;
 
+const char *error_add_source(const char *name, char *code){
+    source_t *source = ceflo_alloc(sizeof(*source));
+    allowChar(&source->name,name);
+    source->code = code;
+    source->next = sources;
+    sources = source;
+    return source->name;
 }
 
-static void visitor_print_six(int fmt,int line){
-    if(line == -1){
-    
-        printf("   ");
-        for (int i = 0; i < fmt; i++){
-            printf(" ");
-        }
-        printf("   ");
-        printf("|");
-    
-    }else{
-        printf("   ");
-        printf("%d",line);
-        printf("   ");
-        printf("|");
+void error_free_sources(void){
+    while(sources != NULL){
+        source_t *next = sources->next;
+        free(sources->name);
+        free(sources->code);
+        free(sources);
+        sources = next;
     }
 }
 
-void Print_visitor_error(int line, int colone,char *file_name,char *format,...){
+static const char *error_find_line(const char *file, int line){
+    for(source_t *source = sources; source != NULL; source = source->next){
+        if(source->name != file)
+            continue;
 
-    char buffer[BUFSIZ];
+        const char *cursor = source->code;
+        for(int i = 1; i < line; i++){
+            cursor = strchr(cursor,'\n');
+            if(cursor == NULL)
+                return NULL;
+            cursor += 1;
+        }
+        return cursor;
+    }
+    return NULL;
+}
+
+/**
+ * @brief affiche la ligne fautive, et un `^` sous la colonne de l'erreur
+ */
+static void error_print_location(const char *file, int line, int colone){
+    if(file == NULL)
+        return;
+
+    fprintf(stderr,"  --> %s:%d:%d\n",file,line,colone);
+
+    const char *text = error_find_line(file,line);
+    if(text == NULL)
+        return;
+
+    int lenght = (int)strcspn(text,"\r\n");
+    fprintf(stderr,"%5d | %.*s\n",line,lenght,text);
+    fprintf(stderr,"      | ");
+    for(int i = 0; i < colone - 1 && i < lenght; i++){
+        // Les octets de suite UTF-8 n'occupent pas de colonne à l'écran.
+        if(((unsigned char)text[i] & 0xC0) != 0x80)
+            fputc(text[i] == '\t' ? '\t' : ' ',stderr);
+    }
+    fprintf(stderr,"^\n");
+}
+
+static _Noreturn void error_report(const char *title, const char *file, int line, int colone, const char *format, va_list args){
+    fflush(stdout);
+    fprintf(stderr,"%s: ",title);
+    vfprintf(stderr,format,args);
+    fprintf(stderr,"\n");
+    error_print_location(file,line,colone);
+    exit(1);
+}
+
+void error_syntax(const char *file, int line, int colone, const char *format, ...){
     va_list args;
     va_start(args,format);
-    vsnprintf(buffer,BUFSIZ-1,format,args);
-    
-    printf("\n");
+    error_report("erreur de syntaxe",file,line,colone,format,args);
+}
 
-    int fmt = (log10(line) +1 ) ;
-    for (int i = 0; i < 5; i++){
-        if(i == 3){
-            visitor_print_six(fmt,line);
-            printf("    %s",buffer);
-        }if(i == 0){
-            visitor_print_six(fmt,-1);
-            printf("FICHIER -> %s[%d:%d]\n",file_name ? file_name:".vil",line,colone);        
-        }else{
-            visitor_print_six(fmt,-1);
-            printf("\n");
-        }
-    }
-       
-    // exit(1);
+void visitor_error(const ast_t *node, const char *format, ...){
+    va_list args;
+    va_start(args,format);
+    error_report(
+        "erreur",
+        node != NULL ? node->file : NULL,
+        node != NULL ? node->line : 0,
+        node != NULL ? node->colone : 0,
+        format,
+        args
+    );
 }

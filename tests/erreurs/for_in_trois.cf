@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `for ... in` prend une ou deux variables
+for var a, b, c in [1] { }

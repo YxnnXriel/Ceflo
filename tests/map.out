@@ -1,0 +1,25 @@
+{ "nom" : "Yann" , "avec espace" : 22 , 3 : "trois" , "cle1" : true , "ville" : "Abidjan" }
+{} 0 5
+Yann Yann 22 trois true Abidjan
+none none none
+Ariel 23 [ 1 , 2 , 3 ]
+true false true Ariel none 0
+trois none false none 6
+[ "nom" , "avec espace" , "cle1" , "ville" , "age" , "nouveau" ]
+6
+2
+true none 1
+{ "c" : 5 , "b" : 3 , "a" : 4 } [ "c" , "b" , "a" ]
+nombre chaine virgule 3
+zero
+{ "b" : 1 , "a" : 2 , "n" : 2 , "e" : 1 } 2 2
+100 true false vide plein
+8 ma fonction 2 5
+par le map
+1 [ "keys" , "get" ] 2
+Grace Abidjan Abidjan
+{ "nom" : "Yann" , "amis" : [ { "nom" : "Grace" , "age" : 18 } ] , "adresse" : { "ville" : "Paris" } }
+{ "nom" : "moi" , "moi" : ... }
+{ "a" : 1 } { "b" : 2 } {} true { "a" : 1 }!
+Compteur{ "le" : 3 , "chat" : 1 , "et" : 2 , "chien" : 1 }
+{ "objet" : Compteur{ "le" : 3 , "chat" : 1 , "et" : 2 , "chien" : 1 } }

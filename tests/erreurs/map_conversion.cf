@@ -1,0 +1,2 @@
+// attendu: erreur: impossible de convertir list en map
+println(@map([]))

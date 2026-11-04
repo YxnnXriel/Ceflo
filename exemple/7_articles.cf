@@ -1,0 +1,55 @@
+// Un petit programme interactif. Essayez :  ./Ceflo exemple/7_articles.cf
+
+struct Article {
+    var Name
+    var Prix::int
+    var Qte::int
+
+    func __init__(n, p, q) {
+        Name = n
+        Prix = p
+        Qte = q
+    }
+
+    func __str__() {
+        return Name + " " + Prix + " Qte: " + Qte
+    }
+}
+
+func Ajouter(Tab) {
+    println("Entrer le :")
+    // input() donne une chaîne, alors que Prix et Qte sont des int : on convertit.
+    Tab.append(
+        new Article(
+            input("Nom de l'article : "),
+            @int(input("Son Prix : ")),
+            @int(input("La quantité : "))
+        )
+    )
+}
+
+func Total(Tab) : int {
+    var total = 0
+    for var i = 0; i < Tab.lenght(); i += 1 {
+        total += Tab[i].Prix * Tab[i].Qte
+    }
+    return total
+}
+
+var tab = []
+var choix = ""
+
+// input() vaut none quand l'entrée est terminée
+while choix != "3" and choix != none {
+    println("1 - Ajouter un Article")
+    println("2 - Afficher les Articles")
+    println("3 - Sortir")
+    choix = input("choix> ")
+
+    if choix == "1" {
+        Ajouter(tab)
+    } else if choix == "2" {
+        println(tab)
+        println("Total : ", Total(tab))
+    }
+}

@@ -1,0 +1,2 @@
+// attendu: erreur: `get` prend 1 ou 2 arguments, mais en reçoit 3
+{}.get(1, 2, 3)

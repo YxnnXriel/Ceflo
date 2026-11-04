@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `export` s'utilise seulement au début du fichier, hors d'un bloc
+if true { export :: [] }

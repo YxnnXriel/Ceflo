@@ -1,0 +1,3 @@
+// attendu: erreur: la structure `S` est déjà définie
+struct S {}
+struct S {}

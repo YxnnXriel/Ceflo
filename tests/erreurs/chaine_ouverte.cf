@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: chaîne jamais fermée
+println("abc

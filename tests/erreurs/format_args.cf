@@ -1,0 +1,2 @@
+// attendu: erreur: `format` : il y a plus de {} que d'arguments (0)
+println("{}".format())

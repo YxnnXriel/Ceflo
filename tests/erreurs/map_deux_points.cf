@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `:` attendu, mais `nombre` trouvé
+var t = { a 1 }

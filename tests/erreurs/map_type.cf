@@ -1,0 +1,2 @@
+// attendu: erreur: `t` est de type map, pas list
+var t::map = []

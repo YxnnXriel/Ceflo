@@ -1,0 +1,3 @@
+// attendu: erreur: `f` doit retourner une valeur de type str, pas int
+func f() : str { return 1 }
+f()

@@ -1,0 +1,2 @@
+// attendu: erreur: list n'a pas de méthode `pop`
+[].pop()

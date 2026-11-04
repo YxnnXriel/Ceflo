@@ -1,53 +1,29 @@
 #ifndef __SCOPE_H__
 #define __SCOPE_H__
 
-#include "ast.h"
-#include "list.h"
-#include "str.h"
+    #include "gc.h"
+    #include "list.h"
 
-typedef struct SCOPE_STRUCT{
-    stk_t  variable_definition;
-    stk_t function_definition;
-    stk_t struct_definition;
-    int countScope;
-    bool is_for_obj;
-    struct SCOPE_STRUCT *scope_parent;
+    struct VALUE_STRUCT;
 
+    // Une portée : les noms visibles à un endroit du programme, et un lien vers
+    // la portée qui l'entoure. Les fonctions, les structures et les variables
+    // partagent les mêmes noms.
+    typedef struct SCOPE_STRUCT{
+        gc_object_t gc;
+        table_t variables;
+        struct SCOPE_STRUCT *scope_parent;
+        list_t *exports;     // noms publiés par `export`, si c'est un fichier
+    }scope_t;
 
-    /* ======== NEXT SCOPE ======== */
-        // utiliser pour gerer la memoire actu
-        struct SCOPE_STRUCT *next;
-        struct SCOPE_STRUCT *prev;
- 
-}scope_t;
+    scope_t *newScope(scope_t *parent);
+    void freeScope(scope_t *scope);
 
-
-scope_t* newScope();
-void freeScope(scope_t * scope);
-void freeLscope(void *x);
-
-
-scope_t * GetFirstScope();
-void ResetFirstScope();
-
-void clearScope();
-void freeSingleScope(scope_t *scope);
-
-ast_t *scope_get_variable_definition(scope_t * scope , const char *vardef);
-void scope_append_variable_definition(scope_t *scope , const char *key , ast_t *value);
-ast_t *scope_get_function_definition(scope_t * scope , const char *funcdef);
-void scope_append_function_definition(scope_t *scope , const char *key , ast_t *value);
-void scope_modif_variable_definition(scope_t * scope , const char *key , ast_t * value);
-
-ast_t *scope_get_struct_definition(scope_t * scope , const char *structdef);
-void scope_append_struct_definition(scope_t *scope , const char *key , ast_t *value);
-int scope_cpy_with_scope(scope_t *end , scope_t *ref);
-int scope_cpy_with_scope_without_count(scope_t * source , scope_t * destination);
-ast_t *scope_found_element(scope_t * scope, const char *element , int *type);
-ast_t * scope_append_element(scope_t * scope, int type ,const char *key , ast_t * value );
-void Print_Scope(scope_t * scope , const char *chaine);
-
-
-
+    // Cherche seulement dans cette portée
+    hash_t *scope_get(scope_t *scope, const char *name);
+    // Cherche dans cette portée, puis dans celles qui l'entourent
+    hash_t *scope_lookup(scope_t *scope, const char *name);
+    hash_t *scope_lookup_hashed(scope_t *scope, const char *name, uint32_t hash);
+    hash_t *scope_define(scope_t *scope, const char *name, struct VALUE_STRUCT *value);
 
 #endif

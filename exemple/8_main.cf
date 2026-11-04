@@ -1,0 +1,24 @@
+// La fonction main : le point de départ d'un programme, comme en C.
+// Essayez :  ./Ceflo exemple/8_main.cf Yann Grace
+
+// Le haut du fichier s'exécute d'abord : c'est la place des définitions.
+func saluer(nom) {
+    println("Bonjour ", nom)
+}
+
+// argv contient les arguments, et argv[0] est le nom du script.
+func main(argv) {
+    println("Le script : ", argv[0])
+
+    if argv.lenght() < 2 {
+        println("Personne à saluer. Donnez des noms après le fichier.")
+        return 0
+    }
+
+    for var i = 1; i < argv.lenght(); i += 1 {
+        saluer(argv[i])
+    }
+
+    // Ce nombre devient le code de sortie du programme, comme en C.
+    return 0
+}

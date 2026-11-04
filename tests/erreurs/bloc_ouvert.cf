@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `}` attendu, mais `fin de fichier` trouvé
+if true {

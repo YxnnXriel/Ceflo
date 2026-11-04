@@ -1,0 +1,81 @@
+// Les structures
+
+// Elles ont le comportement d'objets, mais ce ne sont pas des objets comme dans les langages tels que Java.
+// Observons.
+
+// Définition d'une structure simple.
+struct Point {
+    var x
+    var y
+}
+
+// On peut aussi initialiser des valeurs par défaut.
+struct Game {
+    var gameOver = false;
+}
+
+struct Arme {
+    var name
+    var degaArme::int  // Je peux aussi préciser le type de la variable.
+}
+
+// On peut également ajouter des fonctions et surtout initialiser des valeurs via une fonction d'initialisation.
+struct Personnage {
+    var name
+    var vie::int = 100
+    var pts::int
+    var arme::Arme
+
+    // La fonction d'initialisation doit être cette méthode.
+    // Vous pouvez la surcharger, cela fonctionne aussi bien.
+    // Notez aussi l'ajout de self, c'est l'objet lui-même : vous pouvez accéder aux éléments avec self.
+    // Il est facultatif : sans self, `name` tout seul désigne aussi l'attribut.
+    func __init__(self) {
+        self.name = "Inconnu"
+        self.pts = 0
+        self.arme = none
+    }
+
+    // Une deuxième surcharge, et oui :)
+    func __init__(self, name) {
+        self.name = name
+        self.pts = 0
+        self.arme = new Arme()
+        self.arme.degaArme = 10
+    }
+
+    func __init__(self, name, arme) {
+        self.name = name
+        self.pts = 0
+        self.arme = arme
+    }
+
+    // Cette fonction est utilisée pour le rendu, ce n'est pas une représentation.
+    // Exemple : si vous voulez afficher directement l'instance, cette fonction sera appelée.
+    func __str__(self) {
+        return self.name
+    }
+
+    // Un objet est une référence, comme une liste : Attaque modifie vraiment la cible.
+    func Attaque(self, cible::Personnage) {
+        println(self, " attaque ", cible)
+        cible.vie -= self.arme.degaArme
+        self.pts += self.arme.degaArme
+
+        println("   vie ", cible, " = ", cible.vie)
+        println("   pts ", cible, " = ", cible.pts)
+        println("   vie ", self, " = ", self.vie)
+        println("   pts ", self, " = ", self.pts)
+    }
+}
+
+// On définit un objet comme ça.
+// NB : tous les attributs sont publics, la notion de privée n'existe pas ici.
+var P1 = new Personnage("O-riane")
+var P2 = new Personnage("Oprhée")
+var P3 = new Personnage("Yann Ariel")
+
+// Si je veux accéder aux attributs, je le fais comme ceci.
+P1.Attaque(P2)
+
+// Merci d'avoir suivi ce petit tutoriel.

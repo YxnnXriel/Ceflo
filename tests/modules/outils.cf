@@ -1,0 +1,7 @@
+println("outils chargé")
+var privee = "privée"
+func secret(){ return privee }
+func double(x){ return x * 2 }
+struct Boite { var v = secret() }
+const VERSION = 2
+export :: [double, Boite, VERSION]

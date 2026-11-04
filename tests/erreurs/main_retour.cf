@@ -1,0 +1,2 @@
+// attendu: erreur: `main` doit retourner un int, pas str
+func main() { return "oui" }

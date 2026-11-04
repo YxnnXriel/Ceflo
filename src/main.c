@@ -1,122 +1,46 @@
-
 /**
  * @file main.c
  * @author Yann Ariel (yannariel13@gmail.com)
- * @brief 
- * @version 0.1
- * @date 2023-04-10
- * 
  * @copyright Copyright (c) 2023
- * 
+ *
+ * L'interpréteur suit un parcours simple et basique :
+ *      - le lexer découpe le fichier source en jetons
+ *      - le parser donne un sens aux jetons et construit l'AST
+ *      - le visitor parcourt l'arbre et exécute chaque noeud
+ *
+ *          [Lexer] ==> [Parser] ==> [AST] ==> [Visitor]
+ *
+ * Il m'a été demandé par une amie, à qui j'ai dédié son nom.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-
-#include "include/lexer.h"
-#include "include/token.h"
-#include "include/parser.h"
-#include "include/ast.h"
 #include "include/visitor.h"
-#include "include/clear.h"
-#include <signal.h>
-#include <unistd.h>
+#include "include/bulletin.h"
+#include "include/error.h"
 
-/*
-	L'interpréteur est terminé !
-	Tout ce qui suivra comme mise à jour n'est qu'optimisation
-	Du code et précision des erreurs soulevées par l'interpréteur.
-	Il n'est pas le premier interpréteur que j'ai écrit, juste le premier qui est complet ,
-	qui m'a été demander par une amie (à qui j'ai dédié le nom de l'interpréteur), 
-	et c'est aussi le premier qui a un traçage de l'AST.
+// Appelée à chaque sortie du programme, même après une erreur.
+static void ceflo_clean(void){
+    fflush(stdout);
+    visitor_free();
+    bulletin_free();
+    gc_free_all();
+    Hash_Free_Pool();
+    clearAst();
+    error_free_sources();
+}
 
-	L'interpréteur suit un parcours simple et basique :
-		- lexème du fichier source pour avoir une liste de jetons
-		- scanner les jetons pour donner un sens pour la génération de l'AST
-		- Visiter l'arbre et exécuter chaque instruction des nœuds
+int main(int argc, char **argv){
+    if(argc < 2){
+        fprintf(stderr,"CeFlo\n");
+        fprintf(stderr,"utilisation : %s fichier.cf [arguments du script]\n",argv[0]);
+        return 2;
+    }
 
-			[Lexer] ==> [Parser] ==> [AST] ==> [Visitor]
-*/
+    ceflo_stack_init();
+    atexit(ceflo_clean);
 
-
-
-// TODO : Corriger le parser.c   
-
-
-/**
- * TODO: secure lexer entry,and try free current ast if we meet a problem
- * - Faire les attributs et les fonction d'une liste   - OK
- * - Ajouter un dictionnaire(si c'est possible)  - ?
- * - Bien d'autre								 - ?
- * - Fix Bug function call and List  			- OK
- * - Fix Bug list access , new obj   			- OK
- * - Fix lfunc type right            			- OK
- * - Fix Bug char from parser and lexer			- OK
- * - Rewrite clean all							- OK
- * - Fix Bug typé								- OK
- * - Mise à jour du simple garbage				- OK
- * - Ajouter des fonctions pour chaque valeur 	- OK
- * - Inroduire les constantes				  	- OK
- * - Modifier les modif value dans scope.c		- OK
- * - Ajouter une Api pour l'interpréteur	    - ?
- * - Fix bug variable acces						- OK
- * - Ajouter le resolveur d'object lors du casting - OK
- * - reparer la fonction __init__ 				- OK
- * - Nettoyer et optimiser le codes de certain partie - ?
- * - trouver l'erreur avec le retour du pointeur self - OK
- * - Modifier le typer_type
- */ 
-
-
-/*
-	l'api pour l'interpréteur vas fonctionner comme ceci :
-		je vais créer des fonctions d'integration plus simple autour de l'ast
-		ensuite je vais faire des fonctions d'evaluation de l'ast
-
-		dans le fond, j'aurais un fichier .h qui utilise l'ast et je fas tous
-		les fonctions d'integration de l'ast dans le fichier .c
-		et c'est à patir du fichier .h que les autres programmeur pourraient faire leurs 
-		bibliothèques.
-
-
-**/
-
-
-// Je crois que je dois revoir tous le système des variables , je vais le revoir tres bientot
-// je vais reflechir la dessus tres bientot
-
-
-lexer_t lexer;
-
-
-
-void handle_sigint(int sig) { 
-	clear_ceflo_clean(); 
-	exit(1);
-} 
-
-
-int main(int argc, char const *argv[]){
-
-	if(argc >= 2){
-		signal(SIGINT, handle_sigint);
-		signal(SIGSEGV, handle_sigint);
-		signal(SIGFPE, handle_sigint);
-		signal(SIGILL, handle_sigint);
-
-		newLexer(&lexer,argv[1]);
-	    __init_first_ast(); // la tête de l'ast
-	    ResetFirstScope();
-		ast_t *node = parser_parse(&lexer);
-		visitor_visit_code(node);
-	    clear_ceflo_clean();
-	}else{
-		printf("[CEFLO]\n");
-		printf("./Ceflo [args]\n");
-		printf("file error\n");
-	}
-
-	return 0;
+    visitor_t visitor;
+    return visitor_run_file(&visitor,argc - 1,argv + 1);
 }

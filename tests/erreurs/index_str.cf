@@ -1,0 +1,2 @@
+// attendu: erreur: l'index 1 n'existe pas (taille : 1)
+println("a"[1])

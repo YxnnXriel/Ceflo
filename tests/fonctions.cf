@@ -1,0 +1,55 @@
+func Hello() { println("Hello") }
+func Bye { println("Bye") }
+func Plus -> x { return x + 1 }
+func Add -> x, y : int { return x + y }
+func Mult(x::int, y) : int { return x * y }
+func Rien(){ }
+func RienRetour(){ return }
+
+Hello(); Bye()
+println(Plus(1), " ", Add(1, 2), " ", Mult(90, 34))
+println(Rien(), " ", RienRetour())
+
+// Récursion et ordre d'évaluation
+func fib(n){ if n < 2 { return n } return fib(n - 1) + fib(n - 2) }
+println(fib(15))
+func fact(n){ return n <= 1 ? 1 : n * fact(n - 1) }
+println(fact(10))
+
+// Les fonctions sont des valeurs
+var add = lfunc(a, b){ return a + b }
+println(add(1, 2))
+var l = [lfunc(x){ return x * 2 }, lfunc -> x { return x * 3 }]
+println(l[0](4), " ", l[1](4))
+func applique(f, x){ return f(x) }
+println(applique(lfunc(y){ return y + 1 }, 1))
+println(applique(Plus, 41))
+var dire = println
+dire("alias")
+
+// Closures
+func compteur(){
+    var n = 0
+    return lfunc(){ n += 1; return n }
+}
+var c1 = compteur(), c2 = compteur()
+c1(); c1()
+println(c1(), " ", c2())
+
+// Une fonction voit l'endroit où elle est écrite, pas celui d'où on l'appelle
+var nom = "global"
+func qui(){ return nom }
+func appelant(){ var nom = "local"; return qui() }
+println(appelant())
+
+// On peut remplacer un builtin
+func input(){ return "à moi" }
+println(input())
+
+// Une variable globale se modifie depuis une fonction
+var total = 0
+func ajoute(n){ total += n }
+ajoute(2); ajoute(3)
+println(total)
+
+println(Hello, " ", add, " ", println)

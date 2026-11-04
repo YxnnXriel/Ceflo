@@ -1,0 +1,2 @@
+// attendu: erreur: number ne se parcourt pas avec `for ... in`
+for var a in 3 { }

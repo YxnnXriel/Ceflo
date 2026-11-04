@@ -1,0 +1,2 @@
+// attendu: erreur: `format` : ${ n'est jamais fermé
+format("${a")

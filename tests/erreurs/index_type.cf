@@ -1,0 +1,2 @@
+// attendu: erreur: un index doit être un nombre, pas str
+println([1]["a"])

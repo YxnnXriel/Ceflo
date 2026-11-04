@@ -1,0 +1,132 @@
+// for ... in : les maps, les listes et les chaînes
+
+// Une variable : les clés d'un map, dans l'ordre d'insertion
+var t = { c: 1, a: 2, 3: "trois" }
+for var k in t { print(k, " ") }
+println("")
+
+// Deux variables : la clé et la valeur
+for var k, v in t { print(k, "=", v, " ") }
+println("")
+
+// Une liste : ses éléments, ou l'index et l'élément
+for var x in [10, 20] { print(x, " ") }
+for var i, x in [10, 20] { print(i, ":", x, " ") }
+println("")
+
+// Une chaîne : ses caractères
+for var c in "abc" { print(c, "-") }
+for var i, c in "ab" { print(i, c, " ") }
+println("")
+
+// Vide, et valeur directement dans la boucle
+for var k in {} { println("jamais") }
+for var k in [] { println("jamais") }
+for var k in "" { println("jamais") }
+for var k in { seul: 1 } { println(k) }
+
+// break et continue
+for var k, v in { a: 1, b: 2, c: 3, d: 4 } {
+    if v == 2 { continue }
+    if v == 4 { break }
+    print(k, " ")
+}
+println("")
+
+// return, depuis deux boucles imbriquées
+func cherche(grille, voulu) {
+    for var i, ligne in grille {
+        for var j, x in ligne {
+            if x == voulu { return [i, j] }
+        }
+    }
+    return none
+}
+println(cherche([[1, 2], [3, 4]], 3), " ", cherche([[1]], 9))
+
+// Les variables de la boucle n'existent que dans la boucle, et ne cachent rien dehors
+var k = "dehors"
+for var k in [1] { var dedans = k }
+println(k)
+
+// Chaque tour a ses propres variables : une lfunc garde la valeur de son tour
+var fonctions = []
+for var x in [1, 2, 3] { fonctions.append(lfunc() { return x }) }
+for var f in fonctions { print(f(), " ") }
+println("")
+
+// Modifier la valeur d'une variable de boucle ne change pas le map
+var fixe = { a: 1 }
+for var cle, valeur in fixe { valeur = 100 }
+println(fixe)
+
+// Modifier le map dans sa boucle : une clé enlevée est sautée, une clé ajoutée attend
+var change = { a: 1, b: 2, c: 3 }
+for var cle, valeur in change {
+    print(cle, " ")
+    if cle == "a" {
+        change.remove("b")
+        change.d = 4
+        change.c = 30
+    }
+    if cle == "c" { println(valeur) }
+}
+println(change)
+
+// Beaucoup d'ajouts et de remove pendant la boucle : le map se reconstruit
+var gros = {}
+for var i = 0; i < 100; i += 1 { gros[i] = i }
+var vus = 0
+for var cle in gros {
+    gros.remove(cle)
+    gros[cle + 1000] = cle
+    vus += 1
+}
+println(vus, " ", gros.lenght(), " ", gros[1000], " ", gros[0])
+
+// Modifier la liste dans sa boucle : la taille est relue à chaque tour
+var pile = [1, 2]
+for var x in pile {
+    if x < 3 { pile.append(x + 2) }
+    print(x, " ")
+}
+println("")
+
+// La liste peut rétrécir sans danger
+var courte = [1, 2, 3, 4]
+for var x in courte {
+    courte.remove(courte.lenght() - 1)
+    print(x, " ")
+}
+println("")
+
+// Une chaîne réaffectée dans sa boucle : on parcourt celle du départ
+var s = "abc"
+for var c in s {
+    s = "z"
+    print(c)
+}
+println(" ", s)
+
+// Avec des types
+for var cle::str, valeur::int in { a: 1, b: 2 } { print(cle, valeur, " ") }
+for var c::char in "x" { println(c) }
+
+// Une valeur calculée, dans une fonction, avec un objet
+struct Inventaire {
+    var Stock::map
+    func ajoute(nom, n) { Stock[nom] = Stock.get(nom, 0) + n; return self }
+    func total() {
+        var somme = 0
+        for var nom, n in Stock { somme += n }
+        return somme
+    }
+}
+println(new Inventaire().ajoute("stylo", 2).ajoute("cahier", 5).ajoute("stylo", 1).total())
+
+// Des boucles imbriquées sur des valeurs temporaires, que le GC ne doit pas libérer
+var somme = 0
+for var i, texte in "a b c".split(" ") {
+    for var c in texte + texte { somme += @int(c == 'a') }
+}
+println(somme)

@@ -1,76 +1,132 @@
 #ifndef __VALUE_H__
 #define __VALUE_H__
 
+    #include <stdio.h>
 
-    #include "visitor.h"
+    #include "gc.h"
+    #include "str.h"
+    #include "list.h"
+    #include "map.h"
+    #include "ast.h"
 
+    struct SCOPE_STRUCT;
+    struct VISITOR_STRUCT;
+    struct VALUE_STRUCT;
 
+    typedef enum{
+        NONE,
+        BOOL,
+        CHAR,
+        NUMBER,
+        STRING,
+        LIST,
+        MAP,
+        OBJECT,
+        FUNCTION,
+        BUILTIN,
+        STRUCT,
+        GENERIC,
+    }type_ceflo;
 
-    Value_t add_value(Value_t * a ,Value_t * b, Value_t * res ,  Value_t *priority, Value_t * unpriority);
-    Value_t minus_value(Value_t * a ,Value_t * b, Value_t * res ,  Value_t *priority, Value_t * unpriority);
+    // Une fonction écrite en C : les builtins et les bibliothèques natives (.so)
+    typedef struct VALUE_STRUCT *(*ceflo_func_t)(
+        struct VISITOR_STRUCT *visitor,
+        ast_t *node,
+        struct VALUE_STRUCT **args,
+        int argc
+    );
 
+    // Une fonction CeFlo se souvient de la portée où elle a été créée.
+    typedef struct{
+        ast_t *definition;
+        struct SCOPE_STRUCT *closure;
+    }Func_t;
 
+    typedef struct{
+        const char *name;
+        ceflo_func_t function;
+    }Builtin_t;
 
+    typedef struct{
+        ast_t *definition;
+        struct SCOPE_STRUCT *closure;
+    }Struct_t;
 
+    // Un objet est une portée qui contient ses attributs et ses méthodes.
+    typedef struct{
+        struct VALUE_STRUCT *structure;
+        struct SCOPE_STRUCT *self;
+    }Obj_t;
 
-    // LIST
-    ast_t * value_List_lenght(visitor_t * visitor , list_t *list , ast_t * value);
-    ast_t * value_List_append(visitor_t * visitor , list_t *list , ast_t * value);
-    ast_t * value_List_get(visitor_t * visitor , list_t *list , ast_t * value);
-    ast_t * value_List_deleted(visitor_t * visitor , list_t *list , ast_t * value);
-    ast_t * value_List_print(visitor_t * visitor , list_t *list , ast_t * value);
-    ast_t * value_List_filter(visitor_t * visitor , list_t *list , ast_t * value);
+    typedef struct VALUE_STRUCT{
+        gc_object_t gc;
+        type_ceflo type;
+        union{
+            bool booleanValue;
+            char charValue;
+            double numberValue;
+            string_t *stringValue;
+            list_t *listValue;
+            map_t *mapValue;
+            Obj_t ObjectValue;
+            Func_t functionValue;
+            Builtin_t builtinValue;
+            Struct_t structValue;
+            void *GenericValue;
+        }as;
+    }value_t;
 
-    struct value_list{
-        char *name;
-        ast_t* (*func_list_name)(visitor_t * visitor , list_t *list , ast_t * value);
-    };
-    
-    ast_t * value_list_switch_function(visitor_t * visitor,list_t *list , ast_t *value);
+    #define AS_BOOL(value) ((value)->as.booleanValue)
+    #define AS_CHAR(value) ((value)->as.charValue)
+    #define AS_NUMBER(value) ((value)->as.numberValue)
+    #define AS_STRING(value) ((value)->as.stringValue)
+    #define AS_LIST(value) ((value)->as.listValue)
+    #define AS_MAP(value) ((value)->as.mapValue)
 
-    #define VALUE_LIST_ATTR 6
-    static struct value_list attr_value_list[] = {
-        {"get",&value_List_get},
-        {"remove",&value_List_deleted},
-        {"append",&value_List_append},
-        {"lenght",&value_List_lenght},
-        {"print",&value_List_print},
-        {"filter",&value_List_filter},
-    };
+    // Créer une valeur. Elles sont toutes gérées par le garbage collector.
+    value_t *makeNone(void);
+    value_t *makeBool(bool x);
+    value_t *makeChar(char x);
+    value_t *makeNumber(double x);
+    value_t *makeString(const char *str);
+    value_t *makeStringLenght(const char *str, int lenght);
+    value_t *makeList(void);
+    value_t *makeMap(void);
+    value_t *makeObject(value_t *structure, struct SCOPE_STRUCT *self);
+    value_t *makeFunction(ast_t *definition, struct SCOPE_STRUCT *closure);
+    value_t *makeBuiltin(const char *name, ceflo_func_t function);
+    value_t *makeStruct(ast_t *definition, struct SCOPE_STRUCT *closure);
+    value_t *makeGeneric(void *x);
+    void freeValue(value_t *value);
 
+    void Value_list_append(value_t *list, value_t *item);
 
+    // Lire et écrire dans un map : t[cle] et t.nom. Une clé absente se lit comme `none`.
+    value_t *Value_map_get(ast_t *node, value_t *map, value_t *key);
+    void Value_map_set(ast_t *node, value_t *map, value_t *key, value_t *value);
+    value_t *Value_map_get_name(value_t *map, const char *name);
+    void Value_map_set_name(value_t *map, const char *name, value_t *value);
+    value_t *Value_map_keys(value_t *map);
 
-    // NUMBER
+    // Questions sur une valeur
+    bool Value_is_true(value_t *value);
+    bool Value_equals(value_t *left, value_t *right);
+    double Value_as_double(value_t *value);
+    char Value_number_to_char(double number);
+    int Value_compare_text(value_t *left, value_t *right, bool *ok);
+    const char *Value_type_name(value_t *value);
 
-    // CHAR
+    // Texte d'une valeur : le résultat doit être libéré avec Buffer_Free.
+    void Value_to_buffer(struct VISITOR_STRUCT *visitor, buffer_t *buffer, value_t *value);
+    void Value_print(struct VISITOR_STRUCT *visitor, FILE *file, value_t *value);
+    value_t *Value_to_string(struct VISITOR_STRUCT *visitor, value_t *value);
 
-    // STRING
+    // Vérifie le nombre d'arguments d'une fonction native.
+    void Value_check_args(ast_t *node, const char *name, int argc, int expected);
+    // Vérifie le type d'un argument d'une fonction native.
+    void Value_check_type(ast_t *node, const char *name, value_t *value, type_ceflo expected);
 
-    ast_t *Value_String_lenght(visitor_t *visitor , string_t * str , ast_t * value);
-    ast_t *Value_String_format(visitor_t *visitor , string_t * str , ast_t * value);
-
-    struct value_str{
-        char *name;
-        ast_t * (*func)(visitor_t *visitor , string_t * str , ast_t * value);
-    };
-
-    #define VALUE_STRING_ATTR 2
-    
-    ast_t * value_str_switch_function(visitor_t * visitor,string_t * str, ast_t *value);
-    static struct value_str attr_value_str[] = {
-        {"lenght",&Value_String_lenght},
-        {"format",&Value_String_format},
-
-    };
-
-    // OBJECT
-    
-    
-    // SOME VALUE
-        ast_t *Value_Add(ast_t *left , ast_t *right);
-        ast_t *Value_Minus(ast_t *left , ast_t *right);
-
-
-
+    // Méthodes de list, map et str : retourne NULL si la méthode n'existe pas.
+    value_t *Value_call_method(struct VISITOR_STRUCT *visitor, ast_t *node, value_t *self, const char *name, value_t **args, int argc);
 
 #endif

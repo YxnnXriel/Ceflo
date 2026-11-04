@@ -1,0 +1,2 @@
+// attendu: erreur: `zzz` n'est pas définie
+println(zzz)

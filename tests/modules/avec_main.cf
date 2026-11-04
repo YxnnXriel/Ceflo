@@ -1,0 +1,2 @@
+func outil() { return "outil" }
+func main() { println("le main d'un module ne se lance pas") ; return 9 }

@@ -1,0 +1,5 @@
+println(input("nom> "))
+println(nextInt("n> ") + 1)
+println(input())
+println(input())
+println(argv)

@@ -1,0 +1,3 @@
+// attendu: erreur: `x` est de type int, pas str
+func f(x::int) { return x }
+f("12")

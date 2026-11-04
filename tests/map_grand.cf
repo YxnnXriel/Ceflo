@@ -1,0 +1,9 @@
+// Beaucoup de clés, de remove et de reconstructions
+var grand = {}
+for var i = 0; i < 20000; i += 1 { grand["cle" + i] = i }
+for var i = 0; i < 20000; i += 2 { grand.remove("cle" + i) }
+for var i = 0; i < 5000; i += 1 { grand[i] = i * 2 }
+var somme = 0
+var cles = grand.keys()
+for var i = 0; i < cles.lenght(); i += 1 { somme += grand[cles[i]] }
+println(grand.lenght(), " ", somme, " ", grand["cle1"], " ", grand["cle2"], " ", grand[4999], " ", cles[0], " ", cles[10000])

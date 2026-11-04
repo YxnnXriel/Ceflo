@@ -1,0 +1,2 @@
+// attendu: erreur: number ne s'utilise pas avec `[ ]`
+println(1[0])

@@ -1,0 +1,2 @@
+// attendu: erreur: impossible d'ouvrir `rien.so`
+from @"rien.so" import a

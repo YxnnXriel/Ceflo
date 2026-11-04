@@ -1,0 +1,2 @@
+// attendu: erreur: `k` est de type int, pas str
+for var k::int in { a: 1 } { }

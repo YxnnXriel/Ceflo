@@ -1,34 +1,49 @@
-
 CC = gcc
-CCC = i686-w64-mingw32-gcc
 EXEC = Ceflo
-FILE = test.cf
-DEBUG = -DDEBUG_CEFLO
-LINUX = -DLINUX
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
-CFLAGS= -Wextra -std=c11 -pedantic -ggdb $(LINUX)
-
-TEST=/home/prog/Bureau/PROG/ceflo_ast/bin
+HEADERS = $(wildcard src/include/*.h)
+CFLAGS = -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto
+LDFLAGS = -rdynamic -lm -ldl
+SANITIZE = -std=c11 -D_GNU_SOURCE -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -DCEFLO_NO_POOL
+VALGRIND = valgrind --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all --track-origins=yes --main-stacksize=67108864 --error-exitcode=1
+VAL_FILE = test.cf
 
 all : $(EXEC)
-%.o : %.c include/*.h
-	$(CC) $(CFLAGS) -o $@ -c $< -lm
-$(EXEC):$(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-cls :
-	-rm src/*.o
-	-rm $(EXEC)
+$(EXEC) : $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-publish :
-	cp ./$(EXEC)  $(TEST)/Linux
-	cp ./$(EXEC).exe  $(TEST)/Win
+%.o : %.c $(HEADERS)
+	$(CC) $(CFLAGS) -o $@ -c $<
 
+# Les bibliothèques natives : `from @"lib/math/libmath.so" import [mathPi]`
+libs : lib/math/libmath.so lib/file/libfile.so
 
-test :
-	-make
-	./$(EXEC) $(FILE)
-val :
-	-make
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXEC) $(FILE)
+lib/math/libmath.so : lib/math/math.c $(HEADERS)
+	$(CC) $(CFLAGS) -fPIC -shared -Isrc/include -o $@ $< -lm
+
+lib/file/libfile.so : lib/file/file.c $(HEADERS)
+	$(CC) $(CFLAGS) -fPIC -shared -Isrc/include -o $@ $<
+
+test : $(EXEC) libs
+	tests/run.sh ./$(EXEC)
+
+# Les tests sous AddressSanitizer, puis avec un GC qui se déclenche à chaque allocation
+sanitize : libs
+	$(CC) $(SANITIZE) -o $(EXEC)_asan $(SRC) $(LDFLAGS)
+	tests/run.sh ./$(EXEC)_asan
+	$(CC) $(SANITIZE) -DCEFLO_GC_STRESS -o $(EXEC)_stress $(SRC) $(LDFLAGS)
+	CEFLO_TEST_SKIP="memoire recursion map_grand" tests/run.sh ./$(EXEC)_stress
+
+# Cherche les fuites de mémoire. Pour un autre script : make val VAL_FILE=exemple/4_listes.cf
+# La pile de valgrind doit avoir la même taille que celle demandée par ceflo_stack_init.
+# Sans réservoir (CEFLO_NO_POOL), valgrind voit chaque objet et chaque libération.
+val : $(SRC) $(HEADERS)
+	$(CC) -std=c11 -D_GNU_SOURCE -g -O1 -DCEFLO_NO_POOL -o $(EXEC)_val $(SRC) $(LDFLAGS)
+	$(VALGRIND) ./$(EXEC)_val $(VAL_FILE)
+
+clean :
+	-rm -f src/*.o lib/*/*.so $(EXEC) $(EXEC)_asan $(EXEC)_stress $(EXEC)_val
+
+.PHONY : all libs test sanitize val clean

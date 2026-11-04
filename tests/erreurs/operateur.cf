@@ -1,0 +1,2 @@
+// attendu: erreur: l'opérateur `+` ne s'applique pas à none et number
+println(none + 1)

@@ -1,27 +1,23 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <math.h>
-#include "../../src/include/ast.h"
-#include "../../src/include/visitor.h"
 
-struct AST_STRUCT *mathPi(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
-    
+#include "visitor.h"
+
+value_t *mathPi(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;(void)args;
+    Value_check_args(node,"mathPi",argc,0);
     return makeNumber(acos(-1.0));
 }
 
+value_t *mathLog10(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;
+    Value_check_args(node,"mathLog10",argc,1);
+    Value_check_type(node,"mathLog10",args[0],NUMBER);
+    return makeNumber(log10(AS_NUMBER(args[0])));
+}
 
-struct AST_STRUCT *mathLog10(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
-
-    ast_t * args1 = List_Ast_Get(args,0);
-
-    args1 = visitor_visit(vs,args1);
-    
-    double value = 0;
-    if(AS_NUMBER(args1->value) != 0)
-        value = log10(args1->value.as.numberValue);
-
-    ast_t * val = makeNumber(value);
-
-    return val;
+value_t *mathSqrt(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;
+    Value_check_args(node,"mathSqrt",argc,1);
+    Value_check_type(node,"mathSqrt",args[0],NUMBER);
+    return makeNumber(sqrt(AS_NUMBER(args[0])));
 }

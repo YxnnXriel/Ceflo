@@ -1,0 +1,2 @@
+// attendu: erreur: l'index 3 n'existe pas (taille : 3)
+println([1, 2, 3][3])

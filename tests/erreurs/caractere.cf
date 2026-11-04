@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: caractère inattendu `$`
+var a = 1 $ 2

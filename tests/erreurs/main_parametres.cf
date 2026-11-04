@@ -1,0 +1,2 @@
+// attendu: erreur: `main` prend au plus un paramètre : argv
+func main(a, b) { }

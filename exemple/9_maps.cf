@@ -1,0 +1,65 @@
+// Les maps : des tables clé -> valeur, écrites comme en TypeScript.
+// Essayez :  ./Ceflo exemple/9_maps.cf
+
+// Un map se crée avec { } et chaque clé mène à une valeur.
+var profil = {
+    nom: "Yann",
+    age: 22,
+    "ville natale": "Abidjan",
+}
+
+println(profil)
+
+// On lit une clé de deux façons. Une clé absente vaut none.
+println(profil.nom)
+println(profil["ville natale"])
+println(profil.absent)
+
+// On écrit de la même façon : une nouvelle clé se crée toute seule.
+profil.age += 1
+profil["metier"] = "développeur"
+println(profil.age, " ", profil.metier)
+
+println(profil.has("age"), " ", profil.lenght(), " ", profil.keys())
+
+// Le grand classique : compter les mots d'un texte, en passant par une fonction.
+func compter(texte) : map {
+    var comptes = {}
+
+    for var mot in texte.split(" ") {
+        // get donne la valeur, ou 0 si le mot n'a pas encore été vu.
+        comptes[mot] = comptes.get(mot, 0) + 1
+    }
+    return comptes
+}
+
+var comptes = compter("le chat et le chien et le lapin")
+println(comptes)
+
+// Parcourir un map : les clés arrivent dans leur ordre d'insertion.
+for var mot in comptes {
+    print(mot, " ")
+}
+println("")
+
+// Avec deux variables, on reçoit la clé et sa valeur.
+for var mot, nombre in comptes {
+    println(mot, " : ", nombre)
+}
+
+// for ... in marche aussi sur les listes et les chaînes.
+for var i, couleur in ["rouge", "vert"] {
+    println(i, " ", couleur)
+}
+
+for var lettre in "abc" {
+    print(lettre, ".")
+}
+println("")
+
+// Un map range aussi des fonctions, qui s'appellent comme des méthodes.
+var calcul = {
+    double: lfunc(x) { return x * 2 },
+    carre: lfunc(x) { return x * x },
+}
+println(calcul.double(4), " ", calcul.carre(4))

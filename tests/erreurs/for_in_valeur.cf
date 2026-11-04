@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: les variables de `for ... in` ne reçoivent pas de valeur
+for var a = 1 in [1] { }

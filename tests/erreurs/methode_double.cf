@@ -1,0 +1,3 @@
+// attendu: erreur de syntaxe: la méthode `m` est déjà définie à la ligne 2
+struct S { func m(){}
+func m(){} }

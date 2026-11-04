@@ -1,0 +1,2 @@
+// attendu: erreur: `a` est de type int, pas str
+var a::int = "21"

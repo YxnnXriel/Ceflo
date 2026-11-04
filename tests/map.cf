@@ -1,0 +1,108 @@
+// Les tables clé -> valeur, comme en TypeScript
+
+// Création : nom, chaîne, nombre, clé calculée, raccourci, virgule finale
+var ville = "Abidjan"
+var calcul = "cle" + 1
+var t = {
+    nom: "Yann",
+    "avec espace": 22,
+    3: "trois",
+    [calcul]: true,
+    ville,
+}
+println(t)
+println({}, " ", {}.lenght(), " ", t.lenght())
+
+// Lire : les deux écritures donnent la même chose, une clé absente vaut none
+println(t.nom, " ", t["nom"], " ", t["avec espace"], " ", t[3], " ", t.cle1, " ", t.ville)
+println(t.absent, " ", t["absent"], " ", t[99])
+
+// Écrire
+t.nom = "Ariel"
+t["age"] = 21
+t.age += 1
+t["age"] += 1
+t.nouveau = [1, 2]
+t.nouveau.append(3)
+println(t.nom, " ", t.age, " ", t.nouveau)
+
+// Méthodes
+println(t.has("nom"), " ", t.has("rien"), " ", t.has(3), " ", t.get("nom"), " ", t.get("rien"), " ", t.get("rien", 0))
+println(t.remove(3), " ", t.remove("rien"), " ", t.has(3), " ", t[3], " ", t.lenght())
+println(t.keys())
+println(t.values().lenght())
+println(t.set("chaine", 1).set("suite", 2).suite)
+
+// Une clé présente qui vaut none existe bien
+var vide = { rien: none }
+println(vide.has("rien"), " ", vide.get("rien", 5), " ", vide.lenght())
+
+// L'ordre d'insertion est gardé, même après remove
+var ordre = { c: 1, a: 2, b: 3 }
+ordre.remove("a")
+ordre.a = 4
+ordre.c = 5
+println(ordre, " ", ordre.keys())
+
+// Les nombres et les chaînes sont des clés différentes, 0 et -0 la même
+var mixte = { 1: "nombre", "1": "chaine", 1.5: "virgule" }
+println(mixte[1], " ", mixte["1"], " ", mixte[1.5], " ", mixte.lenght())
+mixte[0] = "zero"
+println(mixte[-0])
+
+// Un caractère compte comme une chaîne d'un seul octet
+var lettres = {}
+var mot = "banane"
+for var i = 0; i < mot.lenght(); i += 1 {
+    lettres[mot[i]] = lettres.get(mot[i], 0) + 1
+}
+println(lettres, " ", lettres["a"], " ", lettres['n'])
+
+// Un map est une référence, et sa valeur de vérité suit celle des listes
+var meme = lettres
+meme.b = 100
+println(lettres.b, " ", lettres == meme, " ", {} == {}, " ", {} ? "plein" : "vide", " ", { a: 1 } ? "plein" : "vide")
+
+// Une fonction rangée dans un map s'appelle comme une méthode, et passe avant les méthodes
+var total = 0
+var outils = {
+    double: lfunc(x) { return x * 2 },
+    keys: lfunc() { return "ma fonction" },
+    ajoute: lfunc(x) { total += x; return total },
+    println,
+}
+println(outils.double(4), " ", outils.keys(), " ", outils.ajoute(2), " ", outils.ajoute(3))
+outils.println("par le map")
+
+// Une clé qui s'appelle comme une méthode ne la cache pas si ce n'est pas une fonction
+var comptes = { keys: 1, get: 2 }
+println(comptes.keys, " ", comptes.keys(), " ", comptes.get("get"))
+
+// Imbrication, cycle, affichage
+var profil = { nom: "Yann", amis: [{ nom: "Grace" }], adresse: { ville: "Abidjan" } }
+println(profil.amis[0].nom, " ", profil.adresse.ville, " ", profil["adresse"]["ville"])
+profil.adresse.ville = "Paris"
+profil.amis[0]["age"] = 18
+println(profil)
+var boucle = { nom: "moi" }
+boucle.moi = boucle
+println(boucle)
+
+// Avec les types
+var type::map
+type.a = 1
+var autre::map = { b: 2 }
+func taille(m::map) : map { return m }
+println(type, " ", taille(autre), " ", @map(), " ", @map(autre) == autre, " ", @str({ a: 1 }) + "!")
+
+// Dans une structure, et une structure dans un map
+struct Compteur {
+    var Mots::map
+    func ajoute(mot) { Mots[mot] = Mots.get(mot, 0) + 1 }
+    func __str__() { return "Compteur" + Mots }
+}
+var c = new Compteur()
+var mots = "le chat et le chien et le".split(" ")
+for var i = 0; i < mots.lenght(); i += 1 { c.ajoute(mots[i]) }
+println(c)
+println({ objet: c })

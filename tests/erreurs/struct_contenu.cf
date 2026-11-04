@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: une structure contient seulement des `var`, des `const` et des `func`
+struct S { println(1) }

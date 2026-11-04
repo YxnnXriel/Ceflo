@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `self` est déclaré plusieurs fois
+func f(self, self){}

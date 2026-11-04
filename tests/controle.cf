@@ -1,0 +1,53 @@
+var n = 18
+if n < 18 { println("mineur") } else if n == 18 { println("tout juste") } else { println("majeur") }
+if false { println("non") } else if false { println("non") }
+if true {}
+while false {}
+for ; false ; {}
+
+// Les noms déclarés dans un bloc restent dans ce bloc
+var x = 1
+if true { var x = 2; println(x) }
+println(x)
+if true { x = 3 }
+println(x)
+
+// Boucles
+var i = 0
+while i < 3 { println(i); i += 1 }
+for var j = 0; j < 3; j += 1 { println(j) }
+for var a = 0, b = 10; a < b; a += 4, b -= 4 { println(a, " ", b) }
+
+i = 0
+while true { i += 1; if i == 3 { break } }
+println(i)
+
+i = 0
+while i < 4 { i += 1; if i == 2 { continue } println(i) }
+for var j = 0; j < 4; j += 1 { if j == 1 { continue } if j == 3 { break } println(j) }
+
+// break ne sort que de la boucle la plus proche
+for var a = 0; a < 2; a += 1 {
+    for var b = 0; b < 5; b += 1 {
+        if b == 1 { break }
+        println(a, ":", b)
+    }
+}
+
+// return traverse les blocs et les boucles
+func cherche(){
+    for var a = 0; a < 3; a += 1 {
+        var c = 0
+        while true {
+            if c == 2 { return a * 10 + c }
+            c += 1
+        }
+    }
+    return -1
+}
+println(cherche())
+
+// La liste suivant un println sur une nouvelle ligne n'est pas un index
+var l = [1]
+println(l)
+[2, 3].print()

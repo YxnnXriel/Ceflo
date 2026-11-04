@@ -1,0 +1,24 @@
+// Une valeur en attente reste en vie, même si plus rien d'autre ne la retient
+var x = "avant"
+func change(){ x = "après"; return "y" * 100 }
+println(x, " ", change().lenght(), " ", x)
+println(x + change().lenght())
+
+var liste = ["retiré", 2]
+println(liste.remove(0), " ", "z" * 10, " ", liste)
+
+struct Boite { var v = "dedans"; func vide(){ v = "vide"; return 1 } }
+var boite = new Boite()
+println(boite.v, " ", boite.vide(), " ", boite.v)
+
+var l2 = ["ancien"]
+func remplace(){ l2[0] = "nouveau"; return 0 }
+println(l2[0], " ", remplace(), " ", l2[0])
+
+var ajout = "a"
+struct Etrange { func __str__(){ ajout = "écrasé"; return "b" } }
+ajout += new Etrange()
+println(ajout)
+
+var f = [1, 2, 3]
+println(f.filter(lfunc(v){ f.remove(0); "w" * 50; return true }))

@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `identifiant` attendu, mais `in` trouvé
+var in = 1

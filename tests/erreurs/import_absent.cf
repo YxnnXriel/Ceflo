@@ -1,0 +1,2 @@
+// attendu: erreur: impossible d'ouvrir `rien.cf`
+from rien import a

@@ -1,0 +1,4 @@
+// Le main d'un module importé ne se lance pas, même avec import *
+from modules.avec_main import *
+var main_variable = 1
+println(outil())

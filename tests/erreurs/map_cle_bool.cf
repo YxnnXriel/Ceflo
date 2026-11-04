@@ -1,0 +1,2 @@
+// attendu: erreur: une clé de map doit être str ou number, pas bool
+println({ [true]: 1 })

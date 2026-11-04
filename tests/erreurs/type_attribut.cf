@@ -1,0 +1,4 @@
+// attendu: erreur: `Age` est de type int, pas str
+struct P { var Age::int }
+var p = new P()
+p.Age = "x"

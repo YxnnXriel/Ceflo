@@ -1,129 +1,72 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include <math.h>
-#include "../../src/include/ast.h"
-#include "../../src/include/visitor.h"
-#include "../../src/include/clear.h"
+#include "visitor.h"
+#include "error.h"
 
-
-struct AST_STRUCT *file_stdin(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
+value_t *file_stdin(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;(void)args;
+    Value_check_args(node,"file_stdin",argc,0);
     return makeGeneric(stdin);
 }
 
-
-struct AST_STRUCT *file_stdout(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
+value_t *file_stdout(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;(void)args;
+    Value_check_args(node,"file_stdout",argc,0);
     return makeGeneric(stdout);
 }
 
+// file_fopen("notes.txt", "r") : le fichier, ou none s'il ne s'ouvre pas
+value_t *file_fopen(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;
+    Value_check_args(node,"file_fopen",argc,2);
+    Value_check_type(node,"file_fopen",args[0],STRING);
+    Value_check_type(node,"file_fopen",args[1],STRING);
 
-struct AST_STRUCT *file_fopen(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
-
-    uint8_t check[] = {STRING,STRING};
-
-
-    if(api_check_params_function(vs,node,args,check,2) == false){
-        return makeError();
-    }
-
-
-    struct AST_STRUCT *generic = NULL;
-    struct AST_STRUCT *arg1 = visitor_visit(vs,List_Ast_Get(args,0));
-    struct AST_STRUCT *arg2 = visitor_visit(vs,List_Ast_Get(args,1));
-
-    
-    const char *file = arg1->value.as.stringValue->str;
-    const char *md =  arg2->value.as.stringValue->str;
-
-    FILE *fic = fopen(file,md);
-
-    if(fic == NULL){
-        fprintf(stderr,
-            "%s : %s not working or mod %s is not supported\n",
-            node->function_call_name,
-            AS_STRING(arg1->value),
-            AS_STRING(arg2->value)
-        );
-        
-        return makeError();
-
-    }
-
-    generic = makeGeneric(fic);
-
-    return generic;
-
+    FILE *file = fopen(AS_STRING(args[0])->str,AS_STRING(args[1])->str);
+    return file != NULL ? makeGeneric(file) : makeNone();
 }
 
+value_t *file_fclose(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;
+    Value_check_args(node,"file_fclose",argc,1);
+    Value_check_type(node,"file_fclose",args[0],GENERIC);
 
-
-struct AST_STRUCT *file_fclose(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
-
-    uint8_t check[] = {GENERIC};
-
-    if(api_check_params_function(vs,node,args,check,1) == false){
-        return makeError();
-
-    }
-    
-    ast_t * arg1 =  visitor_visit(vs, List_Ast_Get(args,0));
-
-
-    FILE * fic = arg1->value.as.GenericValue;
-    fclose(fic);
-
-    return makeNumber(1);
+    fclose(args[0]->as.GenericValue);
+    return makeNone();
 }
 
-struct AST_STRUCT *file_fprintf(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
+// file_fprintf(fichier, valeur, valeur...)
+value_t *file_fprintf(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    if(argc < 1)
+        visitor_error(node,"`file_fprintf` attend au moins un fichier");
+    Value_check_type(node,"file_fprintf",args[0],GENERIC);
 
-    uint8_t check = GENERIC;
-
-    ast_t * arg1 =  visitor_visit(vs, List_Ast_Get(args,0));
-    
-    api_check_param_function(
-        vs,
-        node,
-        arg1,
-        check,
-        1
-    );
-
-    FILE * fic = arg1->value.as.GenericValue;
-
-    int i = 0;
-    for ( i = 1; i < (int) args->size; i++){
-        ast_t * child = List_Ast_Get(args,i);
-        child = visitor_visit(vs,child);
-        fprintValueAst(fic,child);
-    }
-
-    return makeNumber(1);
+    for(int i = 1; i < argc; i++)
+        Value_print(visitor,args[0]->as.GenericValue,args[i]);
+    return makeNone();
 }
 
-struct AST_STRUCT *file_fgetline(struct VISITOR_STRUCT *vs ,struct AST_STRUCT*node ,struct LIST_AST_STRUCT *args){
+// file_fgetline(fichier) : la ligne sans son retour à la ligne, ou none à la fin du fichier
+value_t *file_fgetline(visitor_t *visitor, ast_t *node, value_t **args, int argc){
+    (void)visitor;
+    Value_check_args(node,"file_fgetline",argc,1);
+    Value_check_type(node,"file_fgetline",args[0],GENERIC);
 
-        uint8_t check = GENERIC;
+    FILE *file = args[0]->as.GenericValue;
+    int carac = fgetc(file);
+    if(carac == EOF)
+        return makeNone();
 
-    ast_t * arg1 =  visitor_visit(vs, List_Ast_Get(args,0));
-    
-    api_check_param_function(
-        vs,
-        node,
-        arg1,
-        check,
-        1
-    );
+    buffer_t line;
+    newBuffer(&line);
+    while(carac != EOF && carac != '\n'){
+        Buffer_Append_Char(&line,(char)carac);
+        carac = fgetc(file);
+    }
 
-    FILE * fic = arg1->value.as.GenericValue;
-
-    ast_t * line = NULL;
-
-    char buffer[BUFSIZ];
-
-    fgets(buffer,BUFSIZ-1,fic);
-
-    line = makeString(buffer);
-
-    return line;
+    value_t *result = makeStringLenght(line.data,(int)line.size);
+    Buffer_Free(&line);
+    return result;
 }

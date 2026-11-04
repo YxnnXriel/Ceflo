@@ -1,0 +1,16 @@
+from @"../lib/math/libmath.so" import [mathPi, mathSqrt]
+from @"../lib/math/libmath.so" import mathLog10
+from @"../lib/file/libfile.so" import [file_fopen, file_fclose, file_fprintf, file_fgetline]
+println(mathSqrt(16), " ", mathLog10(1000), " ", mathPi() > 3.14)
+var chemin = argv[1]
+var f = file_fopen(chemin, "w")
+file_fprintf(f, "ligne ", 1, "\n", [1, 2], "\n")
+file_fclose(f)
+f = file_fopen(chemin, "r")
+var ligne = file_fgetline(f)
+while ligne != none {
+    println(ligne)
+    ligne = file_fgetline(f)
+}
+file_fclose(f)
+println(file_fopen("/dossier/qui/n/existe/pas", "r"))

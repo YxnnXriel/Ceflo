@@ -1,1975 +1,1047 @@
 /**
  * @file visitor.c
  * @author Yann Ariel (yannariel13@gmail.com)
- * @brief 
- * @version 0.1
- * @date 2023-04-10
- * 
+ * @brief exécute l'AST
  * @copyright Copyright (c) 2023
- * 
+ *
+ * [NOTE]
+ *      Chaque noeud de l'AST a sa fonction visitor_visit_*. Une expression
+ *      retourne sa valeur. Une instruction retourne NULL.
+ *
+ *      `return`, `break` et `continue` remplissent visitor->signal : les blocs et
+ *      les boucles arrêtent alors de s'exécuter, jusqu'à ce que la fonction ou la
+ *      boucle concernée s'en occupe.
+ *
+ *      Les nombres, les caractères et les chaînes ne changent jamais : `a = b`
+ *      peut donc les partager. Les listes et les objets sont des références.
+ *
+ * [HELP]
+ *      use ctrl + f , '$' for walk to different AST branch
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-#ifdef LINUX
-#define LINUX
+#ifndef _WIN32
     #include <dlfcn.h>
 #endif
 
 #include "include/visitor.h"
-#include "include/ast.h"
 #include "include/error.h"
+#include "include/parser.h"
 #include "include/value_expr.h"
-
-    #include "include/bulletin.h"
-    #include "include/Value.h"
-    #include "include/debug.h"
-    #include "include/clear.h"
-    #include "include/typer.h"
-    #include "include/parser.h"
+#include "include/typer.h"
+#include "include/bulletin.h"
 
 
-
-#define CEFLO_GB 1
-
-
-extern lexer_t lexer;
-
-static ast_t *visitor_visit_get_function(scope_t *scope, ast_t *node){
-    
-    ast_t * functionDef = scope_get_function_definition(
-        scope,
-        node->function_call_name
-    );
-    
-    if(functionDef != NULL)
-        return functionDef;
-
-    if(functionDef == NULL){
-        if(scope->scope_parent != NULL ){
-            return visitor_visit_get_function(scope->scope_parent,node);
-        }
-    }   
-    return NULL; 
-}
-
-static ast_t *getStruct(scope_t *scope, const char *struct_name){
-    ast_t * structdef = scope_get_struct_definition(
-        scope,
-        struct_name
-    );
-    
-    if(structdef != NULL)
-        return structdef;
-
-    if(structdef == NULL){
-        if(scope->scope_parent != NULL ){
-            return getStruct(scope->scope_parent,struct_name);
-        }
-    }   
-    return NULL; 
-}
-
-static ast_t *visitor_visit_get_struct(scope_t *scope, ast_t *node){
-    
-    ast_t * structdef = scope_get_struct_definition(
-        scope,
-        node->function_call_name
-    );
-    
-    if(structdef != NULL)
-        return structdef;
-
-    if(structdef == NULL){
-        if(scope->scope_parent != NULL ){
-            return visitor_visit_get_struct(scope->scope_parent,node);
-        }
-    }   
-    return NULL; 
-}
-
-
-static bool ismethodHaveSelf(ast_t * method){
-    for (int i = 0; i < (int)method->function_defintion_args.size; i++){
-        ast_t  * item = List_Ast_Get(&method->function_defintion_args,i);
-        if(strcmp(item->variable_name,"self") == 0)
-            return true;
-    }
-    return false;
-}
-
-static void newVisitorWithScope(visitor_t * visitor , scope_t *scope){
-    visitor->global_scope = scope;
-    visitor->is_for_obj = scope->is_for_obj;
-    newList_Ast(&visitor->constants);
-
-}
-
-
-void freeLvisitor(void *x){
-    visitor_t *visitor = (visitor_t*)x;
-    freeVisitor(visitor);
-}
-
-void freeVisitor(visitor_t *visitor){
-    freeScope(visitor->global_scope);
-}
-
-
-
-/*
-
-    [NOTE]
-        each node is a AST NODE , and each node is assigned to a function
-        VISITOR parameter save the scope of each block declaration or statement
-        during a function call , new scope is defined and the function definiton save in the previous scope(depend of scope parent if this last exist) is copied
-        all statement into the function definition copie is copied
-        after end call, GARBAGE_FUNCTION_STRUCT clear this copie and return the result if is exist
-        
-        variable definition , structure definition , function definition are save in the current scope
-        I dont have put secure on the multiple variable definition on different scope definition ( in a function who haves a function declaration on herself (in body function definition) )
-            [the secure in the next :) ]
-
-        the list and string value are pointers, if you update the list, the list will be updated
-        yes, string is copied when this one is a parameter of function call , but not list value
-
-        AST_OBJ for me is just a scope who a many element (variable , function ect ..)
-
-    [HELP]
-        use ctrl + f , '$' for walk to different AST branch 
-*/
-
-
-/**
- * @brief NEW VISITOR
- * 
- * @param visitor 
- */
-void newVisitor(visitor_t * visitor){
-    visitor->global_scope = newScope();
-    visitor->is_for_obj = false;
-    newList_Ast(&visitor->constants);
-}
-
-void visitor_Sweep_value(visitor_t *visitor){
-
-    int x = 0;
-    for (int i = 0; i < (int)visitor->constants.size; i++){
-        if(Value_decref(List_Ast_Get(&visitor->constants,i))){
-            visitor->constants.list[i] = NULL;
-            x++;
-        }
-    }
-    
-    if(x != 0){
-        List_Ast_Shift_All(&visitor->constants);
-        visitor->constants.size -= x;
-    }
-    
-}
-
-void visitor_append_value(visitor_t * visitor , ast_t * value){
-
-    if(CEFLO_GB == 1){
-        if(visitor->constants.size == 100){
-
-            visitor_Sweep_value(visitor);
-        }
-        
-        List_Ast_Append(
-            &visitor->constants,
-            value
-        );
-    }
-
-
-}
-
-
-int  visitor_visit_code(ast_t* node){
-    visitor_t visitor;
-	newVisitor(&visitor);
-	visitor.global_scope->countScope = 0;
-	visitor_visit(&visitor,node);
-
-    return 0;
-
-}
-
-
-#ifdef LINUX
-#define LINUX
-static ast_t* dll_add_to_visitor(visitor_t *visitor,ast_t *hd,const char *chaine ){
-
-    ast_t *func_dll = newAst(AST_FUNCTION_DLL);
-    func_dll->value.as.dll_funcValue = dlsym(hd->dll_handle,chaine);
-    func_dll->value.type = DLL;
-
-    if(!func_dll->value.as.dll_funcValue){
-        // il y a une erreur
-        fprintf(stderr,"Erreur : impossible d'avoir %s \n",chaine);
-        clear_ceflo_clean();        
-        exit(EXIT_FAILURE);
-    }
-
-    scope_append_function_definition(
-        visitor->global_scope,
-        chaine,
-        func_dll
-    );
-
-    return func_dll;
-}
-
-
-static ast_t* visitor_visit_dll_import(visitor_t *visitor , ast_t* node){
-
-    // permet d'importer les dll
-
-    ast_t * hd = newAst(AST_DLL);
-
-    hd->dll_handle = dlopen(node->variable_name,RTLD_LAZY);
-
-    if(!hd->dll_handle){
-        fprintf(stderr,"Erreur : impossible d'ouvir %s \n",node->variable_name);
-        clear_ceflo_clean();
-        exit(EXIT_FAILURE);
-    }
-
-    if(node->left->type == AST_VARIABLE){
-        // on veut récuperer une fonction dans cette dll
-        const char *chaine = node->left->variable_name;
-        dll_add_to_visitor(visitor,hd,chaine);
-    }
-    else if(node->left->type == AST_LIST){
-        
-        list_t * list = AS_LIST(node->left->value);
-
-        for (int i = 0; i < list->Size; i++){
-            ast_t * item = List_Get(list,i);
-            dll_add_to_visitor(visitor,hd,item->variable_name);
-        }
-
-    }else{
-        // il y a une erreur
-    }
-
-    return node;
-}
-
-#endif
 
 //                          ===================================== $COMPOUND ==============================================
 
-/**
- * @brief big switch statment on node of tree
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit(visitor_t * visitor,ast_t *node){
 
-    if(node == (void*)0){
-        // printf("NODE NULL \n");
-        return NULL;
+// Exécute les instructions dans la portée courante.
+static value_t *visitor_visit_statements(visitor_t *visitor, ast_t *node){
+    for(int i = 0; i < node->list_compound->Size; i++){
+        size_t mark = gc_temp_mark();
+        visitor_visit(visitor,List_Get(node->list_compound,i));
+
+        // On garde les temporaires : ils contiennent peut-être la valeur de `return`.
+        if(visitor->signal != SIGNAL_NONE)
+            return NULL;
+
+        gc_temp_reset(mark);
     }
-
-
-    // printf("[< %s >] \n",AST_TO_STRING[node->type]);
-
-    // if(node->type == AST_FUNCTION_CALL){
-    //     printf("=== %s === \n",node->function_call_name);
-    // }
-    // if(node->type == AST_VARIABLE){
-    //     printf("=== %s === \n",node->variable_name);
-    // }
-
-
-    switch (node->type){
-        case AST_CHAR:
-        case AST_BOOL:
-        case AST_NUMBER:
-        case AST_STRING:
-        case AST_NONE:
-        case AST_OBJ:
-        case AST_RETURN:
-        case AST_BREAK:
-        case AST_LFUNC:
-        case AST_GENERIC:
-            return visitor_visit_data(visitor,node);break;
-        case AST_COMPOUND: return visitor_visit_compound(visitor,node);break;
-        case AST_STRUCT_DEFINITION: return visitor_visit_struct_definition(visitor,node);break;
-        case AST_STRUCT: return visitor_visit_struct(visitor,node);break;
-        case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);break;
-        case AST_VARIABLE: return visitor_visit_variable(visitor,node);break;
-        case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor,node);break;
-        case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor,node);break;
-        case AST_BINOP: return visitor_visit_binop(visitor,node);break;
-        case AST_UNOP: return visitor_visit_unop(visitor,node);break;
-        case AST_IF: return visitor_visit_if(visitor,node);break;
-        case AST_TERNARY: return visitor_visit_ternary(visitor,node);break;
-        case AST_WHILE: return visitor_visit_while(visitor,node);break;
-        case AST_FOR: return visitor_visit_for(visitor,node);break;
-        case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);break;
-        case AST_LIST: return visitor_visit_list_init(visitor,node);break;
-        case AST_LIST_ASSIGNEMENT: return visitor_visit_list_assignement(visitor,node);break;
-        case AST_LIST_ACCESS: return visitor_visit_list_access(visitor,node);break;
-        case AST_OBJ_ACCESS:return visitor_visit_object_access(visitor,node);break;
-        case AST_INCLUDE : return visitor_visit_include(visitor,node);break;
-        case AST_EXPORT : return visitor_visit_export(visitor,node);break;
-        case AST_NOOP:
-            return node;
-        default:
-            printf("%s: pas implementer \n",AST_TO_STRING[node->type]);
-            clear_ceflo_clean();
-            exit(1);
-            break;
-    }
-
-
-
-    return node;
-}
-
-
-
-
-
-
-
-
-/**
- * @brief visit list node of current branch 
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_compound(visitor_t * visitor,ast_t *node){
-
-    for (int i = 0; i < node->list_compound->Size; i++){
-        ast_t *child = List_Get(node->list_compound,i);
-        ast_t *noeud =  visitor_visit(visitor,child);
-
-
-        if(noeud ){
-            if(noeud->type == AST_BREAK)
-                return noeud;
-            if(noeud ->type == AST_RETURN){
-                if(noeud ->return_expr != NULL){
-                    ast_t * return_value = visitor_visit(visitor,noeud->return_expr); 
-                    return_value->is_return_value = true;
-                    return return_value;
-                }
-            }
-
-            if((noeud->is_return_value == true) 
-                &&
-                noeud->countScope - 1 != visitor->global_scope->countScope
-            ){
-                if(visitor->global_scope->countScope == 0){
-                    noeud->is_return_value =  false;
-                }
-                else{
-                    // noeud->is_return_value =  false;
-                    return noeud ;
-                }
-            }else{
-                if(noeud->is_return_value){
-                    noeud->is_return_value =  false;
-                }
-            }
-
-        }
-    }
-    
-    return node;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//                          ===================================== $LIST ==============================================
-
-
-/**
- * @brief visit list Value
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_list_init(visitor_t * visitor,ast_t *node){
-    Value_t * val = &node->value;
-    for (int i = 0; i < val->as.listValue->Size; i++){
-        val->as.listValue->Item[i] =  visitor_visit(visitor,val->as.listValue->Item[i]);
-    }
-
-    return node;
-    
-}
-
-
-
-/**
- * @brief try Get an access for the list
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_list_access(visitor_t * visitor,ast_t *node){
-
-
-    ast_t * variable = visitor_visit(visitor,node->left);
-    ast_t * index = visitor_visit(visitor,node->list_ptr);
-
-    if(variable->type == AST_LIST){
-        if(index->type == AST_NUMBER){
-            if(index->value.as.numberValue > variable->value.as.listValue->Size){
-                Print_visitor_error(
-                variable->line,
-                variable->colone,
-                "./Ceflo",
-                "%s[%g] n'existe pas \n",
-                variable->variable_name,
-                index->value.as.numberValue
-                );
-                clear_ceflo_clean();
-                exit(1);
-            }
-
-            ast_t * res = List_Get(variable->value.as.listValue,(int) index->value.as.numberValue);
-
-            if(res == NULL){
-                Print_visitor_error(
-                variable->line,
-                variable->colone,
-                "./Ceflo",
-                "%s[%g] n'existe pas \n",
-                variable->variable_name,
-                index->value.as.numberValue
-                );
-                clear_ceflo_clean();
-                exit(1);
-            }
-            res->ref_list = variable->value.as.listValue;
-            res->ref_list_index = (int) index->value.as.numberValue;
-            return res;
-        }
-    }
-
-    if(variable->type == AST_STRING){
-        if(index->type == AST_NUMBER){
-            if(index->value.as.numberValue > variable->value.as.stringValue->lenght){
-                Print_visitor_error(
-                variable->line,
-                variable->colone,
-                "./Ceflo",
-                "%s[%g] n'existe pas \n",
-                variable->variable_name,
-                index->value.as.numberValue
-                );
-                clear_ceflo_clean();
-                exit(1);
-            }
-            ast_t * value =  newAst(AST_CHAR);
-            newValue(&value->value,CHAR);
-            value->value.as.charValue = String_index(variable->value.as.stringValue,(int)index->value.as.numberValue);
-            value->list_ptr = index;
-            value->ref_string = variable;
-            value->is_string_modif = true;
-            return value;
-        }
-    }
-
-
-    return index;
-}
-
-
-
-/**
- * @brief modifier the list at index
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_list_assignement(visitor_t * visitor,ast_t *node){
-
-    ast_t * variable = visitor_visit(visitor,node->assignement_left);
-
-
-    ast_t * value = visitor_visit(visitor,node->assignement_value);
-
-
-    if(node->op.type != TOKEN_EQUAL){
-        ast_t * binop = newAst(AST_BINOP);
-        binop->left = variable;
-        binop->right = value;
-        binop->op = node->op;
-        value = visitor_visit(visitor,binop);
-    }
-        
-    modifValue(&variable,value);
-    
-
-    
-    if(variable->is_string_modif){
-        string_t * str = variable->ref_string->value.as.stringValue;
-        if(value->type == AST_CHAR){
-            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,value->value.as.charValue);
-        }
-        else if(value->type == AST_NUMBER)
-            String_Set_char(str,(int)variable->list_ptr->value.as.numberValue,(char) value->value.as.numberValue);
-        else{
-            variable->ref_string->type = AST_NONE;
-        }
-        variable->is_string_modif = false;
-    }
-    
-
-    return value;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//                          ===================================== $OBJECT ==============================================
-
-
-/**
- * @brief save structure defintion
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-
-ast_t * visitor_visit_struct_definition(visitor_t * visitor,ast_t *node){
-    scope_append_struct_definition(
-        visitor->global_scope,
-        node->struct_definition_name,
-        node
-    );
-    return node;
-}
-
-
-/**
- * @brief transform new + structName in AST_OBJ
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_struct(visitor_t * visitor,ast_t *node){
-
-
-    ast_t *structDef = scope_get_struct_definition(
-        visitor->global_scope,
-        node->function_call_name
-    );
-
-    if(structDef == NULL){
-        if(visitor->global_scope->scope_parent != NULL){
-            structDef = visitor_visit_get_struct(visitor->global_scope->scope_parent,node);
-        }
-    }
-
-    if(structDef == NULL){
-        
-        Print_visitor_error(
-            node->line,
-            node->colone,
-            "./Ceflo",
-            "struct %s n'est pas définit \n",
-            node->function_call_name
-        );
-        clear_ceflo_clean();
-        exit(1);
-        
-    }
-
-
-    // if(strcmp(structDef->struct_definition_name,"DefinePointName")==0){
-
-    //     Print_Scope(visitor->global_scope,"PREMIER SCOPE");
-
-    //     for (int i = 0; i < node->function_call_args.size; i++){
-    //         ast_t * item = List_Ast_Get(&node->function_call_args,i);
-    //         if(Debug_Print_Ast_Type(item) == AST_VARIABLE){
-    //             printf("%s\n",item->variable_name);
-    //         }
-    //     }
-        
-    // }
-
-    ast_t *obj = newAst(AST_OBJ);
-    newValue(&obj->value,OBJECT);
-    
-    Obj_t * newObj = &obj->value.as.ObjectValue;
-    newObject(newObj);
-
-    newObj->self = newScope();
-    newObj->self->countScope = node->countScope;
-    newObj->self->is_for_obj = true;
-    obj->is_new_obj =  true;
-
-    obj->countScope = node->countScope;
-    newObj->obj_name = node->function_call_name;
-    newObj->self->is_for_obj = true;
-
-    visitor_t vs;
-    newVisitorWithScope(&vs,newObj->self);
-    ast_t * init = NULL;
-
-    obj->scope = newObj->self;
-    obj->scope->scope_parent = visitor->global_scope;
-
-    //TODO: ecrire la methode getattr pour les object
-
-    /*LOGIC**/
-
-    ast_t * value = NULL;
-
-
-    for (int i = 0; i < structDef->struct_definition_item->Size; i++){
-        ast_t *item = List_Get(structDef->struct_definition_item,i);
-        
-        if(item->type == AST_FUNCTION_DEFINITION){
-            if(strcmp("__init__",item->function_definition_name) == 0){
-                if(init != NULL)
-                    continue;
-
-                if(node->function_call_args.size == item->function_defintion_args.size){
-                    init = item;
-                }
-
-                continue;
-            }
-
-            if(strcmp("__str__",item->function_definition_name)==0){
-                newObj->__str__ = item;
-                continue;
-            }
-
-            if(strcmp("__cast__",item->function_definition_name)== 0){
-                newObj->__cast__ = item;
-                continue;
-            }
-        }
-
-
-        value =  ast_copy(item,NULL);
-        
-        visitor_visit(
-            &vs,
-            value
-        );
-    }
-    obj->scope->scope_parent = NULL;
-
-
-    if(init != NULL){
-
-        // free(node->function_call_name);
-        // allowChar(&node->function_call_name,"__init__");
-        // node->type = AST_FUNCTION_CALL;
-        // ast_t *val = visitor_visit(
-        //     &vs,
-        //     node
-        // );
-        Obj_t *init_self = NULL;
-        if(init->is_define_self)
-            init_self = newObj; 
-
-
-        // printf("    [< %s >]    \n",node->function_call_name);
-        visitor_visit_method(
-            visitor,
-            init_self,
-            init,
-            &node->function_call_args 
-        );
-
-    }
-
-
-
-    return obj;
-
-}
-
-
-/**
- * @brief try get/update/call element of value OBJ
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_object_access(visitor_t * visitor,ast_t *node){
-
-
-    ast_t * variable = visitor_visit(visitor,node->left);
-    ast_t * res = NULL; 
-    ast_t * right = node->right;
-    
-
-
-    if(variable->type == AST_OBJ){
-        Obj_t * self = &variable->value.as.ObjectValue;
-        visitor_t vs;
-        newVisitorWithScope(&vs,self->self);
-        vs.global_scope->scope_parent = visitor->global_scope;
-        
-        if(right->type == AST_FUNCTION_CALL){
-
-            // j'ai mis ça parce que si je pointe directement sur la structure, ça m'evite de 
-            // copier des fonctions qui peuvent être lourd dans la mémoire
-            // si c'est pas bon je peux simplement changer en scope_get_function
-            // ast_t * structt = getStruct(visitor->global_scope,self->obj_name);
-
-            // if(structt == NULL){
-            //     Print_visitor_error(
-            //         right->line,
-            //         right->colone,
-            //         "./Ceflo","la structure %s n'a pas été exporter correctement ou l'object n'est pas défini\n",
-            //         self->obj_name
-            //     );
-            // }
-
-
-            // ast_t *method = GetInStruct(
-            //     structt,"FUNC",right->function_call_name
-            // );
-
-            ast_t *method = scope_get_function_definition(
-                self->self,
-                right->function_call_name
-            );
-
-
-            if(method == NULL){
-                method = ObjectGetAttr(self,right->function_call_name,1);
-            }
-
-
-            if(method == NULL){
-                Print_visitor_error(
-                    right->line,
-                    right->colone,
-                    "./Ceflo","La methode `%s` n'est pas definit ou `%s` n'est pas un object\n",
-                    right->function_call_name,
-                    variable->assignement_variable_name
-                );
-            }
-
-            
-            if(!method->is_define_self){
-                self = NULL;
-            }
-
-            if(method->type == AST_LFUNC){
-                method = method->value.as.lfuncValue;
-            }
-
-            res = visitor_visit_method(
-                visitor,
-                self,
-                method,
-                &right->function_call_args
-            );
-
-        }else{
-            res = visitor_visit(&vs,right);
-        }
-        vs.global_scope->scope_parent = NULL;
-        return res;
-    }
-
-
-    if(variable->type == AST_LIST){
-
-        res = value_list_switch_function(visitor,variable->value.as.listValue,right);
-        if(res != NULL)
-            return res;
-    }
-
-    if(variable->type == AST_STRING){
-
-        res = value_str_switch_function(visitor,variable->value.as.stringValue,right);
-        if(res != NULL)
-            return res;
-    }
-
-
-    if(right->type == AST_FUNCTION_CALL){
-        Print_visitor_error(
-            right->line,
-            right->colone,
-            "./Ceflo","La methode `%s` n'est pas definit ou `%s` n'est pas un object\n",
-            right->function_call_name,
-            variable->assignement_variable_name
-        );
-    }
-    if(right->type == AST_VARIABLE){
-        Print_visitor_error(
-            right->line,
-            right->colone,
-            "./Ceflo","L'attribut `%s` n'est pas definit ou `%s` n'est pas un object\n",
-            right->variable_name,
-            variable->assignement_variable_name
-        );
-    }
-
-
-    clear_ceflo_clean();
-    exit(1);
-
     return NULL;
 }
 
+// Un bloc { } : il a sa propre portée dès qu'il déclare un nom.
+static value_t *visitor_visit_compound(visitor_t *visitor, ast_t *node){
+    if(!node->has_definition)
+        return visitor_visit_statements(visitor,node);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    scope_t *outer = visitor->scope;
+    visitor->scope = newScope(outer);
+    visitor_visit_statements(visitor,node);
+    visitor->scope = outer;
+    return NULL;
+}
 
 
 //                          ===================================== $VARIABLE ==============================================
 
 
+static void visitor_check_type(visitor_t *visitor, ast_t *node, const char *name, value_t *value, const char *type_name){
+    if(!typer_has_type(visitor,node,value,type_name))
+        visitor_error(node,"`%s` est de type %s, pas %s",name,type_name,typer_type_name(value));
+}
+
+// Une variable typée garde son type, même si on la déclare une deuxième fois.
+static const char *visitor_definition_type(visitor_t *visitor, ast_t *node){
+    const char *type_name = node->variable_definition_static_type_name;
+    hash_t *old = scope_get(visitor->scope,node->variable_definition_name);
+
+    if(old == NULL || old->type_name == NULL)
+        return type_name;
+    if(type_name != NULL && strcmp(type_name,old->type_name) != 0)
+        visitor_error(node,"`%s` est déjà de type %s",node->variable_definition_name,old->type_name);
+    return old->type_name;
+}
+
+static value_t *visitor_visit_variable_definition(visitor_t *visitor, ast_t *node){
+    for(; node != NULL; node = node->left){
+        const char *type_name = visitor_definition_type(visitor,node);
+        value_t *value = NULL;
+
+        if(node->variable_definition_value != NULL){
+            value = visitor_visit(visitor,node->variable_definition_value);
+            if(type_name != NULL)
+                visitor_check_type(visitor,node,node->variable_definition_name,value,type_name);
+        }else{
+            value = type_name != NULL ? typer_default_value(visitor,node,type_name) : makeNone();
+        }
+
+        hash_t *item = scope_define(visitor->scope,node->variable_definition_name,value);
+        item->type_name = type_name;
+        item->is_const = node->is_const;
+    }
+    return NULL;
+}
+
+// Le hash du nom ne se calcule qu'une fois par noeud, et non à chaque lecture.
+static hash_t *visitor_find_variable(visitor_t *visitor, ast_t *node){
+    if(node->variable_hash == 0)
+        node->variable_hash = Hash_Name(node->variable_name);
+
+    hash_t *item = scope_lookup_hashed(visitor->scope,node->variable_name,node->variable_hash);
+    if(item == NULL)
+        visitor_error(node,"`%s` n'est pas définie",node->variable_name);
+    return item;
+}
+
+static value_t *visitor_visit_variable(visitor_t *visitor, ast_t *node){
+    return visitor_find_variable(visitor,node)->value;
+}
+
+
+//                          ===================================== $LIST ==============================================
+
+
+static value_t *visitor_visit_list_init(visitor_t *visitor, ast_t *node){
+    value_t *list = makeList();
+    for(int i = 0; i < node->list_compound->Size; i++)
+        Value_list_append(list,visitor_visit(visitor,List_Get(node->list_compound,i)));
+    return list;
+}
+
+static value_t *visitor_visit_map_init(visitor_t *visitor, ast_t *node){
+    value_t *map = makeMap();
+    for(int i = 0; i < node->list_compound->Size; i += 2){
+        value_t *key = visitor_visit(visitor,List_Get(node->list_compound,i));
+        value_t *value = visitor_visit(visitor,List_Get(node->list_compound,i + 1));
+        Value_map_set(node,map,key,value);
+    }
+    return map;
+}
+
+static int visitor_get_index(ast_t *node, value_t *index, int size){
+    if(index->type != NUMBER)
+        visitor_error(node,"un index doit être un nombre, pas %s",Value_type_name(index));
+
+    double position = AS_NUMBER(index);
+    if(position != floor(position))
+        visitor_error(node,"un index doit être un entier");
+    if(position < 0 || position >= size)
+        visitor_error(node,"l'index %.0f n'existe pas (taille : %d)",position,size);
+
+    return (int)position;
+}
+
+static value_t *visitor_visit_list_access(visitor_t *visitor, ast_t *node){
+    value_t *container = visitor_visit(visitor,node->left);
+    value_t *index = visitor_visit(visitor,node->list_ptr);
+
+    if(container->type == LIST)
+        return AS_LIST(container)->Item[visitor_get_index(node,index,AS_LIST(container)->Size)];
+
+    if(container->type == STRING)
+        return makeChar(AS_STRING(container)->str[visitor_get_index(node,index,AS_STRING(container)->lenght)]);
+
+    if(container->type == MAP)
+        return Value_map_get(node,container,index);
+
+    visitor_error(node,"%s ne s'utilise pas avec `[ ]`",Value_type_name(container));
+}
+
+
+//                          ===================================== $OBJECT ==============================================
+
+
+static value_t *visitor_visit_struct_definition(visitor_t *visitor, ast_t *node){
+    hash_t *existing = scope_get(visitor->scope,node->struct_definition_name);
+    if(existing != NULL && ((value_t*)existing->value)->type == STRUCT)
+        visitor_error(node,"la structure `%s` est déjà définie",node->struct_definition_name);
+
+    scope_define(visitor->scope,node->struct_definition_name,makeStruct(node,visitor->scope));
+    return NULL;
+}
+
+// __init__ se surcharge : on prend celui qui a le bon nombre de paramètres.
+static ast_t *visitor_find_init(ast_t *definition, int argc){
+    for(int i = 0; i < definition->struct_definition_item->Size; i++){
+        ast_t *item = List_Get(definition->struct_definition_item,i);
+        if(item->type == AST_FUNCTION_DEFINITION &&
+           strcmp(item->function_definition_name,"__init__") == 0 &&
+           item->function_definition_args->Size == argc){
+            return item;
+        }
+    }
+    return NULL;
+}
+
 /**
- * @brief save variable definition in the current scope
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
+ * @brief crée un objet : sa portée reçoit `self`, les attributs et les méthodes.
+ *        Dans une méthode, un attribut est donc visible avec ou sans `self.`
  */
-ast_t * visitor_visit_variable_definition(visitor_t * visitor,ast_t *node){
+value_t *visitor_new_object(visitor_t *visitor, ast_t *node, value_t *structure, value_t **args, int argc){
+    ast_t *definition = structure->as.structValue.definition;
+    ast_t *init = visitor_find_init(definition,argc);
 
-    ast_t * value = visitor_visit(visitor,node->variable_definition_value);
-
-
-    if(value->type == AST_COMPOUND){
-        value = newAst(AST_NONE);
+    if(init == NULL && argc > 0){
+        visitor_error(node,"`%s` n'a pas de __init__ qui prend %d argument(s)",
+            definition->struct_definition_name,argc);
     }
 
+    scope_t *self = newScope(structure->as.structValue.closure);
+    value_t *object = makeObject(structure,self);
+    scope_define(self,"self",object)->is_const = true;
 
-    value->variable_definition_static_type = node->variable_definition_static_type;
-    value->countScope = visitor->global_scope->countScope;
+    scope_t *outer = visitor->scope;
+    visitor->scope = self;
 
-    if(node->variable_definition_static_type != NONE){
-        uint8_t type = type_ceflo_to_ast(node->variable_definition_static_type);
+    for(int i = 0; i < definition->struct_definition_item->Size; i++){
+        ast_t *item = List_Get(definition->struct_definition_item,i);
 
-        ast_t *res = typer_caste_value(type,value);
-
-        if(res == NULL){
-            Print_visitor_error(
-                node->variable_definition_value->line,
-                node->variable_definition_value->colone,
-                "./Ceflo",
-                "casting du type impossible !\n"
-            );
-            clear_ceflo_clean();
-            exit(1);
+        if(item->type == AST_VARIABLE_DEFINITION){
+            visitor_visit_variable_definition(visitor,item);
+        }else if(strcmp(item->function_definition_name,"__init__") != 0 &&
+                 strcmp(item->function_definition_name,"__cast__") != 0){
+            scope_define(self,item->function_definition_name,makeFunction(item,self));
         }
     }
 
+    visitor->scope = outer;
 
+    if(init != NULL)
+        visitor_call(visitor,node,makeFunction(init,self),args,argc);
 
-    // if(value->marked_count == 0)
-    //     Value_incref(value);
-
-    value->is_for_variable = true;
-    
- 
-    if(node->variable_definition_static_type_name)
-        allowChar(&value->variable_definition_static_type_name,node->variable_definition_static_type_name);
-
-        
-        
-    
-    if(value->type == AST_OBJ ){
-        // je fais une copie
-        if(value->is_new_obj == false){
-            value = ast_copy(value,visitor->global_scope);
-        }
-        else
-            value->is_new_obj = false;    
-    }
-    
-
-
-    // visitor_append_value(
-    //     visitor,
-    //     value
-    // );
-
-
-    scope_append_variable_definition(
-        visitor->global_scope,
-        node->variable_definition_name,
-        value
-    );
-
-    if(node->left != NULL){
-        visitor_visit_variable_definition(
-            visitor,
-            node->left
-        );
-    }
-
-
-    return value;
+    return object;
 }
 
 
+static hash_t *visitor_get_attribute(ast_t *node, value_t *object){
+    if(object->type != OBJECT)
+        visitor_error(node,"%s n'a pas d'attribut `%s`",Value_type_name(object),node->variable_name);
 
-static ast_t* getVariable(visitor_t * visitor , ast_t * node){
-        visitor_t visi;
-        newVisitorWithScope(&visi,visitor->global_scope->scope_parent);
-        return visitor_visit_variable(&visi,node);
+    hash_t *item = scope_get(object->as.ObjectValue.self,node->variable_name);
+    if(item == NULL)
+        visitor_error(node,"`%s` n'a pas d'attribut `%s`",Value_type_name(object),node->variable_name);
+
+    return item;
 }
 
-/**
- * @brief Get variable definition by name ( this one return the value of the variable )
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_variable(visitor_t * visitor,ast_t *node){
+static value_t *visitor_visit_object_access(visitor_t *visitor, ast_t *node){
+    value_t *object = visitor_visit(visitor,node->left);
 
-    ast_t * value = scope_get_variable_definition(
-        visitor->global_scope,
-        node->variable_name
-    );
-
-
-    if(value != NULL){
-        value->is_for_variable = true;
-        value->scope = visitor->global_scope;
-        value->assignement_variable_name = node->variable_name;
-        return value;
+    if(object->type == MAP){
+        value_t *value = Value_map_get_name(object,node->variable_name);
+        return value != NULL ? value : makeNone();
     }
 
-
-    if(value == NULL && (visitor->is_for_obj == false || node->variable_forGlobal == true) ){
-        // else{
-            if(visitor->global_scope != NULL && visitor->global_scope->scope_parent != NULL){
-                return getVariable(visitor,node);
-        //         return getVariable(visitor,node);
-            }
-        // }
-    }
-
-        Print_visitor_error(
-            node->line,
-            node->colone,
-            "./Ceflo",
-            "var %s n'est pas définit \n",
-            node->variable_name
-        );
-
-        // clear_ceflo_clean();
-        // exit(1);
-
-        return NULL;
-
+    return visitor_get_attribute(node,object)->value;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //                          ===================================== $FUNCTION ==============================================
 
 
+static value_t *visitor_visit_function_definition(visitor_t *visitor, ast_t *node){
+    hash_t *existing = scope_get(visitor->scope,node->function_definition_name);
+    if(existing != NULL && ((value_t*)existing->value)->type == FUNCTION)
+        visitor_error(node,"la fonction `%s` est déjà définie",node->function_definition_name);
 
-/** TODO: Voir la partie OBJ , je cherche le resolveur de OBJ , ou je cherche la fonction qui vas caster en objet
-*/
-
-
-static ast_t *is_function_return_type(visitor_t *visitor, ast_t *function , ast_t *value){
-
-    if(function->function_definition_return_type != NONE){
-        if(function->function_definition_return_type != OBJECT){
-            uint8_t type = type_ceflo_to_ast(function->function_definition_return_type);
-            ast_t *res =  typer_caste_value(type, value);
-            return res;
-        }else{
-
-            if(value->type != AST_OBJ) return NULL;
-        
-
-            const char *name = function->function_definition_return_type_name;
-            ast_t *structt = getStruct(visitor->global_scope,name);
-
-            bool is_sameObj = ObjectIsSame(&value->value.as.ObjectValue,name) == 1;
-            if(is_sameObj){
-                return value;
-            }else{
-                // je recuperere déja la structure par son som
-
-                ast_t * structure = getStruct(visitor->global_scope,name);
-
-                if(structure != NULL){
-
-                    ast_t * function = GetInStruct(
-                        structure,
-                        "FUNC",
-                        "__cast__"
-                    );
-                    
-                    if(function != NULL){
-
-                        /**
-                         * TODO: reparer la fonction __init__
-                         * 
-                         */
-
-                        list_ast_t args;
-                        newList_Ast(&args);
-                        List_Ast_Append(&args,value);
-                        return visitor_visit_function(visitor,function,&args);
-                    }
-
-                }
-
-                return NULL;
-            }
-        }
-    }
-
-    return value;
+    scope_define(visitor->scope,node->function_definition_name,makeFunction(node,visitor->scope));
+    return NULL;
 }
 
-/**
- * @brief save function defintion in the current scope
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_function_definition(visitor_t * visitor,ast_t *node){
-    scope_append_function_definition(
-        visitor->global_scope,
-        node->function_definition_name,
-        node
-    );
+static value_t *visitor_call_function(visitor_t *visitor, ast_t *node, value_t *function, value_t **args, int argc){
+    ast_t *definition = function->as.functionValue.definition;
+    ast_t *where = node != NULL ? node : definition;
 
+    if(argc != definition->function_definition_args->Size){
+        visitor_error(where,"`%s` prend %d argument(s), mais en reçoit %d",
+            definition->function_definition_name,
+            definition->function_definition_args->Size,
+            argc
+        );
+    }
 
-    return node;
+    size_t mark = gc_temp_mark();
+    scope_t *caller = visitor->scope;
+    visitor->scope = newScope(function->as.functionValue.closure);
+
+    for(int i = 0; i < argc; i++){
+        ast_t *arg = List_Get(definition->function_definition_args,i);
+        if(arg->variable_definition_static_type_name != NULL)
+            visitor_check_type(visitor,where,arg->variable_name,args[i],arg->variable_definition_static_type_name);
+        hash_t *item = scope_define(visitor->scope,arg->variable_name,args[i]);
+        item->type_name = arg->variable_definition_static_type_name;
+    }
+
+    visitor_visit_statements(visitor,definition->function_definition_body);
+
+    value_t *result = visitor->signal == SIGNAL_RETURN ? visitor->return_value : makeNone();
+    visitor->signal = SIGNAL_NONE;
+    visitor->return_value = NULL;
+
+    const char *return_type = definition->function_definition_return_type_name;
+    if(return_type != NULL && !typer_has_type(visitor,where,result,return_type)){
+        visitor_error(where,"`%s` doit retourner une valeur de type %s, pas %s",
+            definition->function_definition_name,
+            return_type,
+            typer_type_name(result)
+        );
+    }
+
+    visitor->scope = caller;
+
+    gc_temp_reset(mark);
+    gc_temp_push(result);
+
+    return result;
 }
 
+value_t *visitor_call(visitor_t *visitor, ast_t *node, value_t *function, value_t **args, int argc){
+    if(function->type == FUNCTION)
+        return visitor_call_function(visitor,node,function,args,argc);
 
+    if(function->type == BUILTIN)
+        return function->as.builtinValue.function(visitor,node,args,argc);
 
-ast_t* visitor_visit_method(visitor_t *visitor ,Obj_t * self ,  ast_t * method , list_ast_t * args){
-    
-    scope_t * newscope = newScope();
-    visitor_t visit;
-    newVisitorWithScope(&visit,newscope);
-
-
-    visit.global_scope->countScope = method->function_definition_body->countScope; 
-    if(visitor != NULL)    
-        visit.global_scope->scope_parent = visitor->global_scope;
-
-
-
-    if(self != NULL && method->is_define_self == true){
-        ast_t * self_to_ast = create_self_ast(self);
-        scope_append_variable_definition(
-            newscope,
-            "self",
-            self_to_ast
-        );
-    }
-
-
-
-    if(args != NULL){
-
-        if(args->size != method->function_defintion_args.size){
-            Print_visitor_error(
-                method->line,
-                method->colone,
-                "./Ceflo",
-                "func %s prends %d argument(s) \n",
-                method->function_definition_name,
-                method->function_defintion_args.size
-            );
-
-            clear_ceflo_clean();
-            exit(1);
-        }
-
-        // printf("[%s]\n",func->function_definition_name);
-
-        for (int i = 0; i < (int) args->size; i++){
-            ast_t *args1 = List_Ast_Get(&method->function_defintion_args,i);
-            ast_t * value = NULL; 
-
-            char * variable_name = args1->variable_name;
-
-            // TODO : mettre self dans une chaine static
- 
-            value = visitor_visit(visitor,List_Ast_Get(args,i));
-            
-            // printf("       {%s} ",variable_name);
-     
-            if(args1->variable_definition_static_type != NONE){
-                uint8_t type = type_ceflo_to_ast(args1->variable_definition_static_type);
-
-                ast_t *res = typer_caste_value(type,value);
-
-                if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
-                    res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
-                }
-
-                if(res == NULL){
-                    Print_visitor_error(
-                    args1->line,
-                    args1->colone,
-                    "./Ceflo",
-                    "casting du type impossible !\n"
-                );
-                
-                clear_ceflo_clean();
-                exit(1);
-            }
-        }
-
-
-            
-            scope_append_variable_definition(
-                newscope,
-                variable_name,
-                value
-            );
-        }
-    }
-    
-
-
-    ast_t *returnValue =  visitor_visit(&visit,method->function_definition_body);   
-
-        
-
-    is_function_return_type(visitor,method,returnValue);
-
-    
-
-    freeSingleScope(newscope);
-
-    if(returnValue == NULL){
-        Print_visitor_error(
-            method->line,
-            method->colone,
-            "./Ceflo",
-            "func %s : retourne une value precise !\n",
-            method->function_definition_name
-        );
-        clear_ceflo_clean();
-        exit(1);
-    }
-
-
-    return returnValue;
+    visitor_error(node,"%s n'est pas une fonction",Value_type_name(function));
 }
 
+// Les arguments s'évaluent de gauche à droite, avant l'appel.
+#define VISIT_ARGS(visitor, node, name)                                                     \
+    int name##_count = (node)->function_call_args->Size;                                    \
+    value_t *name[name##_count > 0 ? name##_count : 1];                                     \
+    for(int name##_i = 0; name##_i < name##_count; name##_i++)                              \
+        name[name##_i] = visitor_visit(visitor,List_Get((node)->function_call_args,name##_i))
 
+static value_t *visitor_visit_method_call(visitor_t *visitor, ast_t *node){
+    ast_t *callee = node->left;
+    value_t *receiver = visitor_visit(visitor,callee->left);
 
-/**
- * @brief visit a function by name
- * 
- * @param visitor 
- * @param func 
- * @param args 
- * @return ast_t* 
- */
-ast_t* visitor_visit_function(visitor_t *visitor , ast_t * func , list_ast_t * args){
-    
-    scope_t * newscope = newScope();
-    visitor_t visit;
-    newVisitorWithScope(&visit,newscope);
-
-
-    visit.global_scope->countScope = func->function_definition_body->countScope; 
-    visit.global_scope->scope_parent = visitor->global_scope;
-
-
-
-    if(args != NULL){
-
-        if(args->size != func->function_defintion_args.size){
-            Print_visitor_error(
-                func->line,
-                func->colone,
-                "./Ceflo",
-                "func %s prends %d argument(s) \n",
-                func->function_definition_name,
-                func->function_defintion_args.size
-            );
-
-            clear_ceflo_clean();
-            exit(1);
+    // Une fonction rangée dans un map passe avant les méthodes de map.
+    if(receiver->type == MAP){
+        value_t *held = Value_map_get_name(receiver,callee->variable_name);
+        if(held != NULL && (held->type == FUNCTION || held->type == BUILTIN)){
+            VISIT_ARGS(visitor,node,args);
+            return visitor_call(visitor,node,held,args,args_count);
         }
-
-        // printf("[%s]\n",func->function_definition_name);
-
-
-        for (int i = 0; i < (int) args->size ; i++){
-
-            ast_t *args1 = List_Ast_Get(&func->function_defintion_args,i);
-
-            char * variable_name = args1->variable_name;
-            ast_t * val = List_Ast_Get(args,i);
-            ast_t * value = NULL;
-
-            value = visitor_visit(visitor,val);
-
-            if(args1->variable_definition_static_type != NONE){
-                    uint8_t type = type_ceflo_to_ast(args1->variable_definition_static_type);
-
-                    ast_t *res = typer_caste_value(type,value);
-
-                    if(res == NULL && args1->variable_definition_static_type + 4 == AST_OBJ ){
-                        res = typer_caste_value_try_obj(AST_OBJ,&value,args1);
-                    }
-
-                    if(res == NULL){
-                        Print_visitor_error(
-                        args1->line,
-                        args1->colone,
-                        "./Ceflo",
-                        "casting du type impossible !\n"
-                    );
-                    
-                    clear_ceflo_clean();
-                    exit(1);
-                }
-            }
-
-
-            scope_append_variable_definition(
-                newscope,
-                variable_name,
-                value
-            );
-        }
-        
-    }
-    
-
-
-
-    ast_t *returnValue =  visitor_visit(&visit,func->function_definition_body);   
-
-    is_function_return_type(visitor,func,returnValue);
-
-    
-    freeSingleScope(newscope);
-
-    if(returnValue == NULL){
-        Print_visitor_error(
-            func->line,
-            func->colone,
-            "./Ceflo",
-            "func %s : retourne une value precise !\n",
-            func->function_definition_name
-        );
-        clear_ceflo_clean();
-        exit(1);
     }
 
+    if(receiver->type == OBJECT){
+        hash_t *method = scope_get(receiver->as.ObjectValue.self,callee->variable_name);
+        if(method == NULL)
+            visitor_error(callee,"`%s` n'a pas de méthode `%s`",Value_type_name(receiver),callee->variable_name);
 
-    return returnValue;
+        VISIT_ARGS(visitor,node,args);
+        return visitor_call(visitor,node,method->value,args,args_count);
+    }
+
+    VISIT_ARGS(visitor,node,args);
+    value_t *result = Value_call_method(visitor,node,receiver,callee->variable_name,args,args_count);
+    if(result == NULL)
+        visitor_error(callee,"%s n'a pas de méthode `%s`",Value_type_name(receiver),callee->variable_name);
+
+    return result;
 }
 
+static value_t *visitor_visit_function_call(visitor_t *visitor, ast_t *node){
+    if(node->left->type == AST_OBJ_ACCESS)
+        return visitor_visit_method_call(visitor,node);
 
-/**
- * @brief visit function call
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_function_call(visitor_t * visitor,ast_t *node){
+    value_t *function = visitor_visit(visitor,node->left);
 
-    ast_t * res = bulletin_switch_function(
-        visitor,node,
-        &node->function_call_args
-    );
-
-    if(res != NULL){
-        return res;
-    }
-
-    if(node->is_func_typer){
-        res = typer_typer(visitor,node->function_call_name,&node->function_call_args);
-        return res;
-    }
-
-    ast_t * functionDef = NULL;
-
-    if(node->left != NULL){
-        functionDef = visitor_visit(visitor,node->left);
-    } 
-
-    if(functionDef == NULL)
-        functionDef =  scope_get_function_definition(
-            visitor->global_scope,
-            node->function_call_name
-        );
-    
-
-    if(functionDef == NULL){
-        if(visitor->global_scope->scope_parent != NULL ){
-            functionDef = visitor_visit_get_function(visitor->global_scope->scope_parent,node);
-        }
-    }    
-
-    
-
-    if(functionDef == NULL){
-        Print_visitor_error(
-            node->line,
-            node->colone,
-            "./Ceflo",
-            "func %s n'est pas définit \n",
-            node->function_call_name
-        );
-
-        clear_ceflo_clean();
-        exit(1);
-    }
-
-
-    if(functionDef->type == AST_LFUNC){
-        functionDef = functionDef->value.as.lfuncValue;
-    }
-
-    if(functionDef->type == AST_FUNCTION_DLL){
-
-        ast_t * f = functionDef->value.as.dll_funcValue(
-            visitor,
-            node,
-            &node->function_call_args
-        );
-        addAstToDoublePile(f);
-        if(f->type == AST_NOOP){
-            clear_ceflo_clean();
-            exit(1);
-        }
-        return f;
-    }
-
-    if(node->function_call_args.size != functionDef->function_defintion_args.size){
-        Print_visitor_error(
-            node->line,
-            node->colone,
-            "./Ceflo",
-            "func %s prends %d argument(s) \n",
-            node->function_call_name,
-            functionDef->function_defintion_args.size
-        );
-        
-
-        clear_ceflo_clean();
-        exit(1);
-    }
-
-    return visitor_visit_function(visitor,functionDef,&node->function_call_args);
+    VISIT_ARGS(visitor,node,args);
+    return visitor_call(visitor,node,function,args,args_count);
 }
 
+static value_t *visitor_visit_new(visitor_t *visitor, ast_t *node){
+    hash_t *item = scope_lookup(visitor->scope,node->function_call_name);
+    if(item == NULL || ((value_t*)item->value)->type != STRUCT)
+        visitor_error(node,"la structure `%s` n'est pas définie",node->function_call_name);
 
+    VISIT_ARGS(visitor,node,args);
+    return visitor_new_object(visitor,node,item->value,args,args_count);
+}
 
-
-
-
-
+static value_t *visitor_visit_type_call(visitor_t *visitor, ast_t *node){
+    VISIT_ARGS(visitor,node,args);
+    return typer_typer(visitor,node,args,args_count);
+}
 
 
 //                          ===================================== $VALUE ==============================================
 
 
+// `and` et `or` n'évaluent leur côté droit que s'il est utile.
+static value_t *visitor_visit_binop(visitor_t *visitor, ast_t *node){
+    value_t *left = visitor_visit(visitor,node->left);
 
-
-void visitor_visit_tree(visitor_t *visitor,Value_t * value, Value_t * left , token_t * op, Value_t * right){
-
-    switch (left->type){
-
-        case CHAR:
-            performe_visit_tree_char(value,left,op,right);
-        break;
-
-        case NUMBER:
-            performe_visit_tree_number(value,left,op,right);
-        break;
-
-        case BOOL : 
-            performe_visit_tree_bool(value,left,op,right);
-        break;
-        case STRING:
-            performe_visit_tree_str(value,left,op,right);
-            break;
-        case NONE:
-            performe_visit_tree_none(value,left,op,right);
-            break;
-
-        default :
-            Print_visitor_error(
-                0,
-                0,
-                "./Ceflo",
-                " operator '-' n'est pas compatible avec l'expression qui suit \n"
-            );
-            clear_ceflo_clean();
-            exit(1);
-        break;
-    }
-}
-
-
-
-/**
- * @brief join result of walk of tree expr
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_binop(visitor_t *visitor , ast_t *node){
-
-
-    Value_t buffer;
-
-    ast_t *left = visitor_visit(visitor,node->left);
-    ast_t *right = visitor_visit(visitor,node->right);
-
-    visitor_visit_tree(
-        visitor,
-        &buffer,
-        &left->value,
-        &node->op,
-        &right->value
-    );
-
-
-    ast_t * value = newAst(value_to_type_ast(&buffer));
-    value->value = buffer;
-    return value;
-}
-
-
-
-
-
-ast_t * visitor_visit_unop(visitor_t * visitor , ast_t * node){
-
-
-    ast_t * left = visitor_visit(visitor,node->right);
-
-    if(node->op.type == TOKEN_PLUS){
-        return left;
-    }else if(node->op.type == TOKEN_MINUS){
-
-        if(left->type == AST_NUMBER){
-            left->value.as.numberValue *= -1; 
-        }else if(left->type == AST_CHAR){
-            left->value.as.charValue *= -1; 
-        }else{
-            Print_visitor_error(
-                node->line,
-                node->colone,
-                "./Ceflo",
-                " operator '-' n'est pas compatible avec l'expression qui suit \n"
-            );
-            clear_ceflo_clean();
-            exit(1);
-        }
+    if(node->op == TOKEN_AND){
+        if(!Value_is_true(left))
+            return makeBool(false);
+        return makeBool(Value_is_true(visitor_visit(visitor,node->right)));
     }
 
-    return left;
-
-}
-
-
-
-
-/**
- * @brief evalue value
- * 
- * @param value 
- * @return int 
- */
-static int visitor_visit_evaluate_expr(ast_t *value){
-
-    switch (value->type){
-        case AST_BOOL: return AS_BOOL(value->value) > 0;
-        case AST_NUMBER: return AS_NUMBER(value->value) > 0;
-        case AST_STRING: return value->value.as.stringValue->lenght > 0;
-        case AST_CHAR: return AS_CHAR(value->value) > 0;
+    if(node->op == TOKEN_OR){
+        if(Value_is_true(left))
+            return makeBool(true);
+        return makeBool(Value_is_true(visitor_visit(visitor,node->right)));
     }
 
-    return 0;
+    value_t *right = visitor_visit(visitor,node->right);
+    return value_expr(visitor,node,left,node->op,right);
 }
 
+static value_t *visitor_visit_unop(visitor_t *visitor, ast_t *node){
+    value_t *value = visitor_visit(visitor,node->right);
 
-/**
- * @brief value
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-ast_t * visitor_visit_data(visitor_t * visitor,ast_t *node){
-    return node;
+    if(node->op == TOKEN_NOT)
+        return makeBool(!Value_is_true(value));
+
+    if(value->type != NUMBER && value->type != BOOL && value->type != CHAR)
+        visitor_error(node,"l'opérateur `-` ne s'applique pas à %s",Value_type_name(value));
+
+    return makeNumber(-Value_as_double(value));
 }
 
-
-
-
-
-
-
-
-
-
-
-
+static value_t *visitor_visit_string(ast_t *node){
+    return makeStringLenght(node->string_value,node->string_lenght);
+}
 
 
 //                          ===================================== $CONTROLE ==============================================
 
 
-/**
- * @brief for if node of tree
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
- */
-
-
-ast_t * visitor_visit_if(visitor_t * visitor,ast_t *node){
-
-
-    if(!node->if_expr)
+static value_t *visitor_visit_if(visitor_t *visitor, ast_t *node){
+    if(Value_is_true(visitor_visit(visitor,node->if_expr)))
         return visitor_visit(visitor,node->if_body);
-
-    if(visitor_visit_evaluate_expr(visitor_visit(visitor,node->if_expr))){
-        return visitor_visit(visitor,node->if_body);
-    }else{
-        if(node->if_other){
-            return visitor_visit(visitor,node->if_other);
-        }
-        if(node->else_body){
-            return visitor_visit(visitor,node->else_body);
-        }
-    }
-
-    return node;
+    if(node->if_other != NULL)
+        return visitor_visit(visitor,node->if_other);
+    if(node->else_body != NULL)
+        return visitor_visit(visitor,node->else_body);
+    return NULL;
 }
 
-ast_t * visitor_visit_ternary(visitor_t * visitor,ast_t *node){
-
-    return visitor_visit_evaluate_expr(visitor_visit(visitor,node->if_expr)) ?
-        visitor_visit(visitor,node->if_other):
+static value_t *visitor_visit_ternary(visitor_t *visitor, ast_t *node){
+    return Value_is_true(visitor_visit(visitor,node->if_expr)) ?
+        visitor_visit(visitor,node->if_other) :
         visitor_visit(visitor,node->else_body);
 }
 
+// Après le corps d'une boucle : retourne true si la boucle doit s'arrêter.
+static bool visitor_loop_should_stop(visitor_t *visitor){
+    if(visitor->signal == SIGNAL_BREAK){
+        visitor->signal = SIGNAL_NONE;
+        return true;
+    }
+    if(visitor->signal == SIGNAL_CONTINUE)
+        visitor->signal = SIGNAL_NONE;
+    return visitor->signal == SIGNAL_RETURN;
+}
+
+static value_t *visitor_visit_while(visitor_t *visitor, ast_t *node){
+    size_t mark = gc_temp_mark();
+
+    while(Value_is_true(visitor_visit(visitor,node->while_expr))){
+        visitor_visit(visitor,node->while_body);
+        if(visitor_loop_should_stop(visitor))
+            return NULL;
+        gc_temp_reset(mark);
+    }
+
+    return NULL;
+}
+
+static value_t *visitor_visit_for(visitor_t *visitor, ast_t *node){
+    scope_t *outer = visitor->scope;
+    visitor->scope = newScope(outer);
+
+    if(node->for_init != NULL)
+        visitor_visit(visitor,node->for_init);
+
+    size_t mark = gc_temp_mark();
+
+    while(node->for_condition == NULL || Value_is_true(visitor_visit(visitor,node->for_condition))){
+        visitor_visit(visitor,node->for_body);
+        if(visitor_loop_should_stop(visitor))
+            break;
+        visitor_visit_statements(visitor,node->for_solve);
+        gc_temp_reset(mark);
+    }
+
+    visitor->scope = outer;
+    return NULL;
+}
+
+static void visitor_for_in_define(visitor_t *visitor, ast_t *variable, value_t *value){
+    const char *type_name = variable->variable_definition_static_type_name;
+    if(type_name != NULL)
+        visitor_check_type(visitor,variable,variable->variable_definition_name,value,type_name);
+
+    hash_t *item = scope_define(visitor->scope,variable->variable_definition_name,value);
+    item->type_name = type_name;
+}
+
+// Un tour de boucle a sa propre portée : une lfunc y garde la valeur de ce tour-là.
+static bool visitor_for_in_turn(visitor_t *visitor, ast_t *node, value_t *first, value_t *second){
+    scope_t *outer = visitor->scope;
+    visitor->scope = newScope(outer);
+
+    visitor_for_in_define(visitor,node->for_init,first);
+    if(node->for_init->left != NULL)
+        visitor_for_in_define(visitor,node->for_init->left,second);
+
+    visitor_visit(visitor,node->for_body);
+    visitor->scope = outer;
+
+    return !visitor_loop_should_stop(visitor);
+}
+
 /**
- * @brief for while node of tree
- * 
- * @param visitor 
- * @param node 
- * @return ast_t* 
+ * @brief les clés sont relevées avant le premier tour. Le corps peut donc modifier
+ *        le map : une clé enlevée est sautée, une clé ajoutée attend la prochaine boucle.
  */
-ast_t * visitor_visit_while(visitor_t * visitor,ast_t *node){
+static void visitor_for_in_map(visitor_t *visitor, ast_t *node, value_t *map){
+    value_t *keys = Value_map_keys(map);
+    size_t mark = gc_temp_mark();
+    int next = 0;
 
-    
-    while (visitor_visit_evaluate_expr(visitor_visit(visitor,node->while_expr))){
-        ast_t *res =  visitor_visit(visitor,node->while_body);
-        if(res->is_return_value)
-            return res;
-        if(res->type == AST_BREAK){
+    for(int i = 0; i < AS_LIST(keys)->Size; i++){
+        value_t *key = AS_LIST(keys)->Item[i];
+
+        // Tant que le map ne bouge pas, la paire suivante est la bonne : pas besoin de chercher.
+        map_t *table = AS_MAP(map);
+        while(next < table->size && table->entries[next].key == NULL)
+            next += 1;
+
+        value_t *value = NULL;
+        if(next < table->size && table->entries[next].key == key)
+            value = table->entries[next].value;
+        else
+            value = map_get(table,key);
+        next += 1;
+
+        if(value == NULL)
+            continue;
+        if(!visitor_for_in_turn(visitor,node,key,value))
             break;
-        }
-
+        gc_temp_reset(mark);
     }
-    
-    return node;
 }
 
+// Avec une seule variable, une liste donne ses éléments. Avec deux, l'index et l'élément.
+static void visitor_for_in_list(visitor_t *visitor, ast_t *node, value_t *list){
+    bool with_index = node->for_init->left != NULL;
+    size_t mark = gc_temp_mark();
 
-ast_t * visitor_visit_for(visitor_t * visitor,ast_t *node){
-    
-    visitor_t vs;
-    newVisitor(&vs);
-    vs.global_scope->scope_parent = visitor->global_scope;
-
-    for (ast_t * i = visitor_visit(&vs,node->for_init) ; 
-        visitor_visit_evaluate_expr(visitor_visit(&vs,node->for_condition)); 
-        visitor_visit(&vs,node->for_solve))
-    {
-        ast_t *res =  visitor_visit(&vs,node->for_body);
-        if(res->is_return_value){
-            res->is_return_value = false;
-            return res;
-        }
-        if(res->type == AST_BREAK){
+    // La taille est relue à chaque tour : le corps peut modifier la liste.
+    for(int i = 0; i < AS_LIST(list)->Size; i++){
+        value_t *item = AS_LIST(list)->Item[i];
+        gc_temp_push(item);
+        bool go_on = with_index ? visitor_for_in_turn(visitor,node,makeNumber(i),item) :
+            visitor_for_in_turn(visitor,node,item,NULL);
+        if(!go_on)
             break;
-        }
-
+        gc_temp_reset(mark);
     }
-
-    freeSingleScope(vs.global_scope);
-
-    return node;
 }
 
+static void visitor_for_in_string(visitor_t *visitor, ast_t *node, value_t *string){
+    bool with_index = node->for_init->left != NULL;
+    size_t mark = gc_temp_mark();
 
+    for(int i = 0; i < AS_STRING(string)->lenght; i++){
+        value_t *carac = makeChar(AS_STRING(string)->str[i]);
+        bool go_on = with_index ? visitor_for_in_turn(visitor,node,makeNumber(i),carac) :
+            visitor_for_in_turn(visitor,node,carac,NULL);
+        if(!go_on)
+            break;
+        gc_temp_reset(mark);
+    }
+}
 
+static value_t *visitor_visit_for_in(visitor_t *visitor, ast_t *node){
+    value_t *iterable = visitor_visit(visitor,node->for_condition);
 
+    if(iterable->type == MAP)
+        visitor_for_in_map(visitor,node,iterable);
+    else if(iterable->type == LIST)
+        visitor_for_in_list(visitor,node,iterable);
+    else if(iterable->type == STRING)
+        visitor_for_in_string(visitor,node,iterable);
+    else
+        visitor_error(node,"%s ne se parcourt pas avec `for ... in`",Value_type_name(iterable));
 
+    return NULL;
+}
 
-
-
-
-
-
-
-
+static value_t *visitor_visit_return(visitor_t *visitor, ast_t *node){
+    visitor->return_value = node->return_expr != NULL ?
+        visitor_visit(visitor,node->return_expr) : makeNone();
+    visitor->signal = SIGNAL_RETURN;
+    return NULL;
+}
 
 
 //                          ===================================== $MODIFIER ==============================================
 
 
+/*
+    La cible d'une affectation s'évalue une seule fois : dans `l[f()] += 1`,
+    la fonction f n'est appelée qu'une fois.
+*/
+typedef struct{
+    enum{ PLACE_VARIABLE, PLACE_LIST, PLACE_STRING, PLACE_MAP } kind;
+    hash_t *item;
+    value_t *container;
+    value_t *key;       // PLACE_MAP : NULL dans `t.nom`, où la clé est le nom du noeud
+    int index;
+    ast_t *node;
+}place_t;
 
-static void visitor_visit_assignement_value(ast_t * node , ast_t *value){
-    value->is_for_variable = node->is_for_variable;
-    value->scope = NULL;
-    value->variable_definition_static_type = node->variable_definition_static_type;
+static place_t visitor_get_place(visitor_t *visitor, ast_t *target){
+    place_t place = {.node = target};
+
+    if(target->type == AST_VARIABLE){
+        place.kind = PLACE_VARIABLE;
+        place.item = visitor_find_variable(visitor,target);
+        return place;
+    }
+
+    if(target->type == AST_OBJ_ACCESS){
+        value_t *object = visitor_visit(visitor,target->left);
+        if(object->type == MAP){
+            place.kind = PLACE_MAP;
+            place.container = object;
+            return place;
+        }
+        place.kind = PLACE_VARIABLE;
+        place.item = visitor_get_attribute(target,object);
+        return place;
+    }
+
+    place.container = visitor_visit(visitor,target->left);
+    value_t *index = visitor_visit(visitor,target->list_ptr);
+
+    if(place.container->type == LIST){
+        place.kind = PLACE_LIST;
+        place.index = visitor_get_index(target,index,AS_LIST(place.container)->Size);
+    }else if(place.container->type == STRING){
+        place.kind = PLACE_STRING;
+        place.index = visitor_get_index(target,index,AS_STRING(place.container)->lenght);
+    }else if(place.container->type == MAP){
+        place.kind = PLACE_MAP;
+        place.key = index;
+    }else{
+        visitor_error(target,"%s ne s'utilise pas avec `[ ]`",Value_type_name(place.container));
+    }
+
+    return place;
 }
 
-ast_t * visitor_visit_assignement(visitor_t * visitor,ast_t *node){
-
-    ast_t * value = visitor_visit(visitor,node->assignement_value);
-
-    ast_t * variable = visitor_visit(visitor,node->assignement_left);
-
-    scope_t *scope = variable->scope;
-
-
-    if(node->op.type != TOKEN_ID){
-        ast_t * binop = newAst(AST_BINOP);
-        binop->left = variable;
-        binop->right = value;
-        binop->op = node->op;
-        value =  visitor_visit(visitor,binop);
-    }
-
-
-    if(variable->variable_definition_static_type != NONE){
-        uint8_t type = type_ceflo_to_ast(variable->variable_definition_static_type );
-        ast_t * res = typer_caste_value(type,value);
-
-        if(res == NULL){
-            Print_visitor_error(
-                node->line,
-                node->colone,
-                "./Ceflo",
-                "casting du type impossible !\n"
-            );
-            clear_ceflo_clean();
-            exit(1);
+static value_t *visitor_place_get(place_t *place){
+    switch(place->kind){
+        case PLACE_VARIABLE: return place->item->value;
+        case PLACE_LIST: return AS_LIST(place->container)->Item[place->index];
+        case PLACE_MAP:{
+            if(place->key != NULL)
+                return Value_map_get(place->node,place->container,place->key);
+            value_t *value = Value_map_get_name(place->container,place->node->variable_name);
+            return value != NULL ? value : makeNone();
         }
+        default: return makeChar(AS_STRING(place->container)->str[place->index]);
+    }
+}
 
-        value->variable_definition_static_type = variable->variable_definition_static_type;
+static void visitor_place_set(visitor_t *visitor, place_t *place, value_t *value);
+
+/**
+ * @brief s[i] = 'x' : une chaîne ne change jamais, alors on en construit une
+ *        nouvelle et on la range à la place de l'ancienne.
+ */
+static void visitor_place_set_char(visitor_t *visitor, place_t *place, value_t *value){
+    char carac = '\0';
+
+    if(value->type == CHAR)
+        carac = AS_CHAR(value);
+    else if(value->type == NUMBER)
+        carac = Value_number_to_char(AS_NUMBER(value));
+    else
+        visitor_error(place->node,"un caractère de chaîne reçoit un char, pas %s",Value_type_name(value));
+
+    string_t *old = AS_STRING(place->container);
+    value_t *string = makeStringLenght(old->str,old->lenght);
+    AS_STRING(string)->str[place->index] = carac;
+
+    place_t parent = visitor_get_place(visitor,place->node->left);
+    visitor_place_set(visitor,&parent,string);
+}
+
+static void visitor_place_set(visitor_t *visitor, place_t *place, value_t *value){
+    switch(place->kind){
+        case PLACE_VARIABLE:
+            if(place->item->is_const)
+                visitor_error(place->node,"`%s` est une constante",place->item->key);
+            if(place->item->type_name != NULL)
+                visitor_check_type(visitor,place->node,place->item->key,value,place->item->type_name);
+            place->item->value = value;
+            break;
+        case PLACE_LIST:
+            // La liste a pu rétrécir pendant le calcul de la valeur.
+            if(place->index >= AS_LIST(place->container)->Size)
+                visitor_error(place->node,"l'index %d n'existe plus",place->index);
+            AS_LIST(place->container)->Item[place->index] = value;
+            break;
+        case PLACE_STRING:
+            visitor_place_set_char(visitor,place,value);
+            break;
+        case PLACE_MAP:
+            if(place->key != NULL)
+                Value_map_set(place->node,place->container,place->key,value);
+            else
+                Value_map_set_name(place->container,place->node->variable_name,value);
+            break;
+    }
+}
+
+static value_t *visitor_visit_assignement(visitor_t *visitor, ast_t *node){
+    place_t place = visitor_get_place(visitor,node->assignement_left);
+    value_t *value = visitor_visit(visitor,node->assignement_value);
+
+    if(node->op != TOKEN_EQUAL){
+        value_t *current = visitor_place_get(&place);
+        gc_temp_push(current);
+        value = value_expr(visitor,node,current,node->op,value);
     }
 
-    if(value->type == AST_OBJ ){
-        // je fais une copie
-        if(value->is_new_obj == false){
-            value = ast_copy(value,visitor->global_scope);
-        }
-        else
-            value->is_new_obj = false;    
-    }
-
-    visitor_visit_assignement_value(variable,value);
-
-
-
-    scope_modif_variable_definition(
-        scope,
-        variable->assignement_variable_name,
-        value
-    );
-    
-
-    return node;
+    visitor_place_set(visitor,&place,value);
+    return NULL;
 }
 
 
-static int include_add_value(visitor_t *visitor , visitor_t * vs ,const char *chaine, ast_t * node){
+//                          ===================================== $MODULES ==============================================
 
-    int type = 0;
-    ast_t *get_element =  scope_found_element(vs->global_scope,chaine,&type);
 
-    if(get_element == NULL){
-        Print_visitor_error(
-            node->line,
-            node->colone,
-            node->variable_name,
-            "%s doesn't exist !\n",
-            chaine
-        );
-        clear_ceflo_clean();
+// Les fichiers déjà chargés : un fichier ne s'exécute qu'une seule fois.
+static table_t modules;
+static list_t *dll_handles;
+
+static scope_t *visitor_run_source(visitor_t *visitor, lexer_t *lexer){
+    ast_t *program = parser_parse(lexer);
+
+    scope_t *scope = newScope(visitor->builtins);
+    gc_root(scope);
+
+    ast_t *holder = newAst(AST_NOOP);
+    allowChar(&holder->variable_name,lexer->fileName);
+    Hash_Set(&modules,holder->variable_name,scope);
+
+    scope_t *outer = visitor->scope;
+    visitor->scope = scope;
+    visitor_visit_statements(visitor,program);
+    visitor->scope = outer;
+
+    return scope;
+}
+
+/**
+ * @brief cherche un chemin à côté du fichier qui importe, puis depuis le dossier courant
+ */
+static char *visitor_resolve_path(ast_t *node){
+    const char *path = node->variable_name;
+    const char *slash = strrchr(node->file,'/');
+
+    if(path[0] != '/' && slash != NULL){
+        buffer_t full;
+        newBuffer(&full);
+        Buffer_Append(&full,node->file,(size_t)(slash - node->file) + 1);
+        Buffer_Append_Str(&full,path);
+
+        FILE *file = fopen(full.data,"rb");
+        if(file != NULL){
+            fclose(file);
+            return full.data;
+        }
+        Buffer_Free(&full);
+    }
+
+    char *copy = NULL;
+    allowChar(&copy,path);
+    return copy;
+}
+
+static bool visitor_is_exported(scope_t *module, const char *name){
+    if(module->exports == NULL)
+        return true;
+    for(int i = 0; i < module->exports->Size; i++){
+        if(strcmp(((ast_t*)List_Get(module->exports,i))->variable_name,name) == 0)
+            return true;
+    }
+    return false;
+}
+
+static void visitor_import_all(visitor_t *visitor, scope_t *module){
+    for(int i = 0; i < TAB_SIZE; i++){
+        for(hash_t *item = module->variables.TabHash[i]; item != NULL; item = item->next){
+            // Le `main` d'un module n'empêche pas le fichier qui l'importe d'avoir le sien.
+            if(visitor_is_exported(module,item->key) && strcmp(item->key,"main") != 0){
+                hash_t *copy = scope_define(visitor->scope,item->key,item->value);
+                copy->type_name = item->type_name;
+                copy->is_const = item->is_const;
+            }
+        }
+    }
+}
+
+static void visitor_import_names(visitor_t *visitor, ast_t *node, scope_t *module){
+    for(int i = 0; i < node->list_compound->Size; i++){
+        ast_t *name = List_Get(node->list_compound,i);
+        hash_t *item = scope_get(module,name->variable_name);
+
+        if(item == NULL)
+            visitor_error(name,"`%s` n'existe pas dans `%s`",name->variable_name,node->variable_name);
+        if(!visitor_is_exported(module,name->variable_name))
+            visitor_error(name,"`%s` n'est pas exporté par `%s`",name->variable_name,node->variable_name);
+
+        hash_t *copy = scope_define(visitor->scope,name->variable_name,item->value);
+        copy->type_name = item->type_name;
+        copy->is_const = item->is_const;
+    }
+}
+
+#ifndef _WIN32
+
+static void visitor_import_dll(visitor_t *visitor, ast_t *node){
+    if(node->is_import_all)
+        visitor_error(node,"une bibliothèque native s'importe par noms : `import [a, b]`");
+
+    char *path = visitor_resolve_path(node);
+    void *handle = dlopen(path,RTLD_LAZY);
+    free(path);
+
+    if(handle == NULL)
+        visitor_error(node,"impossible d'ouvrir `%s` : %s",node->variable_name,dlerror());
+
+    if(dll_handles == NULL)
+        dll_handles = newList();
+    List_Append(dll_handles,handle);
+
+    for(int i = 0; i < node->list_compound->Size; i++){
+        ast_t *name = List_Get(node->list_compound,i);
+        ceflo_func_t function = NULL;
+
+        // dlsym retourne un void* : la copie évite une conversion interdite en C.
+        void *symbol = dlsym(handle,name->variable_name);
+        if(symbol == NULL)
+            visitor_error(name,"`%s` n'existe pas dans `%s`",name->variable_name,node->variable_name);
+        memcpy(&function,&symbol,sizeof(function));
+
+        scope_define(visitor->scope,name->variable_name,makeBuiltin(name->variable_name,function));
+    }
+}
+
+#else
+
+static void visitor_import_dll(visitor_t *visitor, ast_t *node){
+    (void)visitor;
+    visitor_error(node,"les bibliothèques natives ne sont pas encore disponibles sous Windows");
+}
+
+#endif
+
+static value_t *visitor_visit_include(visitor_t *visitor, ast_t *node){
+    if(node->is_dll){
+        visitor_import_dll(visitor,node);
+        return NULL;
+    }
+
+    char *path = visitor_resolve_path(node);
+    hash_t *loaded = Hash_Get(&modules,path);
+    scope_t *module = NULL;
+
+    if(loaded != NULL){
+        module = loaded->value;
+    }else{
+        lexer_t lexer;
+        if(!newLexer(&lexer,path)){
+            free(path);
+            visitor_error(node,"impossible d'ouvrir `%s`",node->variable_name);
+        }
+        module = visitor_run_source(visitor,&lexer);
+    }
+    free(path);
+
+    if(node->is_import_all)
+        visitor_import_all(visitor,module);
+    else
+        visitor_import_names(visitor,node,module);
+
+    return NULL;
+}
+
+/**
+ * @brief export :: [a, b] : le fichier ne publie plus que ces noms
+ */
+static value_t *visitor_visit_export(visitor_t *visitor, ast_t *node){
+    if(visitor->scope->exports == NULL)
+        visitor->scope->exports = newList();
+
+    for(int i = 0; i < node->list_compound->Size; i++){
+        ast_t *name = List_Get(node->list_compound,i);
+        if(scope_get(visitor->scope,name->variable_name) == NULL)
+            visitor_error(name,"`%s` n'existe pas : on ne peut pas l'exporter",name->variable_name);
+        List_Append(visitor->scope->exports,name);
+    }
+    return NULL;
+}
+
+
+//                          ===================================== $SWITCH ==============================================
+
+
+/**
+ * @brief big switch statment on node of tree
+ */
+static value_t *visitor_dispatch(visitor_t *visitor, ast_t *node){
+    switch(node->type){
+        case AST_NOOP: return NULL;
+        case AST_COMPOUND: return visitor_visit_compound(visitor,node);
+
+        case AST_NONE: return makeNone();
+        case AST_BOOL: return makeBool(node->bool_value);
+        case AST_CHAR: return makeChar(node->char_value);
+        case AST_NUMBER: return makeNumber(node->number_value);
+        case AST_STRING: return visitor_visit_string(node);
+        case AST_LIST: return visitor_visit_list_init(visitor,node);
+        case AST_MAP: return visitor_visit_map_init(visitor,node);
+        case AST_LFUNC: return makeFunction(node,visitor->scope);
+
+        case AST_VARIABLE: return visitor_visit_variable(visitor,node);
+        case AST_OBJ_ACCESS: return visitor_visit_object_access(visitor,node);
+        case AST_LIST_ACCESS: return visitor_visit_list_access(visitor,node);
+        case AST_FUNCTION_CALL: return visitor_visit_function_call(visitor,node);
+        case AST_STRUCT: return visitor_visit_new(visitor,node);
+        case AST_TYPE_CALL: return visitor_visit_type_call(visitor,node);
+        case AST_BINOP: return visitor_visit_binop(visitor,node);
+        case AST_UNOP: return visitor_visit_unop(visitor,node);
+        case AST_TERNARY: return visitor_visit_ternary(visitor,node);
+
+        case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);
+        case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor,node);
+        case AST_STRUCT_DEFINITION: return visitor_visit_struct_definition(visitor,node);
+        case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);
+        case AST_RETURN: return visitor_visit_return(visitor,node);
+        case AST_BREAK: visitor->signal = SIGNAL_BREAK; return NULL;
+        case AST_CONTINUE: visitor->signal = SIGNAL_CONTINUE; return NULL;
+        case AST_IF: return visitor_visit_if(visitor,node);
+        case AST_WHILE: return visitor_visit_while(visitor,node);
+        case AST_FOR: return visitor_visit_for(visitor,node);
+        case AST_FOR_IN: return visitor_visit_for_in(visitor,node);
+        case AST_INCLUDE: return visitor_visit_include(visitor,node);
+        case AST_EXPORT: return visitor_visit_export(visitor,node);
+    }
+
+    visitor_error(node,"noeud inconnu");
+}
+
+/**
+ * @brief visite un noeud. Sa valeur reste en vie jusqu'à la fin de l'instruction :
+ *        dans `println(x, change())`, change() peut réaffecter x pendant que
+ *        l'ancienne valeur attend son tour pour être affichée.
+ */
+value_t *visitor_visit(visitor_t *visitor, ast_t *node){
+    if(ceflo_stack_exceeded())
+        visitor_error(node,"trop d'appels imbriqués : la récursion ne s'arrête peut-être jamais");
+
+    value_t *value = visitor_dispatch(visitor,node);
+    if(value != NULL)
+        gc_temp_push(value);
+
+    return value;
+}
+
+
+//                          ===================================== $PROGRAMME ==============================================
+
+
+/**
+ * @brief appelle le `main` écrit dans ce fichier, une fois le haut du fichier exécuté.
+ *        Le `main` d'un module importé n'est pas lancé. Retourne le code de sortie.
+ */
+static int visitor_run_main(visitor_t *visitor, scope_t *scope){
+    hash_t *item = scope_get(scope,"main");
+    if(item == NULL)
+        return 0;
+
+    value_t *function = item->value;
+    if(function->type != FUNCTION || function->as.functionValue.closure != scope)
+        return 0;
+
+    ast_t *definition = function->as.functionValue.definition;
+    int argc = definition->function_definition_args->Size;
+    if(argc > 1)
+        visitor_error(definition,"`main` prend au plus un paramètre : argv");
+
+    value_t *arguments = scope_get(visitor->builtins,"argv")->value;
+    value_t *result = visitor_call(visitor,definition,function,&arguments,argc);
+
+    if(result->type == NONE)
+        return 0;
+    if(!typer_has_type(visitor,definition,result,"int"))
+        visitor_error(definition,"`main` doit retourner un int, pas %s",typer_type_name(result));
+
+    return (int)Value_number_to_char(AS_NUMBER(result)) & 0xFF;
+}
+
+int visitor_run_file(visitor_t *visitor, int argc, char **argv){
+    memset(visitor,0,sizeof(*visitor));
+
+    visitor->builtins = newScope(NULL);
+    gc_root(visitor->builtins);
+    bulletin_define_all(visitor->builtins,argc,argv);
+
+    lexer_t lexer;
+    if(!newLexer(&lexer,argv[0])){
+        fprintf(stderr,"erreur: impossible d'ouvrir `%s`\n",argv[0]);
         exit(1);
     }
 
-    scope_append_element(
-        visitor->global_scope,type,chaine,get_element
-    );
-            
-    return 0;
+    return visitor_run_main(visitor,visitor_run_source(visitor,&lexer));
 }
 
+void visitor_free(void){
+    Hash_Free(&modules);
 
-
-ast_t * visitor_visit_include(visitor_t * visitor,ast_t *node){
-
-    // TODO: ajouter un correspondeur de fichier (pour les multiple inclusion)
-
-
-    #ifdef LINUX
-    #define LINUX
-
-        if(node->is_dll)
-            return visitor_visit_dll_import(visitor,node);
+    #ifndef _WIN32
+        if(dll_handles != NULL){
+            for(int i = 0; i < dll_handles->Size; i++)
+                dlclose(List_Get(dll_handles,i));
+            List_Free(dll_handles);
+            dll_handles = NULL;
+        }
     #endif
-
-    lexer_t lex;
-	newLexer(&lex,node->variable_name);
-    ast_t * source = parser_parse(&lex);
-
-
-    visitor_t vs;
-	newVisitor(&vs);
-	vs.global_scope->countScope = 0;
-	visitor_visit(&vs,source);
-
-
-    if(node->op.type == TOKEN_MULT){
-        // c'est que on vas prendre tous 
-        scope_cpy_with_scope_without_count(vs.global_scope,visitor->global_scope);
-    }else{
-        if(node->left->type == AST_VARIABLE){
-            // c'est une variable ou une fonction
-            const char *s = node->left->variable_name;
-            include_add_value(visitor,&vs,s,node);
-        }
-        if(node->left->type == AST_LIST){
-            // c'est une liste
-            list_t * list = node->left->value.as.listValue;
-            for (int i = 0; i < list->Size; i++){
-                ast_t * item = (ast_t*)List_Get(list,i);
-                const char *s = item->variable_name;
-                include_add_value(visitor,&vs,s,item);
-            }
-            
-        }
-    }
-
-    ast_t * export = scope_get_variable_definition(
-        vs.global_scope,
-        "export"
-    );
-
-    if(export != NULL && node->op.type != TOKEN_MULT){
-        // printf("Oui je dois ajouter cette variable ici \n");
-
-        ast_t * item = NULL;
-        ast_t * found = NULL;
-        int j = 0;
-        for (int i = 0; i < export->list_compound->Size; i++){
-            item = List_Get(export->list_compound,i);
-            // je verifie qu'il n'existe pas déja dans le visitor
-            found = scope_found_element(visitor->global_scope,item->variable_name,&j);
-            if(found != NULL){
-                continue;
-            }
-            
-            found = scope_found_element(vs.global_scope,item->variable_name,&j);
-            scope_append_element(visitor->global_scope,j,item->variable_name,found);
-        }
-        
-    }
-
-
-    return node;
-}
-
-
-static void verif_export(visitor_t * visitor , ast_t * node , ast_t * export , ast_t * export_variable){
-    ast_t * value = NULL;
-    int type = 0;
-    for (int i = 0; i < export->list_compound->Size; i++){
-        ast_t * variable = List_Get(export->list_compound,i);
-
-        if(variable->type != AST_VARIABLE){
-            Print_visitor_error(
-                node->line,
-                node->colone,
-                "./Ceflo",
-                "error type here, export work with id!\n"
-            );
-            clear_ceflo_clean();
-            exit(1);
-        }
-
-        value = scope_found_element(
-            visitor->global_scope,
-            variable->variable_name,
-            &type
-        );
-
-        if(value == NULL){
-            Print_visitor_error(
-                variable->line,
-                variable->colone,
-                "./ceflo",
-                "%s doesn't exist !\n",
-                variable->variable_name
-            );
-            clear_ceflo_clean();
-            exit(1);
-        }
-
-        if(export_variable != NULL){
-            // rechercher si elle existe dans cette export, sinon ajouter la
-            int k = 0;
-            for (int j = 0; j < export_variable->list_compound->Size; j++){
-                ast_t * item = List_Get(export_variable->list_compound,i);
-                if(strcmp(item->variable_name,variable->variable_name)==0){
-                    k = 1;
-                    break;
-                }
-            }
-
-            if(k == 0){
-                List_Append(export_variable->list_compound,variable);
-            }
-            
-        }
-    }
-
-}
-
-ast_t * visitor_visit_export(visitor_t * visitor,ast_t *node){
-
-    // verifie que ce visitor ne contient d'export , sinon je crée
-    // je parcours les différents élément pour voir si elle existe, sinon je panic
-    // si il existe et que on à une variable export , je verifie si elle n'est pas dans la liste, sinon je l'ajoute
-
-    int type = 0;
-    ast_t * export_variable = scope_found_element(
-        visitor->global_scope,
-        "export",
-        &type
-    );
-
-    ast_t * export = NULL;
-    ast_t * value = NULL;
-    if(export_variable == NULL){
-        // ici je vais ajouter cette liste comme référence
-        export = node;
-        verif_export(visitor,node,export,NULL);
-        scope_append_variable_definition(
-            visitor->global_scope,
-            "export",
-            export
-        );
-    }else{
-        export = node;
-        verif_export(visitor,node,export,export_variable);
-    }
-
-
-    return node;
 }

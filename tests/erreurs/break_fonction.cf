@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `break` et `continue` s'utilisent dans une boucle
+while true { func f(){ break } }

@@ -1,0 +1,2 @@
+// attendu: erreur: chaîne trop longue
+println("a" * 1000000000000000000000)

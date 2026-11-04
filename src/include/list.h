@@ -1,67 +1,44 @@
 #ifndef __LIST_H__
 #define __LIST_H__
 
-    #include <stdio.h>
-        
-        #include "common.h"
+    #include "common.h"
 
+    // Liste dynamique de pointeurs
     typedef struct LIST_STRUCT{
         void **Item;
         int Size;
-        size_t Sizeof;
-
+        int Capacity;
     }list_t;
 
-
-    list_t * __init__list__(size_t);
-
-
-    int List_Append(list_t *list , void *value);
-    void * List_Get(list_t *list,int index);
-    void * List_Modif(list_t *list,void * value,int index);
-
-    int List_Del(list_t *list , int index,void (*free_method)(void *x));
-    int List_Del_without_supp(list_t *list , int index);
-
+    list_t *newList(void);
+    void List_Append(list_t *list, void *value);
+    void *List_Get(list_t *list, int index);
+    void List_Remove(list_t *list, int index);
     void List_Free(list_t *list);
-    int List_Del_all(list_t *list ,void (*free_method)(void *x));
-
-    void * List_Get_Last(list_t *list);
-    void * List_Get_Firts(list_t *list);
-    int List_Del_by_item(list_t *list , void *x , void (*free_function)(void *y));
 
 
+    // Table de hachage : nom -> valeur.
+    // Les clés ne sont pas copiées : elles doivent vivre aussi longtemps que la table.
+    #define TAB_SIZE 8
 
     typedef struct HASH_STRUCT{
-        char *key;
-        void *value; 
+        const char *key;
+        void *value;
+        const char *type_name;  // type déclaré avec `::`, ou NULL
+        bool is_const;
+        uint32_t hash;
         struct HASH_STRUCT *next;
     }hash_t;
 
-    typedef struct STK_HASH_STRUCT{
-        int Size;
-        hash_t *TabHash[100];
-    }stk_t;
+    typedef struct TABLE_STRUCT{
+        hash_t *TabHash[TAB_SIZE];
+    }table_t;
 
-    hash_t *__init__hash(const char *key ,void * value );
-    stk_t *__init__stk_hash(stk_t *stk);
-    int Hash_Append(stk_t * stk ,const char *key ,void * value);
+    uint32_t Hash_Name(const char *chaine);
+    hash_t *Hash_Get(table_t *table, const char *key);
+    hash_t *Hash_Get_Hashed(table_t *table, const char *key, uint32_t hash);
+    hash_t *Hash_Set(table_t *table, const char *key, void *value);
+    void Hash_Free(table_t *table);
+    void Hash_Free_Pool(void);
 
-    void *Hash_Get(stk_t *stk , const char *key);
-    hash_t *Hash_Get_With_addr(stk_t *stk , const char *key);
-
-    void * Hash_Get_by_index(stk_t *stk ,int index, int mod);
-
-
-    
-    int Hash_Modif(stk_t *stk , const char *key,void *value);
-
-    void Hash_free(stk_t *stk );
-
-    void Hash_Print(stk_t *stk);
-    void Hash_Del(stk_t *stk);
-
-    
-uint64_t  Hash(const char *chaine);
-    
 #endif

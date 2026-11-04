@@ -1,0 +1,3 @@
+// attendu: erreur: `self` est une constante
+struct S { func m(){ self = 1 } }
+new S().m()

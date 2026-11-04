@@ -1,0 +1,12 @@
+// Le haut du fichier s'exécute d'abord, puis main
+from modules.avec_main import *
+
+var bonjour = "Bonjour"
+println("haut du fichier")
+
+func main(argv::list) : int {
+    println(bonjour, " ", argv.lenght(), " ", argv[1], " ", argv[2], " ", outil())
+    return 0
+}
+
+println(argv[0])

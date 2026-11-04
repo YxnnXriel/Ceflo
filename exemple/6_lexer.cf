@@ -1,0 +1,78 @@
+// Un petit lexer écrit en CeFlo : le même travail que src/lexer.c,
+// sur des expressions comme "2 * 2 + 2".
+
+struct Token {
+    var Type
+    var Value
+
+    func __init__(type, value) {
+        Type = type
+        Value = value
+    }
+
+    func __str__() {
+        return Value == none ? Type : Type + " " + Value
+    }
+}
+
+struct Lexer {
+    var Code
+    var Index = 0
+
+    func __init__(code) {
+        Code = code
+    }
+
+    func current() {
+        return Index < Code.lenght() ? Code[Index] : '\0'
+    }
+
+    func advance() {
+        Index += 1
+    }
+
+    func is_digit() {
+        return current() >= '0' and current() <= '9'
+    }
+
+    func skip_white_space() {
+        while current() == ' ' or current() == '\n' {
+            advance()
+        }
+    }
+
+    func collect_digit() {
+        var value = ""
+        while is_digit() {
+            value += current()
+            advance()
+        }
+        return new Token("TOKEN_DIGIT", value)
+    }
+
+    func symbol(type) {
+        var value = @str(current())
+        advance()
+        return new Token(type, value)
+    }
+
+    func next_token() {
+        skip_white_space()
+
+        if is_digit() { return collect_digit() }
+        if current() == '+' { return symbol("TOKEN_PLUS") }
+        if current() == '-' { return symbol("TOKEN_MINUS") }
+        if current() == '*' { return symbol("TOKEN_MULT") }
+        if current() == '/' { return symbol("TOKEN_DIV") }
+
+        return new Token("TOKEN_EOF", none)
+    }
+}
+
+var lexer = new Lexer("2 * 21 + 2")
+var token = lexer.next_token()
+
+while token.Type != "TOKEN_EOF" {
+    println(token)
+    token = lexer.next_token()
+}

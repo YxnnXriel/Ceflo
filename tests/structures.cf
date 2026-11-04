@@ -1,0 +1,117 @@
+struct Point { var x; var y }
+var p = new Point()
+println(p.x, " ", p)
+p.x = 3
+println(p.x)
+
+struct Jeu { var fin = false; var n = 1 + 1; var d = n * 2 }
+var j = new Jeu
+println(j.fin, " ", j.n, " ", j.d)
+
+struct Arme { var nom; var degats::int }
+struct Perso {
+    var nom
+    var vie::int = 100
+    var pts::int
+    var arme::Arme
+    const ESPECE = "humain"
+
+    func __init__(self){ self.nom = "Inconnu"; self.arme = none }
+    func __init__(self, nom){
+        self.nom = nom
+        self.arme = new Arme()
+        self.arme.degats = 10
+    }
+    func __init__(self, nom, arme::Arme){ self.nom = nom; self.arme = arme }
+    func __str__(self){ return self.nom }
+    func Attaque(self, cible::Perso){
+        cible.vie -= self.arme.degats
+        self.pts += self.arme.degats
+        return self
+    }
+}
+var a = new Perso("A"), b = new Perso("B")
+println(new Perso(), " ", a, " ", [a, b], " ", "x" + a)
+a.Attaque(b).Attaque(b)
+println(b.vie, " ", a.pts, " ", a.arme.degats, " ", a.ESPECE, " ", new Perso().arme)
+
+// Sans self : les attributs et les méthodes restent visibles
+struct Compte {
+    var solde = 0
+    func __init__(depart){ solde = depart }
+    func depose(n){ solde += n; return lire() }
+    func lire(){ return solde }
+    func __str__(){ return "Compte(" + solde + ")" }
+}
+var c = new Compte(5)
+println(c.depose(2), " ", c)
+
+// Un objet est une référence
+var r = c
+r.solde = 0
+println(c.solde)
+func vide(o){ o.solde = -1 }
+vide(c)
+println(c.solde)
+
+// Chaque objet a ses propres attributs
+struct Sac { var l = []; func add(v){ l.append(v) } }
+var s1 = new Sac(), s2 = new Sac()
+s1.add(1); s2.add(2)
+println(s1.l, s2.l)
+
+// Objets dans une liste, attribut fonction, méthode d'un élément
+var objs = [new Point(), new Point()]
+objs[1].x = 9
+println(objs[0].x, " ", objs[1].x)
+struct Rappel { var f = lfunc(x){ return x + 1 } }
+println(new Rappel().f(1))
+
+// Structure imbriquée et portée de la structure
+var g = 10
+struct T { var n = 1; func m(self){ return g + self.n } }
+println(new T().m())
+func fabrique(){
+    var cache = "privé"
+    struct Local { func lit(){ return cache } }
+    return new Local()
+}
+println(fabrique().lit())
+
+// __cast__ et @
+struct Metre {
+    var v
+    func __init__(valeur){ v = valeur }
+    func __cast__(x){ return new Metre(x) }
+    func __str__(){ return v + "m" }
+}
+var dist::Metre = @Metre(3)
+println(dist)
+dist = @Metre(8)
+println(dist)
+func longueur() : Metre { return @Metre(12) }
+println(longueur())
+println(@Metre(4), " ", @int("42") + 1, " ", @int(3.9), " ", @int("-7"), " ", @float("1.25"))
+println(@str(5) + "x", " ", @list(1, 2), " ", @bool(0), " ", @char(66), " ", @char("Z"), " ", @int("abc"))
+println(@int(), " ", @str(), "|", @bool(), " ", @list())
+
+// Types déclarés
+var i::int = 12
+i = 3
+var t::str = "5"
+var bo::bool = true
+var ch::char = 'A'
+var li::list = [1]
+var z::int
+println(i, " ", t + 1, " ", bo, " ", ch, " ", li, " ", z)
+func typeRetour(x) : str { return x }
+println(typeRetour("1") + 1)
+var f::float = 3
+f = 3.5
+var garde::int = 1
+var garde = 2
+var garde
+var plus_tard::Metre
+plus_tard = @Metre(1)
+plus_tard = none
+println(f, " ", garde, " ", plus_tard)

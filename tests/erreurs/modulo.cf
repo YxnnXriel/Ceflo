@@ -1,0 +1,2 @@
+// attendu: erreur: modulo par zéro
+println(1 % 0)

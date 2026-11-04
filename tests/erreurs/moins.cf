@@ -1,0 +1,2 @@
+// attendu: erreur: l'opérateur `-` ne s'applique pas à str
+println(-"a")

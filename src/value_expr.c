@@ -1,338 +1,132 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
 #include "include/value_expr.h"
+#include "include/error.h"
 
+#define MAX_REPEAT_SIZE (1024.0 * 1024 * 1024)
 
-
-void performe_visit_tree_char(Value_t * value, Value_t * left , token_t * op, Value_t * right){
-        switch (right->type){
-            case NUMBER:
-                value->type = NUMBER;
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.charValue = left->as.charValue + right->as.numberValue;break;
-                    case TOKEN_MINUS : value->as.charValue = left->as.charValue - right->as.numberValue;break;
-                    case TOKEN_MULT : value->as.charValue = left->as.charValue * right->as.numberValue;break;
-                    case TOKEN_DIV :  value->as.charValue = left->as.charValue / right->as.numberValue;break;
-                    case TOKEN_MODULO :  value->as.charValue = left->as.charValue % (int)right->as.numberValue;break;
-                    case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.charValue < right->as.numberValue;break;
-                    case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.charValue > right->as.numberValue;break;
-                    case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.charValue <= right->as.numberValue;break;
-                    case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.charValue >= right->as.numberValue;break;
-                    case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.charValue == right->as.numberValue;break;
-                    case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.charValue || right->as.numberValue;break;
-        
-                    case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.charValue && right->as.numberValue;break;
-                    case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.charValue != right->as.numberValue;break;
-                    default : value->as.charValue = left->as.charValue + right->as.numberValue;break;
-                }
-                break;
-
-            case NONE:
-                value->type = BOOL;
-                switch (op->type){
-                    case TOKEN_AND : value->as.booleanValue = left->type && right->type;break;
-                    case TOKEN_OR : value->as.booleanValue = left->type || right->type;break;
-                    case TOKEN_EQUAL_EQUAL : value->as.booleanValue = left->type == right->type;break;
-                    case TOKEN_DIF : value->as.booleanValue = left->type != right->type;break;
-                }
-                break;
-
-
-            case CHAR:
-                value->type = CHAR;
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.charValue = left->as.charValue+ right->as.charValue;break;
-                    case TOKEN_MINUS : value->as.charValue= left->as.charValue- right->as.charValue;break;
-                    case TOKEN_MULT : value->as.charValue = left->as.charValue* right->as.charValue;break;
-                    case TOKEN_DIV : value->as.charValue  = left->as.charValue/ right->as.numberValue;break;
-                    case TOKEN_MODULO :value->type = CHAR;value->as.charValue=left->as.charValue% right->as.charValue;break;
-                    case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.charValue< right->as.charValue;break;
-                    case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.charValue> right->as.charValue;break;
-                    case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.charValue <= right->as.charValue;break;
-                    case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.charValue >= right->as.charValue;break;
-                    case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.charValue== right->as.charValue;break;
-                    case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.charValue || right->as.charValue;break;
-                    case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.charValue&& right->as.charValue;break;
-                    case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.charValue!= right->as.charValue;break;
-                    default : value->as.charValue = left->as.charValue + right->as.charValue;break;
-                }
-                break;
-
-            case STRING:
-                value->type = STRING;
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.stringValue = String_cat("%c%s",left->as.charValue,right->as.stringValue->str);break;
-                }
-                break;
-        }
+static bool is_numeric(value_t *value){
+    return value->type == NUMBER || value->type == BOOL || value->type == CHAR;
 }
 
+static _Noreturn void value_expr_error(ast_t *node, value_t *left, TokenEnum op, value_t *right){
+    visitor_error(
+        node,
+        "l'opérateur `%s` ne s'applique pas à %s et %s",
+        token_to_string(op),
+        Value_type_name(left),
+        Value_type_name(right)
+    );
+}
 
+// Dès qu'une chaîne est présente, `+` assemble le texte des deux valeurs.
+static value_t *value_concat(visitor_t *visitor, value_t *left, value_t *right){
+    buffer_t buffer;
+    newBuffer(&buffer);
+    Value_to_buffer(visitor,&buffer,left);
+    Value_to_buffer(visitor,&buffer,right);
+    value_t *result = makeStringLenght(buffer.data,(int)buffer.size);
+    Buffer_Free(&buffer);
+    return result;
+}
 
+static value_t *value_list_concat(value_t *left, value_t *right){
+    value_t *result = makeList();
+    for(int i = 0; i < AS_LIST(left)->Size; i++)
+        Value_list_append(result,AS_LIST(left)->Item[i]);
+    for(int i = 0; i < AS_LIST(right)->Size; i++)
+        Value_list_append(result,AS_LIST(right)->Item[i]);
+    return result;
+}
 
+// "ab" * 3 donne "ababab"
+static value_t *value_repeat(ast_t *node, value_t *text, double count){
+    string_t *str = AS_STRING(text);
 
-void performe_visit_tree_number(Value_t * value, Value_t * left , token_t * op, Value_t * right){
-            value->type = NUMBER;
+    if(count > 0 && str->lenght * count > MAX_REPEAT_SIZE)
+        visitor_error(node,"chaîne trop longue");
 
-    switch (right->type){
-        case CHAR:
-            value->type = NUMBER;
-            switch (op->type){
-                case TOKEN_PLUS : value->as.numberValue = left->as.numberValue+ right->as.charValue;break;
-                case TOKEN_MINUS : value->as.numberValue = left->as.numberValue- right->as.charValue;break;
-                case TOKEN_MULT : value->as.numberValue = left->as.numberValue* right->as.charValue;break;
-                case TOKEN_DIV : value->as.numberValue  = left->as.numberValue/ right->as.numberValue;break;
-                case TOKEN_MODULO :value->type = NUMBER;value->as.numberValue = (int)left->as.numberValue % right->as.charValue;break;
-                
-                case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.numberValue < right->as.charValue;break;
-                case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.numberValue> right->as.charValue;break;
+    int times = count > 0 ? (int)count : 0;
 
-                case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.numberValue <= right->as.charValue;break;
-                case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.numberValue >= right->as.charValue;break;
+    buffer_t buffer;
+    newBuffer(&buffer);
+    for(int i = 0; i < times; i++)
+        Buffer_Append(&buffer,str->str,(size_t)str->lenght);
+    value_t *result = makeStringLenght(buffer.data,(int)buffer.size);
+    Buffer_Free(&buffer);
+    return result;
+}
 
-                case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.numberValue== right->as.charValue;break;
-                case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.numberValue && right->as.charValue;break;
-                case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.numberValue || right->as.charValue;break;
-                case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.numberValue!= right->as.charValue;break;
-                default : value->as.numberValue = left->as.numberValue + right->as.charValue;break;
-            }
+static value_t *value_arithmetic(ast_t *node, double left, TokenEnum op, double right){
+    switch(op){
+        case TOKEN_PLUS: return makeNumber(left + right);
+        case TOKEN_MINUS: return makeNumber(left - right);
+        case TOKEN_MULT: return makeNumber(left * right);
+        case TOKEN_DIV:
+            if(right == 0)
+                visitor_error(node,"division par zéro");
+            return makeNumber(left / right);
+        case TOKEN_MODULO:
+            if(right == 0)
+                visitor_error(node,"modulo par zéro");
+            return makeNumber(fmod(left,right));
+        default:
+            return NULL;
+    }
+}
+
+static bool value_order_holds(double order, TokenEnum op){
+    switch(op){
+        case TOKEN_INF: return order < 0;
+        case TOKEN_INF_EQUAL: return order <= 0;
+        case TOKEN_SUP: return order > 0;
+        default: return order >= 0;
+    }
+}
+
+static value_t *value_compare(ast_t *node, value_t *left, TokenEnum op, value_t *right){
+    if(is_numeric(left) && is_numeric(right)){
+        double a = Value_as_double(left);
+        double b = Value_as_double(right);
+        return makeBool(value_order_holds(a < b ? -1 : (a > b ? 1 : 0),op));
+    }
+
+    bool is_text = false;
+    int order = Value_compare_text(left,right,&is_text);
+    if(!is_text)
+        value_expr_error(node,left,op,right);
+
+    return makeBool(value_order_holds(order,op));
+}
+
+value_t *value_expr(visitor_t *visitor, ast_t *node, value_t *left, TokenEnum op, value_t *right){
+    switch(op){
+        case TOKEN_EQUAL_EQUAL:
+            return makeBool(Value_equals(left,right));
+        case TOKEN_DIF:
+            return makeBool(!Value_equals(left,right));
+        case TOKEN_INF:
+        case TOKEN_INF_EQUAL:
+        case TOKEN_SUP:
+        case TOKEN_SUP_EQUAL:
+            return value_compare(node,left,op,right);
+        case TOKEN_PLUS:
+            if(left->type == STRING || right->type == STRING)
+                return value_concat(visitor,left,right);
+            if(left->type == LIST && right->type == LIST)
+                return value_list_concat(left,right);
             break;
-        case NUMBER:
-
-            switch (op->type){
-                case TOKEN_PLUS :value->as.numberValue = left->as.numberValue + right->as.numberValue;break;
-                case TOKEN_MINUS : value->as.numberValue = left->as.numberValue - right->as.numberValue;break;
-                case TOKEN_MULT : value->as.numberValue = left->as.numberValue * right->as.numberValue;break;
-                case TOKEN_DIV :  value->as.numberValue = left->as.numberValue / right->as.numberValue;break;
-                case TOKEN_MODULO :  value->as.numberValue = (int)left->as.numberValue % (int)right->as.numberValue;break;
-
-                case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.numberValue < right->as.numberValue;break;
-                case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.numberValue > right->as.numberValue;break;
-                
-                case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.numberValue <= right->as.numberValue;break;
-                case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.numberValue >= right->as.numberValue;break;
-
-                case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.numberValue == right->as.numberValue;break;
-                case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.numberValue && right->as.numberValue;break;
-                case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.numberValue || right->as.numberValue;break;
-                case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.numberValue != right->as.numberValue;break;
-                default : value->as.numberValue = left->as.numberValue + right->as.numberValue;break;
-            }
+        case TOKEN_MULT:
+            if(left->type == STRING && right->type == NUMBER)
+                return value_repeat(node,left,AS_NUMBER(right));
             break;
-
-        case NONE:
-            value->type = BOOL;
-            switch (op->type){
-                case TOKEN_AND : value->as.booleanValue = left->type && right->type;break;
-                case TOKEN_OR : value->as.booleanValue = left->type || right->type;break;
-                case TOKEN_EQUAL_EQUAL : value->as.booleanValue = left->type == right->type;break;
-                case TOKEN_DIF : value->as.booleanValue = left->type != right->type;break;
-            }
-            break;
-
-        case STRING:
-            value->type = STRING;
-            switch (op->type){
-                case TOKEN_PLUS :
-                value->as.stringValue = String_cat("%g%s",left->as.numberValue,right->as.stringValue->str);break;
-            }
+        default:
             break;
     }
 
-}
+    if(!is_numeric(left) || !is_numeric(right))
+        value_expr_error(node,left,op,right);
 
-
-void performe_visit_tree_bool(Value_t * value, Value_t * left , token_t * op, Value_t * right){
-
-        switch (right->type){
-            case CHAR:
-                value->type = CHAR;
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.charValue = left->as.booleanValue + right->as.charValue;break;
-                    case TOKEN_MINUS : value->as.charValue= left->as.booleanValue - right->as.charValue;break;
-                    case TOKEN_MULT : value->as.charValue = left->as.booleanValue * right->as.charValue;break;
-                    case TOKEN_DIV : value->as.charValue  = left->as.booleanValue / right->as.numberValue;break;
-                    case TOKEN_MODULO :value->type = NUMBER;value->as.booleanValue  =left->as.booleanValue % right->as.charValue;break;
-                    
-                    case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue  < right->as.charValue;break;
-                    case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue > right->as.charValue;break;
-                    case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue  <= right->as.charValue;break;
-                    case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue >= right->as.charValue;break;
-
-                    case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue == right->as.charValue;break;
-                    case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue  || right->as.charValue;break;
-                    case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue  && right->as.charValue;break;
-                    case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue != right->as.charValue;break;
-                    default : value->as.charValue  = left->as.booleanValue  + right->as.charValue;break;
-                }
-                break;
-
-
-            case NUMBER:
-            value->type = NUMBER;
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.numberValue = left->as.booleanValue + right->as.numberValue;break;
-                    case TOKEN_MINUS : value->as.numberValue = left->as.booleanValue - right->as.numberValue;break;
-                    case TOKEN_MULT : value->as.numberValue = left->as.booleanValue * right->as.numberValue;break;
-                    case TOKEN_DIV :  value->as.numberValue = left->as.booleanValue / right->as.numberValue;break;
-                    case TOKEN_MODULO :  value->as.numberValue = left->as.booleanValue % (int)right->as.numberValue;break;
-
-
-
-                    case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue < right->as.numberValue;break;
-                    case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue > right->as.numberValue;break;
-
-                    case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue <= right->as.numberValue;break;
-                    case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue >= right->as.numberValue;break;
-
-                    case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue == right->as.numberValue;break;
-                    case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue || right->as.numberValue;break;
-                    case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue && right->as.numberValue;break;
-                    case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue != right->as.numberValue;break;
-                    default : value->as.numberValue = left->as.booleanValue + right->as.numberValue;break;
-                }
-                break;
-            case BOOL:
-            value->type = BOOL;
-                switch (op->type){
-                    case TOKEN_MODULO :  value->as.booleanValue = left->as.booleanValue % right->as.booleanValue;break;
-
-                    case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue < right->as.booleanValue;break;
-                    case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue > right->as.booleanValue;break;
-                    
-                    case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue <= right->as.booleanValue;break;
-                    case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = left->as.booleanValue >= right->as.booleanValue;break;
-                    case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue == right->as.booleanValue;break;
-                    case TOKEN_AND : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue && right->as.booleanValue;break;
-                    case TOKEN_OR : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue || right->as.booleanValue;break;
-                    case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = left->as.booleanValue != right->as.booleanValue;break;
-                    default : value->as.booleanValue = left->as.booleanValue + right->as.booleanValue;break;
-                }
-                break;
-            case NONE:
-                value->type = BOOL;
-                switch (op->type){
-                    case TOKEN_AND : value->as.booleanValue = left->type && right->type;break;
-                    case TOKEN_OR : value->as.booleanValue = left->type || right->type;break;
-                    case TOKEN_EQUAL_EQUAL : value->as.booleanValue = left->type == right->type;break;
-                    case TOKEN_DIF : value->as.booleanValue = left->type != right->type;break;
-                }
-                break;
-
-            case STRING:
-                value->type = STRING;
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.stringValue = String_cat("%s%s",left->as.booleanValue ? "true":"false",right->as.stringValue->str);break;
-                }
-                break;
-        }
-
-}
-
-
-void performe_visit_tree_str(Value_t * value, Value_t * left , token_t * op, Value_t * right){
-
-                value->type = STRING;
-
-
-        switch (right->type){
-            case NUMBER:
-                switch (op->type){
-                    case TOKEN_PLUS :
-                        value->as.stringValue = String_cat("%s%g",left->as.stringValue->str,right->as.numberValue);break;
-                    case TOKEN_MULT :{
-                        if(right->as.numberValue <= 0){
-                            // Print_visitor_error(
-                            //     right->line,
-                            //     right->colone,
-                            //     "./Ceflo",
-                            //     " ...* %g pas pris en charge \n",
-                            //     right->as.numberValue
-                            // );
-                            // clear_ceflo_clean();
-                            exit(1);
-                        }
-                        char *chaine = calloc(strlen(left->as.stringValue->str)*right->as.numberValue,sizeof(char*));
-                        for (int i = 0; i < right->as.numberValue; i++)
-                            strcat(chaine,left->as.stringValue->str);
-
-                        value->as.stringValue = new_String(chaine);
-                        free(chaine);
-                    }
-                        break;
-                }
-                break;
-
-            case NONE:
-                value->type = BOOL;
-                switch (op->type){
-                    case TOKEN_AND : value->as.booleanValue = left->type && right->type;break;
-                    case TOKEN_OR : value->as.booleanValue = left->type || right->type;break;
-                    case TOKEN_EQUAL_EQUAL : value->as.booleanValue = left->type == right->type;break;
-                    case TOKEN_DIF : value->as.booleanValue = left->type != right->type;break;
-                }
-                break;
-
-            case CHAR:
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.stringValue = String_cat("%s%c",left->as.stringValue->str,right->as.charValue);break;
-                    // case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.charValue) < 0 ? 1 : 0; break;
-                    // case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.charValue ) > 0 ? 1 : 0; break;
-                    // case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.charValue) == 0 ? 1 : 0; break;
-                    // case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.charValue) != 0 ? 1 : 0; break;
-                }
-                break;
-
-            case STRING:
-                switch (op->type){
-                    case TOKEN_PLUS : value->as.stringValue = String_cat("%s%s",left->as.stringValue->str,right->as.stringValue->str);break;
-                    
-                    case TOKEN_INF : value->type = BOOL ;value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.stringValue->str) < 0 ? 1 : 0; break;
-                    case TOKEN_SUP : value->type = BOOL ;value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.stringValue->str) > 0 ? 1 : 0; break;
-                    
-                    case TOKEN_INF_EQUAL : value->type = BOOL ;value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.stringValue->str) <= 0 ? 1 : 0; break;
-                    case TOKEN_SUP_EQUAL : value->type = BOOL ;value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.stringValue->str) >= 0 ? 1 : 0; break;
-
-                    case TOKEN_EQUAL_EQUAL : value->type = BOOL ; value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.stringValue->str) == 0 ? 1 : 0; break;
-                    case TOKEN_DIF : value->type = BOOL ; value->as.booleanValue = strcmp(left->as.stringValue->str,right->as.stringValue->str) != 0 ? 1 : 0; break;
-                }
-                break;
-        }
-}
-
-void performe_visit_tree_none(Value_t * value, Value_t * left , token_t * op, Value_t * right){
-        switch (op->type){
-            case TOKEN_AND : value->as.booleanValue = left->type && right->type;break;
-            case TOKEN_EQUAL_EQUAL : value->as.booleanValue = left->type == right->type;break;
-            case TOKEN_DIF : value->as.booleanValue = left->type != right->type;break;
-            case TOKEN_OR : value->as.booleanValue = left->type || right->type;break;
-        }
-}
-
-
-int value_to_type_ast(Value_t *value){
-    switch (value->type){
-        case NONE :return AST_NONE;
-        case BOOL : return AST_BOOL;
-        case CHAR : return AST_CHAR;
-        case NUMBER : return AST_NUMBER;
-        case STRING : return AST_STRING;
-        case LIST : return AST_LIST;
-        case OBJECT : return AST_OBJ;
-    }
-    return -1;
-}
-
-int type_ast_to_value(ast_t * node_value){
-     switch (node_value->type){
-        case AST_NONE :return NONE;
-        case AST_BOOL : return BOOL;
-        case AST_CHAR : return CHAR;
-        case AST_NUMBER : return NUMBER;
-        case AST_STRING : return STRING;
-        case AST_LIST : return LIST;
-        case AST_OBJ : return OBJECT;
-    }
-    return -1;   
+    return value_arithmetic(node,Value_as_double(left),op,Value_as_double(right));
 }

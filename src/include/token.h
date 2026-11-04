@@ -1,168 +1,93 @@
 /**
  * @file token.h
- * @author your name (yannariel13@gmail.com)
- * @brief 
- * @version 0.1
- * @date 2023-04-09
- * 
+ * @author Yann Ariel (yannariel13@gmail.com)
  * @copyright Copyright (c) 2023
- * 
  */
 
+#ifndef __TOKEN_H__
+#define __TOKEN_H__
 
+#include "common.h"
 
-                #ifndef __TOKEN_H__
-                #define __TOKEN_H__
+#define FOREACH_TOKEN(TOKEN)                 \
+    TOKEN(TOKEN_ID, "identifiant")           \
+    TOKEN(TOKEN_INTEGER, "nombre")           \
+    TOKEN(TOKEN_FLOAT, "nombre")             \
+    TOKEN(TOKEN_CHAR, "caractère")           \
+    TOKEN(TOKEN_STRING, "chaîne")            \
+    TOKEN(TOKEN_FOR, "for")                  \
+    TOKEN(TOKEN_IN, "in")                    \
+    TOKEN(TOKEN_WHILE, "while")              \
+    TOKEN(TOKEN_IF, "if")                    \
+    TOKEN(TOKEN_ELSE, "else")                \
+    TOKEN(TOKEN_VAR, "var")                  \
+    TOKEN(TOKEN_CONST, "const")              \
+    TOKEN(TOKEN_FUNC, "func")                \
+    TOKEN(TOKEN_LFUNC, "lfunc")              \
+    TOKEN(TOKEN_RETURN, "return")            \
+    TOKEN(TOKEN_IMPORT, "import")            \
+    TOKEN(TOKEN_FROM, "from")                \
+    TOKEN(TOKEN_EXPORT, "export")            \
+    TOKEN(TOKEN_STRUCT, "struct")            \
+    TOKEN(TOKEN_TRUE, "true")                \
+    TOKEN(TOKEN_FALSE, "false")              \
+    TOKEN(TOKEN_NONE, "none")                \
+    TOKEN(TOKEN_OR, "or")                    \
+    TOKEN(TOKEN_AND, "and")                  \
+    TOKEN(TOKEN_NEW, "new")                  \
+    TOKEN(TOKEN_CONTINUE, "continue")        \
+    TOKEN(TOKEN_BREAK, "break")              \
+    TOKEN(TOKEN_AT_SIGN, "@")                \
+    TOKEN(TOKEN_NOT, "!")                    \
+    TOKEN(TOKEN_DIF, "!=")                   \
+    TOKEN(TOKEN_ARROW, "->")                 \
+    TOKEN(TOKEN_COLON, ":")                  \
+    TOKEN(TOKEN_DOUBLE_COLON, "::")          \
+    TOKEN(TOKEN_DOT, ".")                    \
+    TOKEN(TOKEN_SEMI, ";")                   \
+    TOKEN(TOKEN_MARK, "?")                   \
+    TOKEN(TOKEN_COMA, ",")                   \
+    TOKEN(TOKEN_LPARENT, "(")                \
+    TOKEN(TOKEN_RPARENT, ")")                \
+    TOKEN(TOKEN_LBRACKET, "{")               \
+    TOKEN(TOKEN_RBRACKET, "}")               \
+    TOKEN(TOKEN_LBRACE, "[")                 \
+    TOKEN(TOKEN_RBRACE, "]")                 \
+    TOKEN(TOKEN_EQUAL, "=")                  \
+    TOKEN(TOKEN_EQUAL_EQUAL, "==")           \
+    TOKEN(TOKEN_PLUS, "+")                   \
+    TOKEN(TOKEN_PLUS_EQUAL, "+=")            \
+    TOKEN(TOKEN_MINUS, "-")                  \
+    TOKEN(TOKEN_MINUS_EQUAL, "-=")           \
+    TOKEN(TOKEN_MULT, "*")                   \
+    TOKEN(TOKEN_MULT_EQUAL, "*=")            \
+    TOKEN(TOKEN_DIV, "/")                    \
+    TOKEN(TOKEN_DIV_EQUAL, "/=")             \
+    TOKEN(TOKEN_MODULO, "%")                 \
+    TOKEN(TOKEN_MODULO_EQUAL, "%=")          \
+    TOKEN(TOKEN_SUP, ">")                    \
+    TOKEN(TOKEN_SUP_EQUAL, ">=")             \
+    TOKEN(TOKEN_INF, "<")                    \
+    TOKEN(TOKEN_INF_EQUAL, "<=")             \
+    TOKEN(TOKEN_EOF, "fin de fichier")
 
-                #include "common.h"
-
+#define GENERATE_TOKEN_ENUM(TOKEN, TEXT) TOKEN,
 
 typedef enum{
-        TOKEN_ID, // value
-        TOKEN_FOR, // for
-        TOKEN_WHILE, // while
-        TOKEN_IF, // if
-        TOKEN_ELSE, // else
-        TOKEN_VAR, // var
-        TOKEN_CONST, // var
-        TOKEN_FUNC, // func
-        TOKEN_LFUNC , // lfunc
-        TOKEN_MAIN , // main
-        TOKEN_RETURN, // return
-        TOKEN_IMPORT, // import
-        TOKEN_FROM, // import
-        TOKEN_EXPORT, // export
-        TOKEN_STRUCT, // struct
-        TOKEN_TRUE, // True
-        TOKEN_FALSE, // False
-        TOKEN_OR, // or
-        TOKEN_AND, // and
-        TOKEN_PASS , // pass
-        TOKEN_NEW , // new
-        TOKEN_CONTINUE, // continue
-        TOKEN_GLOBAL, // global
-        TOKEN_BREAK, // break
-        TOKEN_NONE, // None
-        TOKEN_CHAR , // 'char value'
-        TOKEN_STRING, // "string value"
-        TOKEN_INTEGER, // 123
-        TOKEN_FLOAT, // 123.0
-        TOKEN_AT_SIGN, // @
-        TOKEN_NOT, // !
-        TOKEN_DIF,// !=
-        TOKEN_MODULO,// %
-        TOKEN_ARROW, // ->
-        TOKEN_COLON , // :
-        TOKEN_DOUBLE_COLON , // ::
-        TOKEN_DOT , // .
-        TOKEN_SEMI, // ;
-        TOKEN_MARK, // ?
-        TOKEN_COMA, // , 
-        TOKEN_LPARENT,  // (
-        TOKEN_RPARENT,  // )
-        TOKEN_LBRACKET, // {
-        TOKEN_RBRACKET, // }
-        TOKEN_LBRACE, // [
-        TOKEN_RBRACE, // ]
-        TOKEN_EQUAL,
-        TOKEN_EQUAL_EQUAL,
-        TOKEN_PLUS, // + 
-        TOKEN_PLUS_EQUAL, // + 
-        TOKEN_MINUS, // -
-        TOKEN_MINUS_EQUAL, // -
-        TOKEN_DIV, // /
-        TOKEN_DIV_EQUAL, // /
-        TOKEN_MULT, // *
-        TOKEN_MULT_EQUAL, // *
-        TOKEN_SUP, // >
-        TOKEN_SUP_EQUAL , // >=
-        TOKEN_INF , // <
-        TOKEN_INF_EQUAL , // <=
-        TOKEN_ADDR , // &
-        TOKEN_EOF 
+    FOREACH_TOKEN(GENERATE_TOKEN_ENUM)
 }TokenEnum;
-
 
 typedef struct{
     TokenEnum type;
-    char * value;
+    char *value;           // texte du jeton (alloué seulement si token_owns_value)
+    int lenght;            // taille de value (une chaîne peut contenir \0)
+    int line;
+    int colone;
+    bool newline_before;   // le jeton commence une nouvelle ligne
 }token_t;
 
-#define AS_TOKEN(ty,val) ((token_t){.type = ty,.value = val})
-
-
-
-static const char *TOKEN_TO_STRING[]={
-    "Identifiant",
-    "for",
-    "while",
-    "if",
-    "else",
-    "var",
-    "const",
-    "func",
-    "lfunc",
-    "main",
-    "return",
-    "import",
-    "from",
-    "export",
-    "struct",
-    "true",
-    "false",
-    "or",
-    "and",
-    "pass",
-    "new",
-    "continue",
-    "global",
-    "break",
-    "None",
-    "char_value",
-    "string_value",
-    "integer_value",
-    "float_value",
-    "@",
-    "!",
-    "!=",
-    "%%",
-    "->",
-    ":",
-    "::",
-    ".",
-    ";",
-    "?",
-    ",",
-    "(",
-    ")",
-    "{",
-    "}",
-    "[",
-    "]",
-    "=",
-    "==",
-    "+",
-    "+=",
-    "-",
-    "-=",
-    "/",
-    "/=",
-    "*",
-    "*=",
-    ">",
-    ">=",
-    "<",
-    "<=",
-    "&",
-    "EOF"
-};
-
-
-token_t * newToken(TokenEnum type , const char *value);
-token_t token_cpy(token_t tok);
-int freeToken(token_t *token);
-
-
-
+const char *token_to_string(TokenEnum type);
+bool token_owns_value(TokenEnum type);
+void freeToken(token_t *token);
 
 #endif

@@ -1,0 +1,2 @@
+// attendu: erreur: `f` est de type float, pas str
+var f::float = "1.5"

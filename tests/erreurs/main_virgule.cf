@@ -1,0 +1,2 @@
+// attendu: erreur: `main` doit retourner un int, pas float
+func main() { return 1.5 }

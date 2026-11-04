@@ -1,0 +1,10 @@
+from "modules/outils.cf" import [double, Boite]
+from modules.outils import VERSION
+from modules.tout import *
+println(double(4), " ", new Boite().v, " ", VERSION)
+println(a, " ", deux())
+func local(){
+    from "modules/tout.cf" import deux
+    return deux()
+}
+println(local())

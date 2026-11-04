@@ -1,0 +1,2 @@
+// attendu: erreur: la structure `S` n'est pas définie
+new S()

@@ -1,0 +1,3 @@
+// attendu: erreur: `m` est de type M, pas int
+struct M { func __cast__(x) { return new M() } }
+var m::M = 3

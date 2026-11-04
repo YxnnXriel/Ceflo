@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `return` en dehors d'une fonction
+return 1

@@ -1,18 +1,9 @@
 #ifndef __VALUE_EXPR_H__
 #define __VALUE_EXPR_H__
 
-#include "ast.h"
-#include "token.h"
+    #include "visitor.h"
 
-
-void performe_visit_tree_char(Value_t * value, Value_t * left , token_t * op, Value_t * right);
-void performe_visit_tree_number(Value_t * value, Value_t * left , token_t * op, Value_t * right);
-void performe_visit_tree_bool(Value_t * value, Value_t * left , token_t * op, Value_t * right);
-void performe_visit_tree_str(Value_t * value, Value_t * left , token_t * op, Value_t * right);
-void performe_visit_tree_none(Value_t * value, Value_t * left , token_t * op, Value_t * right);
-int value_to_type_ast(Value_t *value);
-int type_ast_to_value(ast_t * node_value);
-
-
+    // Calcule `left op right`. `node` situe l'erreur si l'opération est impossible.
+    value_t *value_expr(visitor_t *visitor, ast_t *node, value_t *left, TokenEnum op, value_t *right);
 
 #endif

@@ -1,0 +1,33 @@
+// Sans garbage collector, ce fichier demanderait plusieurs Go.
+struct Noeud { var suivant; var donnees }
+
+var total = 0
+for var i = 0; i < 200000; i += 1 {
+    var a = new Noeud(), b = new Noeud()
+    a.suivant = b
+    b.suivant = a                  // un cycle : il doit quand même être libéré
+    a.donnees = "x" * 1000
+    b.donnees = [i, i + 1, "texte"]
+    total += b.donnees[0] - i + 1
+}
+println(total)
+
+// Une longue chaîne d'objets, marquée sans récursion
+var tete = none
+for var i = 0; i < 100000; i += 1 {
+    var n = new Noeud()
+    n.suivant = tete
+    tete = n
+}
+var compte = 0
+while tete != none { compte += 1; tete = tete.suivant }
+println(compte)
+
+// Valeurs en cours de calcul pendant que le GC tourne
+func grosse(n){ return "y" * n }
+var s = 0
+for var i = 0; i < 2000; i += 1 { s += (grosse(2000) + grosse(2000)).lenght() }
+println(s)
+
+func profond(n){ if n == 0 { return 0 } return 1 + profond(n - 1) }
+println(profond(5000))

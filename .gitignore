@@ -1,5 +1,7 @@
 *.o
+*.so
 Ceflo
-*.cf
-*.txt
-*.sh
+Ceflo_asan
+Ceflo_stress
+Ceflo_val
+test.cf

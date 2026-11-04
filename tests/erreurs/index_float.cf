@@ -1,0 +1,2 @@
+// attendu: erreur: un index doit être un entier
+println([1][0.5])

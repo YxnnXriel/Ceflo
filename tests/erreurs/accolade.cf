@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `}` en trop
+println(1) }

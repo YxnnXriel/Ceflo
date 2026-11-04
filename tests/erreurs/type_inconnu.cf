@@ -1,0 +1,2 @@
+// attendu: erreur: le type `Rien` n'existe pas
+var a::Rien = 1

@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: un caractère contient un seul octet, utilisez "..." pour une chaîne
+var c = 'ab'

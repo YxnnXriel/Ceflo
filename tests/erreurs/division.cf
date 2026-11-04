@@ -1,0 +1,2 @@
+// attendu: erreur: division par zéro
+println(1 / 0)

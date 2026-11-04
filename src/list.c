@@ -1,370 +1,97 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+
 #include "include/list.h"
 
-#define TAB_SIZE 100
-#define TAB_OFFSET 14695981039346656037UL
-#define TAB_PRIME 1099511628211UL
+#define TAB_OFFSET 2166136261u
+#define TAB_PRIME 16777619u
 
-list_t * __init__list__(size_t x){
-
-    list_t *l = calloc(1,sizeof(*l));
-
-    if(l == (void*)0){
-        fprintf(stderr,"line :%d , files :%s , function : %s\n",
-            __LINE__,
-            __FILE__,
-            __func__
-        );
-        exit(1);
-    }
-
-    l->Sizeof = x;
-    l->Item = (void*)0;
-    l->Size = 0;
-
-    return l;
+list_t *newList(void){
+    return ceflo_alloc(sizeof(list_t));
 }
 
-int List_Append(list_t *list , void *value){
-
-    list->Size +=1;
-
-    list->Item = list->Item == (void*)0 ?
-        calloc(1,list->Sizeof): realloc(list->Item,list->Size * list->Sizeof);
-
-
-    if(list->Item == (void*)0){
-        fprintf(stderr,"Allocation dynamique -> line :%d , files :%s , function : %s\n",
-            __LINE__,
-            __FILE__,
-            __func__
-        );
-        exit(1);
+void List_Append(list_t *list, void *value){
+    if(list->Size == list->Capacity){
+        list->Capacity = list->Capacity == 0 ? 4 : list->Capacity * 2;
+        list->Item = ceflo_realloc(list->Item,(size_t)list->Capacity * sizeof(void*));
     }
-    
-    list->Item[list->Size -1] = value;
-
-    return 1;
+    list->Item[list->Size] = value;
+    list->Size += 1;
 }
 
-void * List_Modif(list_t *list,void * value,int index){
-    if(List_Get(list,index) != NULL){
-        list->Item[index] = value;
-        return list;
-    }else{
+void *List_Get(list_t *list, int index){
+    if(index < 0 || index >= list->Size)
         return NULL;
-    }
+    return list->Item[index];
 }
 
-void * List_Get(list_t *list,int index){
-    return index < list->Size ? list->Item[index] : (void*)0;
+void List_Remove(list_t *list, int index){
+    if(index < 0 || index >= list->Size)
+        return;
+    memmove(
+        &list->Item[index],
+        &list->Item[index + 1],
+        (size_t)(list->Size - index - 1) * sizeof(void*)
+    );
+    list->Size -= 1;
 }
-
-
-void * List_Get_Last(list_t *list){
-    return list->Size != 0 ? list->Item[list->Size -1]:(void*)0;
-}
-void * List_Get_Firts(list_t *list){
-    return list->Size != 0 ? list->Item[0]:(void*)0;
-}
-
-
-int List_Del_without_supp(list_t *list , int index){
-
-    if(index > list->Size)
-        return 0;
-    
-    // printf("    FIN\n");
-    for (int i = index; i < list->Size -1; i++)
-        list->Item[i] = list->Item[i+1];
-    
-    list->Size = list->Size -1;
-    
-    return 0;
-
-}
-
-int List_Del(list_t *list , int index,void (*free_method)(void *x)){
-
-
-    if(index > list->Size)
-        return 0;
-
-    // printf("    DEBUT\n");
-    if(free_method != (void*)0)
-        free_method(list->Item[index]);
-    
-    // printf("    FIN\n");
-    for (int i = index; i < list->Size -1; i++)
-        list->Item[i] = list->Item[i+1];
-    
-
-    void *tmp = realloc(list->Item,(list->Size -1 ) * list->Sizeof);
-    if(tmp == NULL && list->Size > 1){
-        fprintf(stderr,"line :%d , files :%s , function : %s\n",
-            __LINE__,
-            __FILE__,
-            __func__
-        );
-        exit(1);
-    }
-
-    list->Size = list->Size -1;
-    list->Item = tmp;
-
-    return 1;
-
-}
-
-int List_Del_all(list_t *list ,void (*free_method)(void *x)){
-
-    if(list->Size <= 0){
-        return 1; 
-    }
-
-    for (int i = list->Size -1; i >= 0; i--){
-        List_Del(list,i,free_method);
-    }
-
-    free(list);
-    
-    return 1;
-
-}
-
-int List_Del_by_item(list_t *list , void *x , void (*free_function)(void *y)){
-    for (int i = 0; i < list->Size; i++){
-        if(List_Get(list,i) == x){
-            List_Del(list,i,free_function);
-            return 1;
-        }
-    }
-    return 0;
-}
-
 
 void List_Free(list_t *list){
-
+    if(list == NULL)
+        return;
     free(list->Item);
     free(list);
-    return;
 }
 
+static pool_t hash_pool;
 
-/* ========================================== */
-
-
-
-
-uint64_t  Hash(const char *chaine){
-
-     uint64_t v = TAB_OFFSET;
-
-    for (int i = 0; chaine[i] != '\0'; i++){
-        v ^=  (uint64_t)(unsigned char)chaine[i];
-        v *= TAB_PRIME;        
+uint32_t Hash_Name(const char *chaine){
+    uint32_t hash = TAB_OFFSET;
+    for(; *chaine != '\0'; chaine++){
+        hash ^= (unsigned char)*chaine;
+        hash *= TAB_PRIME;
     }
-
-    return v;
+    return hash;
 }
 
-hash_t *__init__hash(const char *key ,void * value ){
-
-    hash_t *ha = calloc(1,sizeof(*ha));
-    
-
-    if(ha == (void*)0){
-        
-        fprintf(stderr,"line :%d , files :%s , function : %s\n",
-            __LINE__,
-            __FILE__,
-            __func__
-        );
-        exit(1);
-        
-    }
-
-
-    ha->key = calloc((strlen(key)) , sizeof(char*));
-    strcpy(ha->key,key);
-    ha->value = value;
-
-
-    // ha->next = (void*)0;
-
-    return ha;
-}
-
-static void freeHash(hash_t *hash){
-
-    if(hash != NULL){
-    // printf("ICI %s \n",hash == NULL ? "oui":"non");
-        if(hash->key != NULL){
-            free(hash->key);
-        }
-        if(hash != NULL){
-            free(hash);
-        }
-    }
-}
-stk_t *__init__stk_hash(stk_t *stk){
-
-    stk->Size = 0;
-    for (int i = 0; i < 100; i++){
-        stk->TabHash[i] = (void*)0;    
-    }
-
-    return stk;
-}
-
-int Hash_Append(stk_t * stk ,const char *key ,void * value){
-    
-    hash_t *ha = __init__hash(key,value);
-
-    if(ha == (void*)0) return 0;
-
-    int index = Hash(ha->key) % TAB_SIZE;
-    ha->next = stk->TabHash[index];
-    stk->TabHash[index] = ha;
-
-
-    stk->Size +=1;
-
-    return 1;
-}
-
-
-
-
-
-void *Hash_Get(stk_t *stk , const char *key){
-
-    int index = Hash(key) % TAB_SIZE;
-    hash_t *l = stk->TabHash[index];
-
-    while (l != (void*)0 && strcmp(l->key,key) != 0){
-        l = l->next;
-    }
-
-
-    return l != (void*)0 ? l->value:(void*)0;
-}
-
-hash_t *Hash_Get_With_addr(stk_t *stk , const char *key){
-
-    int index = Hash(key) % TAB_SIZE;
-    hash_t *l = stk->TabHash[index];
-
-    while (l != (void*)0 && strcmp(l->key,key) != 0){
-        l = l->next;
-    }
-
-
-    return l != (void*)0 ? l:(void*)0;
-}
-
-// a reevoir
-
-// void *Hash_Get_by_index(stk_t *stk ,int index){
-//     if(index > stk->Size)
-//         return NULL;
-    
-//     int n = 0;
-//     for (int i = 0; i < TAB_SIZE; i++){
-//         if(stk->TabHash[i] != (void*)0){
-//             hash_t *l = stk->TabHash[i];
-//             if(l != NULL){
-//                 if(n == index){
-//                     return l->value;
-//                 }   
-//                 while (l != (void*)0){
-//                     l = l->next;
-//                     n++;
-//                     if(n == index){
-//                         if(l != NULL)
-//                         return l->value;
-//                     }  
-//                 }
-//             }
-//         }
-//     }   
-
-// }
-
-void * Hash_Get_by_index(stk_t *stk ,int index, int mod){
-    if(index >= stk->Size)
-        return NULL;
-
-    int n = 0;
-    hash_t *l = NULL;
-    for (int i = 0; i < TAB_SIZE; i++){
-        if(stk->TabHash[i] != NULL){ 
-            l = stk->TabHash[i];
-            while (l != NULL){
-                if(n == index){
-                    return mod == 0 ? l->value:l;
-                }
-                l = l->next;
-                n++;
-            }
-        }
+hash_t *Hash_Get_Hashed(table_t *table, const char *key, uint32_t hash){
+    for(hash_t *item = table->TabHash[hash % TAB_SIZE]; item != NULL; item = item->next){
+        if(item->hash == hash && (item->key == key || strcmp(item->key,key) == 0))
+            return item;
     }
     return NULL;
 }
 
-int Hash_Modif(stk_t *stk , const char *key,void *value){
-
-    int index = Hash(key) % TAB_SIZE;
-    hash_t *l = stk->TabHash[index];
-
-    while (l != (void*)0 && strcmp(l->key,key) != 0){
-        l = l->next;
-    }
-
-    if(l != (void*)0){
-        l->value = value;
-        return 1;
-    }
-
-    return 0;
-
+hash_t *Hash_Get(table_t *table, const char *key){
+    return Hash_Get_Hashed(table,key,Hash_Name(key));
 }
 
-void Hash_Print(stk_t *stk){
-
-    for (int i = 0; i < TAB_SIZE; i++){
-        if(stk->TabHash[i] != (void*)0){
-            hash_t *l = stk->TabHash[i];
-            if(l != NULL){
-                printf("[%d]\t",i);
-                while (l != (void*)0){
-                    printf("%s(%p) -> ",l->key,(l->value));
-                    l = l->next;
-                }
-                printf("\n");
-            }
-        }
-    }   
+hash_t *Hash_Set(table_t *table, const char *key, void *value){
+    uint32_t hash = Hash_Name(key);
+    hash_t *item = Hash_Get_Hashed(table,key,hash);
+    if(item == NULL){
+        item = pool_alloc(&hash_pool,sizeof(*item));
+        item->key = key;
+        item->hash = hash;
+        item->next = table->TabHash[hash % TAB_SIZE];
+        table->TabHash[hash % TAB_SIZE] = item;
+    }
+    item->value = value;
+    return item;
 }
 
-
-void Hash_Del(stk_t *stk){
-
-    for (int i = 0; i < TAB_SIZE; i++){
-        if(stk->TabHash[i] != (void*)0){
-            hash_t *l = stk->TabHash[i];
-            if(l != NULL){
-                // printf("[%d]\t",i);
-                while (l != (void*)0){
-                    hash_t * save = l;
-                    l = l->next;
-                    freeHash(save);
-                }
-                // printf("\n");
-            }
+void Hash_Free(table_t *table){
+    for(int i = 0; i < TAB_SIZE; i++){
+        hash_t *item = table->TabHash[i];
+        while(item != NULL){
+            hash_t *next = item->next;
+            pool_release(&hash_pool,item);
+            item = next;
         }
-    }   
+        table->TabHash[i] = NULL;
+    }
+}
+
+void Hash_Free_Pool(void){
+    pool_free_all(&hash_pool);
 }

@@ -1,0 +1,3 @@
+// main n'est pas un mot réservé
+var main = 3
+println(main)

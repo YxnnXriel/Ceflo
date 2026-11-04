@@ -1,0 +1,2 @@
+// attendu: erreur: `z` n'existe pas : on ne peut pas l'exporter
+export :: [z]

@@ -1,0 +1,29 @@
+
+
+// rien de plus simple, regarder :
+
+var myVariable = "CefloV2";
+
+// affiche la variable avec println
+println(myVariable)
+
+// L'affectation se fait également de manière simple, à l'instar des langages modernes.
+
+
+myVariable = 21
+
+// Remarquez que je réattribue la valeur de la variable à un autre type.
+// Oui ! Vous pouvez le faire.
+
+
+
+println(myVariable)
+
+// On peut également spécifier le type de la variable.
+// Son type ne change plus jamais : une valeur d'un autre type est refusée.
+// Pour convertir, il faut le demander avec @type().
+// Une chaîne qui n'est pas un nombre donne sa longueur.
+
+var othervariable::int = @int("je suis une chaine de longeur (34)")
+
+println(othervariable)
