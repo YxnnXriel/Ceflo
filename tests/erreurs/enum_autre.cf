@@ -1,0 +1,5 @@
+// attendu: erreur: `c` est de type Couleur, pas Taille
+enum Couleur { ROUGE, VERT }
+enum Taille { PETIT }
+var c::Couleur = Couleur.ROUGE
+c = Taille.PETIT

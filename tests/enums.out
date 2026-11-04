@@ -1,0 +1,59 @@
+<enum Couleur>
+Couleur.ROUGE Couleur.BLEU
+VERT 1
+5 6 -1 0 1.5 2.5
+[texte] []
+bas BAS
+[ Couleur.ROUGE , Couleur.VERT , Couleur.BLEU ]
+3
+Noms.values values 1
+3
+true
+true
+false
+false
+false
+false
+un élément est vrai, même si sa valeur est 0
+Couleur.BLEU
+none
+none
+Couleur.VERT Couleur.ROUGE
+feu ROUGE
+feu VERT
+Couleur.BLEU
+1 1.5 2
+ROUGE
+texte : Couleur.ROUGE
+Couleur.ROUGE
+true
+[ Couleur.ROUGE ]
+Couleur.VERT
+none
+none
+Niveau.HAUT
+none
+none
+Couleur.VERT
+none
+none
+rouge vert zéro texte
+none
+true false
+vert
+{ Couleur.ROUGE : "ROUGE" , 0 : "zéro" , "ROUGE" : "texte" , Couleur.BLEU : "bleu" }
+Couleur.ROUGE = ROUGE
+0 = zéro
+ROUGE = texte
+Couleur.BLEU = bleu
+{ Couleur.ROUGE : 667 , Couleur.VERT : 667 , Couleur.BLEU : 666 }
+ROUGE VERT BLEU 
+0=0 1=1 2=2 
+[ Couleur.ROUGE , "a" ]
+Interne.UN 1
+Couleur.AUTRE
+Couleur.ROUGE
+Couleur.VERT
+200 true false
+Http.INTROUVABLE
+40000 Http.OK

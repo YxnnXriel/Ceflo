@@ -1,0 +1,3 @@
+// attendu: erreur: `ecrire` attend un argument de type str, pas number
+from os import ecrire
+ecrire("a", 1)

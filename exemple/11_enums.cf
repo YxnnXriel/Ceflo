@@ -1,0 +1,48 @@
+// Une énumération est un vrai type : ses valeurs ne se confondent pas avec des nombres.
+
+enum Etat { ATTENTE, EN_COURS, TERMINE }
+enum Http { OK = 200, INTROUVABLE = 404, ERREUR = 500 }
+
+// Une table remplace une longue suite de `if`.
+const MESSAGES = {
+    [Http.OK]: "tout va bien",
+    [Http.INTROUVABLE]: "la page n'existe pas",
+    [Http.ERREUR]: "le serveur a un problème",
+}
+
+struct Tache {
+    var nom::str
+    var etat::Etat = Etat.ATTENTE
+
+    func __init__(nom::str) { self.nom = nom }
+
+    func avance() {
+        var liste = Etat.values()
+        var suivant = etat.value + 1
+        if suivant < liste.lenght() { etat = liste[suivant] }
+    }
+
+    func __str__() { return nom + " : " + etat.name }
+}
+
+var tache = new Tache("écrire le test")
+println(tache)
+tache.avance()
+println(tache)
+tache.avance()
+tache.avance()
+println(tache)
+
+// Depuis l'extérieur, comme un code lu dans un fichier : une valeur inconnue donne none.
+for var code in [200, 404, 418] {
+    var reponse = @Http(code)
+    if reponse == none {
+        println(code, " : code inconnu")
+    } else {
+        println(code, " : ", MESSAGES[reponse])
+    }
+}
+
+for var etat in Etat.values() {
+    println(etat, " vaut ", etat.value)
+}

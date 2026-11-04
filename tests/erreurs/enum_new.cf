@@ -1,0 +1,3 @@
+// attendu: erreur: `Couleur` est une énumération : ses valeurs existent déjà
+enum Couleur { ROUGE, VERT }
+new Couleur()

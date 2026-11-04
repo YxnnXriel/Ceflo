@@ -34,6 +34,7 @@
 #include "include/value_expr.h"
 #include "include/typer.h"
 #include "include/bulletin.h"
+#include "include/os.h"
 
 
 
@@ -177,13 +178,43 @@ static value_t *visitor_visit_list_access(visitor_t *visitor, ast_t *node){
 //                          ===================================== $OBJECT ==============================================
 
 
-static value_t *visitor_visit_struct_definition(visitor_t *visitor, ast_t *node){
+// Une structure et une énumération ne se redéfinissent pas, et ne prennent pas le nom de l'autre.
+static void visitor_check_new_type(visitor_t *visitor, ast_t *node){
     hash_t *existing = scope_get(visitor->scope,node->struct_definition_name);
-    if(existing != NULL && ((value_t*)existing->value)->type == STRUCT)
+    if(existing == NULL)
+        return;
+    if(((value_t*)existing->value)->type == STRUCT)
         visitor_error(node,"la structure `%s` est déjà définie",node->struct_definition_name);
+    if(((value_t*)existing->value)->type == ENUM)
+        visitor_error(node,"l'énumération `%s` est déjà définie",node->struct_definition_name);
+}
 
+static value_t *visitor_visit_struct_definition(visitor_t *visitor, ast_t *node){
+    visitor_check_new_type(visitor,node);
     scope_define(visitor->scope,node->struct_definition_name,makeStruct(node,visitor->scope));
     return NULL;
+}
+
+static value_t *visitor_visit_enum_definition(visitor_t *visitor, ast_t *node){
+    visitor_check_new_type(visitor,node);
+    scope_define(visitor->scope,node->struct_definition_name,makeEnum(node))->is_const = true;
+    return NULL;
+}
+
+// Couleur.ROUGE, puis Couleur.ROUGE.name et Couleur.ROUGE.value
+static value_t *visitor_enum_access(ast_t *node, value_t *object){
+    if(object->type == ENUM){
+        value_t *member = Value_enum_get(object,node->variable_name);
+        if(member == NULL)
+            visitor_error(node,"`%s` n'a pas de valeur `%s`",object->as.enumValue.definition->struct_definition_name,node->variable_name);
+        return member;
+    }
+
+    if(strcmp(node->variable_name,"name") == 0)
+        return Value_enum_item_name(object);
+    if(strcmp(node->variable_name,"value") == 0)
+        return Value_enum_item_value(object);
+    visitor_error(node,"`%s` n'a pas d'attribut `%s`",Value_type_name(object),node->variable_name);
 }
 
 // __init__ se surcharge : on prend celui qui a le bon nombre de paramètres.
@@ -257,6 +288,9 @@ static value_t *visitor_visit_object_access(visitor_t *visitor, ast_t *node){
         value_t *value = Value_map_get_name(object,node->variable_name);
         return value != NULL ? value : makeNone();
     }
+
+    if(object->type == ENUM || object->type == ENUM_VALUE)
+        return visitor_enum_access(node,object);
 
     return visitor_get_attribute(node,object)->value;
 }
@@ -380,6 +414,8 @@ static value_t *visitor_visit_function_call(visitor_t *visitor, ast_t *node){
 
 static value_t *visitor_visit_new(visitor_t *visitor, ast_t *node){
     hash_t *item = scope_lookup(visitor->scope,node->function_call_name);
+    if(item != NULL && ((value_t*)item->value)->type == ENUM)
+        visitor_error(node,"`%s` est une énumération : ses valeurs existent déjà",node->function_call_name);
     if(item == NULL || ((value_t*)item->value)->type != STRUCT)
         visitor_error(node,"la structure `%s` n'est pas définie",node->function_call_name);
 
@@ -639,6 +675,8 @@ static place_t visitor_get_place(visitor_t *visitor, ast_t *target){
             place.container = object;
             return place;
         }
+        if(object->type == ENUM || object->type == ENUM_VALUE)
+            visitor_error(target,"une énumération ne se modifie pas");
         place.kind = PLACE_VARIABLE;
         place.item = visitor_get_attribute(target,object);
         return place;
@@ -873,6 +911,18 @@ static void visitor_import_dll(visitor_t *visitor, ast_t *node){
 
 #endif
 
+// `from os import ...` sans fichier os.cf : le module compilé dans l'interpréteur.
+static scope_t *visitor_standard_module(visitor_t *visitor, const char *path){
+    if(strcmp(path,"os.cf") != 0)
+        return NULL;
+
+    scope_t *scope = newScope(visitor->builtins);
+    gc_root(scope);
+    os_define_all(scope);
+    Hash_Set(&modules,"os.cf",scope);
+    return scope;
+}
+
 static value_t *visitor_visit_include(visitor_t *visitor, ast_t *node){
     if(node->is_dll){
         visitor_import_dll(visitor,node);
@@ -887,11 +937,15 @@ static value_t *visitor_visit_include(visitor_t *visitor, ast_t *node){
         module = loaded->value;
     }else{
         lexer_t lexer;
-        if(!newLexer(&lexer,path)){
-            free(path);
-            visitor_error(node,"impossible d'ouvrir `%s`",node->variable_name);
+        if(newLexer(&lexer,path)){
+            module = visitor_run_source(visitor,&lexer);
+        }else{
+            module = visitor_standard_module(visitor,path);
+            if(module == NULL){
+                free(path);
+                visitor_error(node,"impossible d'ouvrir `%s`",node->variable_name);
+            }
         }
-        module = visitor_run_source(visitor,&lexer);
     }
     free(path);
 
@@ -953,6 +1007,7 @@ static value_t *visitor_dispatch(visitor_t *visitor, ast_t *node){
         case AST_VARIABLE_DEFINITION: return visitor_visit_variable_definition(visitor,node);
         case AST_FUNCTION_DEFINITION: return visitor_visit_function_definition(visitor,node);
         case AST_STRUCT_DEFINITION: return visitor_visit_struct_definition(visitor,node);
+        case AST_ENUM_DEFINITION: return visitor_visit_enum_definition(visitor,node);
         case AST_ASSIGNEMENT: return visitor_visit_assignement(visitor,node);
         case AST_RETURN: return visitor_visit_return(visitor,node);
         case AST_BREAK: visitor->signal = SIGNAL_BREAK; return NULL;

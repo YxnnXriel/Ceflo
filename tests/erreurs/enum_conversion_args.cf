@@ -1,0 +1,3 @@
+// attendu: erreur: `Couleur` prend 1 argument(s), mais en reçoit 2
+enum Couleur { ROUGE, VERT }
+@Couleur(1, 2)

@@ -1,0 +1,4 @@
+println("cycle_a commence")
+func depuis_a() { return "a" }
+from cycle_b import depuis_b
+func a_appelle_b() { return depuis_b() }

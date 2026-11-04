@@ -1,0 +1,3 @@
+// attendu: erreur: `values` prend 0 argument(s), mais en reçoit 1
+enum Couleur { ROUGE, VERT }
+Couleur.values(1)

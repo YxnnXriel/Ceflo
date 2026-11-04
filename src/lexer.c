@@ -134,6 +134,7 @@ static TokenEnum lexer_precise_id(const char *chaine){
         {"from",TOKEN_FROM},
         {"export",TOKEN_EXPORT},
         {"struct",TOKEN_STRUCT},
+        {"enum",TOKEN_ENUM},
         {"true",TOKEN_TRUE},
         {"false",TOKEN_FALSE},
         {"none",TOKEN_NONE},

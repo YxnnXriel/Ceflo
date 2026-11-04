@@ -1,0 +1,8 @@
+enum Http { OK = 200, INTROUVABLE = 404 }
+enum Cache { PRIVE, PUBLIC }
+
+func est_ok(code::Http) : bool {
+    return code == Http.OK
+}
+
+export :: [Http, est_ok]

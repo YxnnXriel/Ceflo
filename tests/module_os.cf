@@ -1,0 +1,81 @@
+// Le module os. Le script reçoit un dossier de travail qui n'existe pas encore.
+from os import *
+
+var base = argv[1]
+func ici(nom) { return chemin(base, nom) }
+
+// chemin
+println(chemin("a", "b", "c.txt"), " ", chemin("a/", "/b"), " ", chemin("", "a", ""), " ", chemin("/", "a"), " [", chemin(), "]")
+
+// Dossiers
+println(existe(base), " ", creer_dossier(chemin(base, "x/y/z")), " ", existe(base), " ", est_dossier(base))
+println(creer_dossier(chemin(base, "x")), " ", creer_dossier(""), " ", dossier(base))
+
+// Écrire, ajouter, lire
+var f = ici("note.txt")
+println(lire(f), " ", lire_lignes(f), " ", taille(f), " ", existe(f), " ", est_dossier(f))
+println(ecrire(f, "un\ndeux\n"), " ", lire(f) == "un\ndeux\n", " ", taille(f), " ", existe(f), " ", est_dossier(f))
+println(ajouter(f, "trois"), " ", lire_lignes(f), " ", taille(f))
+
+// Écrire remplace, et ajouter crée le fichier s'il manque
+println(ecrire(f, "neuf"), " ", lire(f))
+println(ajouter(ici("cree.txt"), "x"), " ", lire(ici("cree.txt")))
+
+// Ce qui ne marche pas donne none ou false, sans arrêter le script
+println(ecrire(ici("absent/a.txt"), "x"), " ", ajouter(ici("absent/a.txt"), "x"), " ", lire(base), " ", dossier(f), " ", dossier(ici("rien")), " ", taille(ici("rien")))
+println(creer_dossier(chemin(f, "dessous")), " ", creer_dossier(f))
+
+// Lignes : vide, Windows, sans fin de ligne, lignes vides
+var g = ici("lignes.txt")
+ecrire(g, "")
+println(lire_lignes(g), " [", lire(g), "] ", taille(g))
+ecrire(g, "a\r\n\r\nb\n\nc")
+println(lire_lignes(g))
+ecrire(g, "\n")
+println(lire_lignes(g))
+
+// Un texte avec un octet nul se lit et s'écrit en entier
+ecrire(g, "a\0b")
+println(taille(g), " ", lire(g).lenght())
+
+// Renommer et copier
+println(renommer(f, ici("nom.txt")), " ", existe(f), " ", lire(ici("nom.txt")))
+println(copier(ici("nom.txt"), ici("copie.txt")), " ", lire(ici("copie.txt")), " ", lire(ici("nom.txt")))
+println(copier(ici("rien"), ici("autre")), " ", existe(ici("autre")), " ", renommer(ici("rien"), ici("autre")))
+println(dossier(base))
+
+// Supprimer : un fichier ou un dossier vide, jamais un dossier plein
+println(supprimer(ici("copie.txt")), " ", supprimer(ici("copie.txt")), " ", supprimer(ici("x")), " ", existe(ici("x")))
+println(supprimer(ici("x/y/z")), " ", existe(ici("x/y")), " ", existe(ici("x/y/z")))
+
+// Le dossier courant
+var depart = dossier_courant()
+println(changer_dossier(ici("x")), " ", dossier_courant() == depart, " ", dossier(".") , " ", changer_dossier("rien"))
+println(changer_dossier(depart), " ", dossier_courant() == depart)
+
+// L'environnement
+println(env("CEFLO_RIEN_DU_TOUT"), " ", env("PATH") != none)
+
+// commande garde le texte, lancer l'affiche
+var r = commande("printf 'bonjour\nmonde\n'; exit 3")
+println(r, " ", r.code, " ", r.sortie.split("\n")[1])
+println(commande("true").code, " ", commande("false").code, " ", commande("kill -9 $$").code, " [", commande("true").sortie, "]")
+print("avant ")
+println(lancer("echo pendant"))
+println(lancer("exit 7"), " ", lancer("commande_qui_nexiste_pas 2>/dev/null"))
+print("ordre ")
+println(commande("echo garde").sortie)
+
+// Du gros : plus long que le tampon de lecture
+var grand = "abcdefghij" * 2000
+ecrire(ici("grand.txt"), grand)
+println(lire(ici("grand.txt")) == grand, " ", taille(ici("grand.txt")), " ", commande("cat '" + ici("grand.txt") + "'").sortie == grand)
+
+// Un nom seul, et plusieurs imports du même module
+from os import existe
+from os import [env, lire]
+func dans_fonction() {
+    from os import taille
+    return taille(ici("grand.txt"))
+}
+println(dans_fonction())

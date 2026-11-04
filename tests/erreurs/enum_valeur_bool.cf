@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `nombre ou chaîne` attendu
+enum Couleur { A = true }

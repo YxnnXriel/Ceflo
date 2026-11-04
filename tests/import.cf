@@ -1,0 +1,79 @@
+// Toutes les façons d'importer. Essayez :  ./Ceflo tests/import.cf
+
+// Tous les noms publics d'un fichier
+from modules.tout import *
+println("star : ", a, " ", deux())
+
+// Un seul nom
+from modules.outils import double
+println("nom : ", double(4))
+
+// Plusieurs noms, dont une structure
+from modules.outils import [Boite, VERSION]
+println("liste : ", new Boite().v, " ", VERSION)
+
+// Un chemin en chaîne, et un chemin dans un sous-dossier
+from "modules/geometrie/formes.cf" import Carre
+from modules.geometrie.formes import [grand]
+var petit = new Carre(3)
+println("dossier : ", petit, " ", petit.aire(), " ", grand().aire())
+
+// Une structure importée sert aussi de type
+func cote(c::Carre) : int { return c.Cote }
+var type::Carre = grand()
+println("type : ", cote(type), " ", cote(new Carre(7)))
+
+// Un fichier ne s'exécute qu'une seule fois, même importé plusieurs fois
+from modules.compteur import ajoute
+from modules.compteur import lire
+from modules.compteur import [LIMITE, ajoute]
+
+// Ses fonctions partagent donc les mêmes variables
+ajoute(2)
+ajoute(3)
+println("etat : ", lire(), " ", LIMITE)
+
+// Un nom importé est une copie : il garde la valeur du moment de l'import
+from modules.compteur import total
+ajoute(1)
+println("copie : ", total, " ", lire())
+
+// Il garde aussi son type
+total = 50
+println("copie changee : ", total, " ", lire())
+
+// Importer dans une fonction : le nom ne sort pas de la fonction
+var carre = "le mien"
+func dans_fonction() {
+    from modules.geometrie.calculs import carre
+    return carre(5)
+}
+println("fonction : ", dans_fonction(), " ", carre)
+
+// Importer dans un bloc : pareil
+if true {
+    from modules.geometrie.calculs import carre
+    println("bloc : ", carre(6))
+}
+println("bloc apres : ", carre)
+
+// Un import ne casse pas une variable déjà là, sauf s'il porte le même nom
+var a = "avant"
+from modules.tout import [deux]
+println("garde : ", a)
+from modules.tout import a
+println("remplace : ", a)
+
+// Deux fichiers qui s'importent l'un l'autre ne bouclent pas
+from modules.cycle_a import a_appelle_b
+println("cycle : ", a_appelle_b())
+
+// Le main d'un module ne se lance pas, même avec *
+from modules.avec_main import *
+println("main : ", outil())
+
+// Une fonction importée se passe comme une valeur
+var doubles = [1, 2, 3].filter(lfunc(x) { return double(x) > 2 })
+println("valeur : ", doubles)
+var outils = { double, deux }
+println("map : ", outils.double(10), " ", outils.deux())

@@ -1,0 +1,35 @@
+// Le module os : les fichiers, les dossiers et le système.
+// Essayez :  ./Ceflo exemple/10_os.cf
+
+from os import [lire_lignes, dossier, est_dossier, chemin, taille, existe, env, commande]
+
+func main(argv) {
+    // Un script lit son propre texte, ligne par ligne.
+    var lignes = lire_lignes(argv[0])
+    println("Ce script fait ", lignes.lenght(), " lignes.")
+
+    // Un fichier qui manque ne stoppe pas le script : lire_lignes donne none.
+    if lire_lignes("fichier_absent.txt") == none {
+        println("Ce fichier n'existe pas, mais le script continue.")
+    }
+
+    // Lister un dossier
+    println("\nLes fichiers .cf de ce dossier :")
+    var ici = "."
+    for var nom in dossier(ici) {
+        var complet = chemin(ici, nom)
+        if !est_dossier(complet) and nom.split(".cf").lenght() == 2 {
+            println("  ", nom, " : ", taille(complet), " octets")
+        }
+    }
+
+    // L'environnement
+    var utilisateur = env("USER")
+    println("\nBonjour ", utilisateur != none ? utilisateur : "toi")
+
+    // Lancer une commande et lire son résultat
+    var resultat = commande("date +%Y")
+    println("Nous sommes en ", resultat.sortie.split("\n")[0], " (code ", resultat.code, ")")
+
+    return 0
+}

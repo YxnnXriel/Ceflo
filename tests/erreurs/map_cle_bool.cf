@@ -1,2 +1,2 @@
-// attendu: erreur: une clé de map doit être str ou number, pas bool
+// attendu: erreur: une clé de map doit être str, number ou un élément d'énumération, pas bool
 println({ [true]: 1 })

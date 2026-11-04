@@ -1,0 +1,3 @@
+// attendu: erreur: `Couleur` est une constante
+enum Couleur { ROUGE, VERT }
+Couleur = 1

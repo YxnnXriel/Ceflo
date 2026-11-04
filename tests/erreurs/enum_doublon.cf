@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `ROUGE` est déjà dans l'énumération, à la ligne 2
+enum Couleur { ROUGE, VERT, ROUGE }

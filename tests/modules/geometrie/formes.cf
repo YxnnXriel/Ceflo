@@ -1,0 +1,18 @@
+// Le chemin se cherche d'abord à côté de ce fichier : pas besoin d'écrire geometrie/.
+from calculs import carre
+from "calculs.cf" import [carre]
+
+// Ce nom reste privé à cause de export.
+func arrondi(x) { return x * 1 }
+
+struct Carre {
+    var Cote::int = 1
+
+    func __init__(self, cote::int) { self.Cote = cote }
+    func aire() : int { return arrondi(carre(Cote)) }
+    func __str__() { return "Carre(" + Cote + ")" }
+}
+
+func grand() : Carre { return new Carre(100) }
+
+export :: [Carre, grand]

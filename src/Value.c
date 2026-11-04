@@ -101,6 +101,23 @@ value_t *makeStruct(ast_t *definition, struct SCOPE_STRUCT *closure){
     return value;
 }
 
+value_t *makeEnum(ast_t *definition){
+    value_t *value = newValue(ENUM);
+    value->as.enumValue.definition = definition;
+    value->as.enumValue.members = NULL;
+    value_t *members = makeMap();
+    value->as.enumValue.members = members;
+
+    for(int i = 0; i < definition->struct_definition_item->Size; i++){
+        ast_t *item = List_Get(definition->struct_definition_item,i);
+        value_t *member = newValue(ENUM_VALUE);
+        member->as.enumItem.owner = value;
+        member->as.enumItem.item = item;
+        Value_map_set_name(members,item->variable_name,member);
+    }
+    return value;
+}
+
 value_t *makeGeneric(void *x){
     value_t *value = newValue(GENERIC);
     value->as.GenericValue = x;
@@ -121,13 +138,13 @@ void Value_list_append(value_t *list, value_t *item){
     gc_add_bytes(sizeof(void*));
 }
 
-// Une clé est une chaîne ou un nombre. Un caractère compte comme une chaîne d'un seul octet.
+// Une clé est une chaîne, un nombre ou un élément d'énumération. Un caractère compte comme une chaîne d'un seul octet.
 static value_t *Value_map_key(ast_t *node, value_t *key){
-    if(key->type == STRING || key->type == NUMBER)
+    if(key->type == STRING || key->type == NUMBER || key->type == ENUM_VALUE)
         return key;
     if(key->type == CHAR)
         return makeStringLenght(&AS_CHAR(key),1);
-    visitor_error(node,"une clé de map doit être str ou number, pas %s",Value_type_name(key));
+    visitor_error(node,"une clé de map doit être str, number ou un élément d'énumération, pas %s",Value_type_name(key));
 }
 
 value_t *Value_map_get(ast_t *node, value_t *map, value_t *key){
@@ -147,6 +164,38 @@ value_t *Value_map_get_name(value_t *map, const char *name){
 void Value_map_set_name(value_t *map, const char *name, value_t *value){
     if(!map_replace_text(AS_MAP(map),name,(int)strlen(name),value))
         map_set(AS_MAP(map),makeString(name),value);
+}
+
+value_t *Value_enum_get(value_t *enumeration, const char *name){
+    return Value_map_get_name(enumeration->as.enumValue.members,name);
+}
+
+value_t *Value_enum_item_name(value_t *item){
+    return makeString(item->as.enumItem.item->variable_name);
+}
+
+value_t *Value_enum_item_value(value_t *item){
+    ast_t *definition = item->as.enumItem.item;
+    if(definition->type == AST_NUMBER)
+        return makeNumber(definition->number_value);
+    return makeStringLenght(definition->string_value,definition->string_lenght);
+}
+
+static bool Value_enum_item_has(ast_t *item, value_t *value){
+    if(value->type == NUMBER)
+        return item->type == AST_NUMBER && item->number_value == AS_NUMBER(value);
+    return item->type == AST_STRING && item->string_lenght == AS_STRING(value)->lenght &&
+        memcmp(item->string_value,AS_STRING(value)->str,(size_t)item->string_lenght) == 0;
+}
+
+value_t *Value_enum_find(value_t *enumeration, value_t *value){
+    map_t *members = AS_MAP(enumeration->as.enumValue.members);
+    for(int i = 0; i < members->size; i++){
+        value_t *member = members->entries[i].value;
+        if(Value_enum_item_has(member->as.enumItem.item,value))
+            return member;
+    }
+    return NULL;
 }
 
 
@@ -262,6 +311,8 @@ const char *Value_type_name(value_t *value){
         case FUNCTION:
         case BUILTIN: return "func";
         case STRUCT: return "struct";
+        case ENUM: return "enum";
+        case ENUM_VALUE: return value->as.enumItem.owner->as.enumValue.definition->struct_definition_name;
         case GENERIC: return "generic";
     }
     return "?";
@@ -402,6 +453,16 @@ void Value_to_buffer(struct VISITOR_STRUCT *visitor, buffer_t *buffer, value_t *
             Buffer_Append_Str(buffer,value->as.structValue.definition->struct_definition_name);
             Buffer_Append_Char(buffer,'>');
             break;
+        case ENUM:
+            Buffer_Append_Str(buffer,"<enum ");
+            Buffer_Append_Str(buffer,value->as.enumValue.definition->struct_definition_name);
+            Buffer_Append_Char(buffer,'>');
+            break;
+        case ENUM_VALUE:
+            Buffer_Append_Str(buffer,Value_type_name(value));
+            Buffer_Append_Char(buffer,'.');
+            Buffer_Append_Str(buffer,value->as.enumItem.item->variable_name);
+            break;
         case GENERIC:
             Buffer_Append_Str(buffer,"<generic>");
             break;
@@ -439,7 +500,7 @@ void Value_check_args(ast_t *node, const char *name, int argc, int expected){
 
 void Value_check_type(ast_t *node, const char *name, value_t *value, type_ceflo expected){
     static const char *names[] = {
-        "none","bool","char","number","str","list","map","object","func","func","struct","generic"
+        "none","bool","char","number","str","list","map","object","func","func","struct","enum","enum","generic"
     };
 
     if(value->type != expected)
@@ -581,6 +642,14 @@ static value_t *value_Map_values(struct VISITOR_STRUCT *visitor, ast_t *node, va
 }
 
 
+//                          ===================================== $ENUM ===================================================
+
+
+static value_t *value_Enum_values(struct VISITOR_STRUCT *visitor, ast_t *node, value_t *self, value_t **args, int argc){
+    return value_Map_values(visitor,node,self->as.enumValue.members,args,argc);
+}
+
+
 //                          ===================================== $STR ====================================================
 
 
@@ -677,6 +746,11 @@ static const method_t attr_value_map[] = {
     {NULL,NULL},
 };
 
+static const method_t attr_value_enum[] = {
+    {"values",&value_Enum_values},
+    {NULL,NULL},
+};
+
 static const method_t attr_value_str[] = {
     {"lenght",&value_Str_lenght},
     {"length",&value_Str_lenght},
@@ -692,6 +766,8 @@ value_t *Value_call_method(struct VISITOR_STRUCT *visitor, ast_t *node, value_t 
         methods = attr_value_list;
     else if(self->type == MAP)
         methods = attr_value_map;
+    else if(self->type == ENUM)
+        methods = attr_value_enum;
     else if(self->type == STRING)
         methods = attr_value_str;
     else

@@ -1,15 +1,30 @@
 {
   "name": "ceflo",
   "displayName": "CeFlo",
-  "description": "Ceflo Interpreter",
-  "version": "0.0.1",
+  "description": "Coloration, autocomplétion et erreurs du langage CeFlo",
+  "version": "0.5.0",
+  "publisher": "yxnnxriel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YxnnXriel/Ceflo"
+  },
   "engines": {
     "vscode": "^1.77.0"
   },
   "categories": [
     "Programming Languages"
   ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:ceflo"
+  ],
   "contributes": {
+    "configurationDefaults": {
+      "[ceflo]": {
+        "editor.wordBasedSuggestions": "off"
+      }
+    },
     "languages": [{
       "id": "ceflo",
       "aliases": ["CeFlo", "ceflo"],

@@ -1,0 +1,3 @@
+// attendu: erreur: `lire` : le texte ne peut pas contenir de caractère nul
+from os import lire
+lire("a\0b")

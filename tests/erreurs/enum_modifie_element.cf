@@ -1,0 +1,3 @@
+// attendu: erreur: une énumération ne se modifie pas
+enum Couleur { ROUGE, VERT }
+Couleur.ROUGE = 1

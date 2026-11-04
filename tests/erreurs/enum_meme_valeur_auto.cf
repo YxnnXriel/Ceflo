@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `C` a la même valeur que `A`
+enum Couleur { A = 1, B = 0, C }

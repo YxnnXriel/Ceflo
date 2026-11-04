@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: une valeur qui suit un texte s'écrit avec son `=`
+enum Couleur { A = "x", B }

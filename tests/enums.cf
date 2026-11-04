@@ -1,0 +1,133 @@
+// Les énumérations : déclaration, valeurs, types, conversions, maps et modules.
+
+from modules.reseau import [Http, est_ok]
+
+enum Couleur { ROUGE, VERT, BLEU }
+enum Taille { PETIT, GRAND, }
+enum Mixte { A = 5, B, C = -1, D, E = 1.5, F, G = "texte", H = "" }
+enum Niveau {
+    BAS = "bas",
+    HAUT = "haut",
+}
+
+// --- lecture
+println(Couleur)
+println(Couleur.ROUGE, " ", Couleur.BLEU)
+println(Couleur.VERT.name, " ", Couleur.VERT.value)
+println(Mixte.A.value, " ", Mixte.B.value, " ", Mixte.C.value, " ", Mixte.D.value, " ", Mixte.E.value, " ", Mixte.F.value)
+println("[", Mixte.G.value, "] [", Mixte.H.value, "]")
+println(Niveau.BAS.value, " ", Niveau.BAS.name)
+println(Couleur.values())
+println(Couleur.values().lenght())
+
+// --- un élément peut s'appeler comme la méthode ou ses attributs
+enum Noms { values, name, value }
+println(Noms.values, " ", Noms.values.name, " ", Noms.name.value)
+println(Noms.values().lenght())
+
+// --- comparaison
+println(Couleur.ROUGE == Couleur.ROUGE)
+println(Couleur.ROUGE != Couleur.VERT)
+println(Couleur.ROUGE == Taille.PETIT)
+println(Couleur.ROUGE == 0)
+println(Niveau.BAS == "bas")
+println(Couleur.ROUGE == none)
+if Couleur.ROUGE { println("un élément est vrai, même si sa valeur est 0") }
+
+// --- types déclarés
+var c::Couleur = Couleur.ROUGE
+c = Couleur.BLEU
+println(c)
+var vide::Couleur
+println(vide)
+vide = Couleur.VERT
+vide = none
+println(vide)
+
+func suivante(c::Couleur) : Couleur {
+    var liste = Couleur.values()
+    return liste[(c.value + 1) % liste.lenght()]
+}
+println(suivante(Couleur.ROUGE), " ", suivante(Couleur.BLEU))
+
+struct Feu {
+    var etat::Couleur = Couleur.ROUGE
+    func change(c::Couleur) { etat = c; return self }
+    func __str__() { return "feu " + etat.name }
+}
+println(new Feu())
+println(new Feu().change(Couleur.VERT))
+var feu = new Feu()
+feu.etat = Couleur.BLEU
+println(feu.etat)
+
+// --- conversions
+println(@int(Mixte.E), " ", @float(Mixte.E), " ", @number(Couleur.BLEU))
+println(@str(Couleur.ROUGE))
+println("texte : " + Couleur.ROUGE)
+println("{}".format(Couleur.ROUGE))
+println(@bool(Couleur.ROUGE))
+println(@list(Couleur.ROUGE))
+println(@Couleur(1))
+println(@Couleur(99))
+println(@Couleur(1.5))
+println(@Niveau("haut"))
+println(@Niveau("rien"))
+println(@Niveau(0))
+println(@Couleur(Couleur.VERT))
+println(@Couleur(none))
+println(@Couleur())
+
+// --- clés de map
+var noms = { [Couleur.ROUGE]: "rouge", [Couleur.VERT]: "vert", 0: "zéro", ROUGE: "texte" }
+println(noms[Couleur.ROUGE], " ", noms[Couleur.VERT], " ", noms[0], " ", noms["ROUGE"])
+println(noms[Couleur.BLEU])
+println(noms.has(Couleur.VERT), " ", noms.has(Couleur.BLEU))
+noms[Couleur.BLEU] = "bleu"
+noms[Couleur.ROUGE] = "ROUGE"
+println(noms.remove(Couleur.VERT))
+println(noms)
+for var cle, valeur in noms { println(cle, " = ", valeur) }
+
+var comptes = {}
+for var i = 0; i < 2000; i += 1 {
+    var couleur = Couleur.values()[i % 3]
+    comptes[couleur] = comptes.get(couleur,0) + 1
+}
+println(comptes)
+
+// --- parcours et listes
+for var couleur in Couleur.values() { print(couleur.name, " ") }
+println()
+for var i, couleur::Couleur in Couleur.values() { print(i, "=", couleur.value, " ") }
+println()
+println([Couleur.ROUGE, "a"])
+
+// --- une énumération dans une fonction ou un bloc reste locale
+func locale() {
+    enum Interne { UN = 1 }
+    return Interne.UN
+}
+var garde = locale()
+println(garde, " ", garde.value)
+if true {
+    enum Couleur { AUTRE }
+    println(Couleur.AUTRE)
+}
+println(Couleur.ROUGE)
+
+// --- une lfunc se souvient de l'énumération
+var lire = lfunc() { return Couleur.VERT }
+println(lire())
+
+// --- modules
+println(Http.OK.value, " ", est_ok(Http.OK), " ", est_ok(Http.INTROUVABLE))
+println(@Http(404))
+
+// --- le GC garde tout ce qu'il faut
+var reste = 0
+for var i = 0; i < 20000; i += 1 {
+    var texte = "x" + i
+    reste += Http.OK.name.lenght()
+}
+println(reste, " ", Http.OK)

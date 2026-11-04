@@ -1,0 +1,3 @@
+// attendu: erreur: `lire` attend un argument de type str, pas number
+from os import lire
+lire(3)

@@ -43,18 +43,25 @@ static uint32_t map_hash_text(const char *text, int lenght){
     return hash != 0 ? hash : 1;
 }
 
+static uint32_t map_hash_bits(uint64_t bits){
+    return map_mix((uint32_t)(bits ^ (bits >> 32)));
+}
+
 // `+ 0.0` : 0 et -0 sont le même nombre, donc la même clé.
 static uint32_t map_hash_number(double number){
     number += 0.0;
     uint64_t bits;
     memcpy(&bits,&number,sizeof(bits));
-    return map_mix((uint32_t)(bits ^ (bits >> 32)));
+    return map_hash_bits(bits);
 }
 
 // Une chaîne ne change jamais : son hash se calcule une seule fois.
+// Un élément d'énumération n'existe qu'une fois : son adresse suffit.
 static uint32_t map_hash_key(value_t *key){
     if(key->type == NUMBER)
         return map_hash_number(AS_NUMBER(key));
+    if(key->type == ENUM_VALUE)
+        return map_hash_bits((uint64_t)(uintptr_t)key);
 
     string_t *string = AS_STRING(key);
     if(string->hash == 0)
@@ -97,9 +104,23 @@ static int map_find_number(map_t *map, uint32_t hash, double number){
     return -1;
 }
 
+static int map_find_identity(map_t *map, uint32_t hash, value_t *key){
+    if(map->index == NULL)
+        return -1;
+
+    uint32_t mask = (uint32_t)map->capacity * 2 - 1;
+    for(uint32_t i = hash & mask; map->index[i] != MAP_EMPTY; i = (i + 1) & mask){
+        if(map->entries[map->index[i]].key == key)
+            return map->index[i];
+    }
+    return -1;
+}
+
 static int map_find(map_t *map, value_t *key, uint32_t hash){
     if(key->type == NUMBER)
         return map_find_number(map,hash,AS_NUMBER(key));
+    if(key->type == ENUM_VALUE)
+        return map_find_identity(map,hash,key);
     return map_find_text(map,hash,AS_STRING(key)->str,AS_STRING(key)->lenght);
 }
 

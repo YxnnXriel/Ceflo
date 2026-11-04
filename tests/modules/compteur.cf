@@ -1,0 +1,12 @@
+// Ce message prouve qu'un fichier ne s'exécute qu'une seule fois.
+println("compteur chargé")
+
+var total::int = 0
+const LIMITE = 10
+
+func ajoute(n::int) : int {
+    total += n
+    return total
+}
+
+func lire() : int { return total }

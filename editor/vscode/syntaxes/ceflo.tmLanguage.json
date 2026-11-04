@@ -63,6 +63,10 @@
 				{
 					"name": "keyword.control.struct.ceflo",
 					"match": "\\bstruct\\b"
+				},
+				{
+					"name": "keyword.control.enum.ceflo",
+					"match": "\\benum\\b"
 				}
 			]
 		},

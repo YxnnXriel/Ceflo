@@ -1,0 +1,2 @@
+// attendu: erreur: `rien` n'existe pas dans `os.cf`
+from os import rien

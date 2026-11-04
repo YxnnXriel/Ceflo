@@ -1,0 +1,4 @@
+// attendu: erreur: impossible de convertir Taille en Couleur
+enum Couleur { ROUGE, VERT }
+enum Taille { PETIT }
+@Couleur(Taille.PETIT)

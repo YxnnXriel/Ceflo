@@ -1,0 +1,4 @@
+// attendu: erreur: `c` est de type Couleur, pas int
+enum Couleur { ROUGE, VERT }
+var c::Couleur = Couleur.ROUGE
+c = 1

@@ -590,6 +590,90 @@ static ast_t *parser_parse_struct_definition(parser_t *parser){
     return structure;
 }
 
+// A = 1, A = -1 ou A = "x". Sans `=`, c'est la valeur précédente + 1, et 0 pour la première.
+static ast_t *parser_parse_enum_value(parser_t *parser, ast_t *previous){
+    if(!parser_match(parser,TOKEN_EQUAL)){
+        if(previous != NULL && previous->type != AST_NUMBER)
+            parser_error_here(parser,"une valeur qui suit un texte s'écrit avec son `=`");
+
+        ast_t *number = parser_new_node(parser,AST_NUMBER);
+        number->number_value = previous != NULL ? previous->number_value + 1 : 0;
+        return number;
+    }
+
+    if(TYPE(parser) == TOKEN_STRING)
+        return parser_parse_string(parser);
+
+    bool is_negative = parser_match(parser,TOKEN_MINUS);
+    if(TYPE(parser) != TOKEN_INTEGER && TYPE(parser) != TOKEN_FLOAT)
+        parser_error_expected(parser,"nombre ou chaîne");
+
+    ast_t *number = parser_parse_number(parser);
+    if(is_negative)
+        number->number_value = -number->number_value;
+    return number;
+}
+
+static bool parser_enum_same_value(ast_t *a, ast_t *b){
+    if(a->type != b->type)
+        return false;
+    if(a->type == AST_NUMBER)
+        return a->number_value == b->number_value;
+    return a->string_lenght == b->string_lenght &&
+        memcmp(a->string_value,b->string_value,(size_t)a->string_lenght) == 0;
+}
+
+static void parser_check_enum_item(parser_t *parser, ast_t *enumeration, ast_t *item){
+    for(int i = 0; i < enumeration->struct_definition_item->Size; i++){
+        ast_t *other = List_Get(enumeration->struct_definition_item,i);
+
+        if(strcmp(other->variable_name,item->variable_name) == 0){
+            error_syntax(parser->lexer->fileName,item->line,item->colone,
+                "`%s` est déjà dans l'énumération, à la ligne %d",item->variable_name,other->line);
+        }
+        if(parser_enum_same_value(other,item)){
+            error_syntax(parser->lexer->fileName,item->line,item->colone,
+                "`%s` a la même valeur que `%s`",item->variable_name,other->variable_name);
+        }
+    }
+}
+
+static ast_t *parser_parse_enum_item(parser_t *parser, ast_t *previous){
+    int line = parser->current.line;
+    int colone = parser->current.colone;
+
+    char *name = parser_eat_id(parser);
+    ast_t *item = parser_parse_enum_value(parser,previous);
+    item->variable_name = name;
+    item->line = line;
+    item->colone = colone;
+    return item;
+}
+
+// enum Nom { A, B = 5, C = "texte" }
+static ast_t *parser_parse_enum_definition(parser_t *parser){
+    ast_t *enumeration = parser_new_node(parser,AST_ENUM_DEFINITION);
+    parser_advance(parser);
+    enumeration->struct_definition_name = parser_eat_id(parser);
+    enumeration->struct_definition_item = newList();
+
+    ast_t *previous = NULL;
+    parser_eat(parser,TOKEN_LBRACKET);
+    while(TYPE(parser) != TOKEN_RBRACKET){
+        ast_t *item = parser_parse_enum_item(parser,previous);
+        parser_check_enum_item(parser,enumeration,item);
+        List_Append(enumeration->struct_definition_item,item);
+        previous = item;
+        if(!parser_match(parser,TOKEN_COMA))
+            break;
+    }
+    if(previous == NULL)
+        parser_error_here(parser,"une énumération contient au moins une valeur");
+    parser_eat(parser,TOKEN_RBRACKET);
+
+    return enumeration;
+}
+
 
 //                          ===================================== $CONTROLE =============================================
 
@@ -842,6 +926,7 @@ static ast_t *parser_parse_statment(parser_t *parser){
         case TOKEN_CONST: return parser_parse_variable_definition(parser);
         case TOKEN_FUNC: return parser_parse_function_definition(parser);
         case TOKEN_STRUCT: return parser_parse_struct_definition(parser);
+        case TOKEN_ENUM: return parser_parse_enum_definition(parser);
         case TOKEN_RETURN: return parser_parse_return(parser);
         case TOKEN_IF: return parser_parse_if(parser);
         case TOKEN_WHILE: return parser_parse_while(parser);
@@ -856,7 +941,7 @@ static ast_t *parser_parse_statment(parser_t *parser){
 
 static bool parser_is_definition(ast_t *node){
     return node->type == AST_VARIABLE_DEFINITION || node->type == AST_FUNCTION_DEFINITION ||
-        node->type == AST_STRUCT_DEFINITION || node->type == AST_INCLUDE;
+        node->type == AST_STRUCT_DEFINITION || node->type == AST_ENUM_DEFINITION || node->type == AST_INCLUDE;
 }
 
 /**

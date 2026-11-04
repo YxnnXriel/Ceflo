@@ -1,0 +1,5 @@
+// attendu: erreur de syntaxe: `}` attendu
+enum Couleur {
+    A
+    B
+}

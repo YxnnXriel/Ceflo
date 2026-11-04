@@ -1,0 +1,3 @@
+// attendu: erreur: impossible de convertir bool en Couleur
+enum Couleur { ROUGE, VERT }
+@Couleur(true)

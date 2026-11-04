@@ -1,0 +1,3 @@
+// attendu: erreur: enum ne s'utilise pas avec `[ ]`
+enum Couleur { ROUGE, VERT }
+println(Couleur["ROUGE"])

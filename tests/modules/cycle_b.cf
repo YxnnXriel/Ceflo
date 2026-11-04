@@ -1,0 +1,3 @@
+println("cycle_b commence")
+func depuis_b() { return "b" }
+from cycle_a import *

@@ -1,0 +1,2 @@
+// attendu: erreur: `Cache` n'est pas exporté par `../modules/reseau.cf`
+from "../modules/reseau.cf" import [Cache]

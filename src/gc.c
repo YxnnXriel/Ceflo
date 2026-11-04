@@ -63,6 +63,12 @@ static void gc_trace_value(value_t *value){
         case STRUCT:
             gc_mark(value->as.structValue.closure);
             break;
+        case ENUM:
+            gc_mark(value->as.enumValue.members);
+            break;
+        case ENUM_VALUE:
+            gc_mark(value->as.enumItem.owner);
+            break;
         default:
             break;
     }

@@ -1,0 +1,3 @@
+// attendu: erreur de syntaxe: `nombre ou chaîne` attendu
+var x = 1
+enum Couleur { A = x }

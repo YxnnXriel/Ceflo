@@ -29,6 +29,7 @@ static value_t *typer_to_number(value_t *value){
         case BOOL:
         case CHAR: return makeNumber(Value_as_double(value));
         case STRING: return makeNumber(typer_string_to_number(AS_STRING(value)));
+        case ENUM_VALUE: return value->as.enumItem.item->type == AST_NUMBER ? Value_enum_item_value(value) : NULL;
         default: return NULL;
     }
 }
@@ -75,11 +76,26 @@ static value_t *typer_to_struct(visitor_t *visitor, ast_t *node, value_t *value,
     return result;
 }
 
-static value_t *typer_find_struct(visitor_t *visitor, const char *type_name){
-    hash_t *item = scope_lookup(visitor->scope,type_name);
-    if(item == NULL || ((value_t*)item->value)->type != STRUCT)
+// Vers une énumération : on garde ses éléments et `none`, et une valeur inconnue donne `none`.
+static value_t *typer_to_enum(value_t *value, value_t *enumeration){
+    if(value->type == NONE)
+        return value;
+    if(value->type == ENUM_VALUE)
+        return value->as.enumItem.owner == enumeration ? value : NULL;
+    if(value->type != NUMBER && value->type != STRING)
         return NULL;
-    return item->value;
+
+    value_t *member = Value_enum_find(enumeration,value);
+    return member != NULL ? member : makeNone();
+}
+
+// Un type écrit par le script : une structure ou une énumération.
+static value_t *typer_find_type(visitor_t *visitor, const char *type_name){
+    hash_t *item = scope_lookup(visitor->scope,type_name);
+    if(item == NULL)
+        return NULL;
+    type_ceflo type = ((value_t*)item->value)->type;
+    return type == STRUCT || type == ENUM ? item->value : NULL;
 }
 
 static value_t *typer_caste_value(visitor_t *visitor, ast_t *node, value_t *value, const char *type_name){
@@ -92,17 +108,17 @@ static value_t *typer_caste_value(visitor_t *visitor, ast_t *node, value_t *valu
     if(strcmp(type_name,"char") == 0)
         return typer_to_char(value);
     if(strcmp(type_name,"str") == 0 || strcmp(type_name,"string") == 0)
-        return Value_to_string(visitor,value);
+        return value->type == ENUM_VALUE ? Value_enum_item_name(value) : Value_to_string(visitor,value);
     if(strcmp(type_name,"list") == 0)
         return typer_to_list(value);
     if(strcmp(type_name,"map") == 0)
         return value->type == MAP ? value : NULL;
 
-    value_t *structure = typer_find_struct(visitor,type_name);
-    if(structure == NULL)
+    value_t *found = typer_find_type(visitor,type_name);
+    if(found == NULL)
         visitor_error(node,"le type `%s` n'existe pas",type_name);
 
-    return typer_to_struct(visitor,node,value,structure);
+    return found->type == ENUM ? typer_to_enum(value,found) : typer_to_struct(visitor,node,value,found);
 }
 
 static bool typer_is_whole(value_t *value){
@@ -125,12 +141,16 @@ bool typer_has_type(visitor_t *visitor, ast_t *node, value_t *value, const char 
     if(strcmp(type_name,"map") == 0)
         return value->type == MAP;
 
-    value_t *structure = typer_find_struct(visitor,type_name);
-    if(structure == NULL)
+    value_t *found = typer_find_type(visitor,type_name);
+    if(found == NULL)
         visitor_error(node,"le type `%s` n'existe pas",type_name);
 
     // Un objet peut ne pas encore exister : `var Job::Metier` vaut none.
-    return value->type == NONE || (value->type == OBJECT && value->as.ObjectValue.structure == structure);
+    if(value->type == NONE)
+        return true;
+    if(found->type == ENUM)
+        return value->type == ENUM_VALUE && value->as.enumItem.owner == found;
+    return value->type == OBJECT && value->as.ObjectValue.structure == found;
 }
 
 const char *typer_type_name(value_t *value){
@@ -153,7 +173,7 @@ value_t *typer_default_value(visitor_t *visitor, ast_t *node, const char *type_n
     if(strcmp(type_name,"map") == 0)
         return makeMap();
 
-    if(typer_find_struct(visitor,type_name) == NULL)
+    if(typer_find_type(visitor,type_name) == NULL)
         visitor_error(node,"le type `%s` n'existe pas",type_name);
 
     return makeNone();
@@ -170,8 +190,9 @@ value_t *typer_typer(visitor_t *visitor, ast_t *node, value_t **args, int argc){
     }
 
     // @Point(1, 2) : une structure se construit comme avec `new`, sauf si elle a un __cast__
-    value_t *structure = typer_find_struct(visitor,type_name);
-    if(structure != NULL && (argc != 1 || GetFunctionInStruct(structure->as.structValue.definition,"__cast__") == NULL))
+    value_t *structure = typer_find_type(visitor,type_name);
+    if(structure != NULL && structure->type == STRUCT &&
+       (argc != 1 || GetFunctionInStruct(structure->as.structValue.definition,"__cast__") == NULL))
         return visitor_new_object(visitor,node,structure,args,argc);
 
     if(argc == 0)

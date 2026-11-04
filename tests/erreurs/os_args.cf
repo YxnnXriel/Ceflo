@@ -1,0 +1,3 @@
+// attendu: erreur: `lire` prend 1 argument(s), mais en reçoit 2
+from os import lire
+lire("a", "b")

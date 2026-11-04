@@ -42,6 +42,7 @@
         AST_VARIABLE_DEFINITION,
         AST_FUNCTION_DEFINITION,
         AST_STRUCT_DEFINITION,
+        AST_ENUM_DEFINITION,     // chaque élément est un AST_NUMBER ou un AST_STRING, nommé par variable_name
         AST_ASSIGNEMENT,
         AST_RETURN,
         AST_BREAK,
@@ -122,7 +123,7 @@
         /* ======  list_access ====== */
             struct AST_STRUCT *list_ptr;
 
-        /* ======  struct definition ====== */
+        /* ======  struct definition, enum definition ====== */
             char *struct_definition_name;
             list_t *struct_definition_item;
 

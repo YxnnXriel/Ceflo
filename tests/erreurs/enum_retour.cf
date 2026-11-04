@@ -1,0 +1,4 @@
+// attendu: erreur: `f` doit retourner une valeur de type Couleur, pas int
+enum Couleur { ROUGE, VERT }
+func f() : Couleur { return 0 }
+f()

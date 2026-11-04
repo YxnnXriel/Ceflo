@@ -45,6 +45,7 @@ for script in *.cf; do
 
     case $name in
         natif) arguments="$TMP/natif.txt" ;;
+        module_os) arguments="$TMP/os" ;;
         entree|main) arguments="un deux" ;;
         *) arguments="" ;;
     esac

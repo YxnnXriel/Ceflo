@@ -1,0 +1,4 @@
+// attendu: erreur: `c` est de type Couleur, pas str
+enum Couleur { ROUGE, VERT }
+func f(c::Couleur) { }
+f("ROUGE")

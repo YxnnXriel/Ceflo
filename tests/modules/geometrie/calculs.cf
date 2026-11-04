@@ -1,0 +1,1 @@
+func carre(x) { return x * x }

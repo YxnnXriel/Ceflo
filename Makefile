@@ -43,7 +43,16 @@ val : $(SRC) $(HEADERS)
 	$(CC) -std=c11 -D_GNU_SOURCE -g -O1 -DCEFLO_NO_POOL -o $(EXEC)_val $(SRC) $(LDFLAGS)
 	$(VALGRIND) ./$(EXEC)_val $(VAL_FILE)
 
-clean :
-	-rm -f src/*.o lib/*/*.so $(EXEC) $(EXEC)_asan $(EXEC)_stress $(EXEC)_val
+# Installe la coloration et l'autocomplétion dans Visual Studio Code.
+editor :
+	python3 editor/vscode/construire.py
+	code --install-extension editor/vscode/ceflo.vsix --force
 
-.PHONY : all libs test sanitize val clean
+editor-test :
+	node --test editor/vscode/test/analyse.test.js
+	editor/vscode/test/lancer.sh
+
+clean :
+	-rm -f src/*.o lib/*/*.so $(EXEC) $(EXEC)_asan $(EXEC)_stress $(EXEC)_val editor/vscode/ceflo.vsix
+
+.PHONY : all libs test sanitize val editor editor-test clean

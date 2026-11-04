@@ -109,6 +109,16 @@ for var cle, valeur in profil {
     println(cle, " : ", valeur)
 }
 
+// Énumérations : un vrai type, pas des nombres déguisés
+enum Couleur { ROUGE, VERT, BLEU }
+var teinte::Couleur = Couleur.VERT
+println(teinte.name, " ", teinte.value)
+
+// Les fichiers et le système
+from os import [lire_lignes, dossier, commande]
+println(dossier("."))
+println(commande("date").sortie)
+
 // Pour changer de type, on le demande
 var saisie = @int("42")
 ```
@@ -135,6 +145,7 @@ Le dossier [exemple](exemple) montre tout cela pas à pas. [GRAMMAIRE.md](GRAMMA
 | [src/gc.c](src/gc.c) | le garbage collector |
 | [src/map.c](src/map.c) | la table de hachage du type `map` |
 | [src/bulletin.c](src/bulletin.c) | les fonctions fournies : `println`, `input`, `format`... |
+| [src/os.c](src/os.c) | le module `os` : fichiers, dossiers, système |
 | [src/error.c](src/error.c) | l'affichage des erreurs |
 | [src/str.c](src/str.c), [src/list.c](src/list.c), [src/common.c](src/common.c) | les outils : chaînes, listes, tables, mémoire |
 
@@ -178,7 +189,13 @@ make test
 
 ## Éditeur
 
-[editor/vscode](editor/vscode) colore le code CeFlo dans Visual Studio Code. Copiez ce dossier dans `~/.vscode/extensions/ceflo`.
+[editor/vscode](editor/vscode) apporte à Visual Studio Code la coloration et l'autocomplétion du code CeFlo : attributs et méthodes après un `.`, chemins et noms après `from ... import`, types après `::`, clés d'un map. Il souligne aussi ce qui échouera sûrement à l'exécution, comme `p.x = "texte"` sur un `x::int`.
+
+```bash
+make editor
+```
+
+`make editor-test` teste l'autocomplétion, seule puis dans un vrai Visual Studio Code.
 
 ## Contact
 

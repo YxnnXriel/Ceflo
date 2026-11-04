@@ -1,0 +1,3 @@
+// attendu: erreur: l'opérateur `+` ne s'applique pas à Couleur et number
+enum Couleur { ROUGE, VERT }
+println(Couleur.ROUGE + 1)

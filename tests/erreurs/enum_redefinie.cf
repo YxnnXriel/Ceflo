@@ -1,0 +1,3 @@
+// attendu: erreur: l'énumération `Couleur` est déjà définie
+enum Couleur { ROUGE, VERT }
+enum Couleur { BLEU }

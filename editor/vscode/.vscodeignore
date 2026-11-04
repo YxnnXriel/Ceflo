@@ -1,4 +1,6 @@
 .vscode/**
 .vscode-test/**
 .gitignore
-vsc-extension-quickstart.md
+test/**
+construire.py
+*.vsix

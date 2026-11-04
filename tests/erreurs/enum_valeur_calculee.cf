@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: `}` attendu, mais `+` trouvé
+enum Couleur { A = 1 + 1 }

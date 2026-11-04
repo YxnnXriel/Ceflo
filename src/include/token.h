@@ -29,6 +29,7 @@
     TOKEN(TOKEN_FROM, "from")                \
     TOKEN(TOKEN_EXPORT, "export")            \
     TOKEN(TOKEN_STRUCT, "struct")            \
+    TOKEN(TOKEN_ENUM, "enum")                \
     TOKEN(TOKEN_TRUE, "true")                \
     TOKEN(TOKEN_FALSE, "false")              \
     TOKEN(TOKEN_NONE, "none")                \

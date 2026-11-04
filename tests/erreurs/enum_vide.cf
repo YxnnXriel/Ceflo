@@ -1,0 +1,2 @@
+// attendu: erreur de syntaxe: une énumération contient au moins une valeur
+enum Couleur { }

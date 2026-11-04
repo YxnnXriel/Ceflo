@@ -1,0 +1,2 @@
+// attendu: erreur: `arrondi` n'est pas exporté par `../modules/geometrie/formes.cf`
+from "../modules/geometrie/formes.cf" import arrondi

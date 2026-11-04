@@ -26,6 +26,7 @@ bloc           = "{" instructions "}" ;
 instruction    = definition_var
                | definition_func
                | definition_struct
+               | definition_enum
                | si
                | tant_que
                | pour
@@ -55,6 +56,9 @@ param          = ID [ "::" ID ] ;
 type_retour    = ":" ( ID | "none" ) ;
 
 definition_struct = "struct" ID "{" { definition_var | definition_func | ";" } "}" ;
+
+definition_enum = "enum" ID "{" element { "," element } [ "," ] "}" ;
+element         = ID [ "=" ( CHAINE | [ "-" ] NOMBRE ) ] ;
 
 (* ------------------------ contrôle ---------------------- *)
 
@@ -115,7 +119,7 @@ CARACTERE  = "'" ( caractère | échappement ) "'" ;
 échappement = "\n" | "\t" | "\r" | "\a" | "\b" | "\0" | "\\" | '\"' | "\'" ;
 ```
 
-- **Mots réservés :** `for in while if else var const func lfunc return import from export struct true false none or and new continue break`
+- **Mots réservés :** `for in while if else var const func lfunc return import from export struct enum true false none or and new continue break`
 - **Commentaires :** `// jusqu'à la fin de la ligne` et `/* sur plusieurs lignes */`
 - **Script :** une première ligne `#!...` est ignorée.
 
@@ -149,6 +153,7 @@ CARACTERE  = "'" ( caractère | échappement ) "'" ;
 | `list` | `[1, 2]` | `[]` | **référence** |
 | `map` | `{ a: 1 }` | `{}` | **référence** |
 | objet | `new Point()` | jamais | **référence** |
+| élément d'énumération | `Couleur.ROUGE` | jamais | référence |
 | fonction | `lfunc(x){ }` | jamais | référence |
 
 Une chaîne ne change jamais vraiment : `s[0] = 'X'` range une nouvelle chaîne dans `s`. Une chaîne et ses index comptent en octets : `"é".lenght()` vaut 2.
@@ -183,7 +188,7 @@ t.age += 1
 t["nouvelle"] = true
 ```
 
-- **Clés :** une clé est une chaîne ou un nombre. `1` et `"1"` sont deux clés différentes. Un `char` compte comme une chaîne d'un seul octet, ce qui donne `t[mot[i]]`. Un autre type est une erreur.
+- **Clés :** une clé est une chaîne, un nombre ou un élément d'énumération. `1` et `"1"` sont deux clés différentes, et `Couleur.ROUGE` n'est ni l'une ni l'autre. Un `char` compte comme une chaîne d'un seul octet, ce qui donne `t[mot[i]]`. Un autre type est une erreur.
 - **Mots réservés :** une clé comme `if` ou `new` s'écrit entre guillemets, et se lit avec `t["if"]`.
 - **Fonctions :** dans `t.f()`, si la clé `f` contient une fonction, elle est appelée. Sinon `f` est une méthode de map. Une clé `keys` qui contient un nombre ne cache donc pas `t.keys()`.
 
@@ -230,6 +235,7 @@ var a::str = "x"    // erreur : `a` est déjà de type int
 | `list` | une liste | `[]` |
 | `map` | un map | `{}` |
 | une structure | un objet de cette structure, ou `none` | `none` |
+| une énumération | un de ses éléments, ou `none` | `none` |
 
 Une variable déclarée sans type reste libre : `var x = 1` puis `x = "a"` est accepté.
 
@@ -246,6 +252,7 @@ Seul `@type(valeur)` convertit :
 | `str`, `string` | le texte de la valeur |
 | `map` | seulement un map, tel quel |
 | une structure | avec un seul argument, l'objet ou `none` tel quel, sinon `__cast__` |
+| une énumération | l'élément qui a cette valeur, ou `none` si aucun ne l'a |
 
 Vers un nombre, une chaîne donne le nombre qu'elle contient, ou sinon **sa longueur** : `@int("42")` vaut 42 et `@int("abc")` vaut 3.
 
@@ -267,6 +274,36 @@ struct Point {
 ```
 
 Un objet est une portée qui contient ses attributs et ses méthodes. Dans une méthode, `x` et `self.x` désignent donc le même attribut, et `self` est toujours disponible même sans être déclaré. `__cast__` reçoit la valeur à convertir et s'appelle sans objet : il ne peut pas utiliser `self`.
+
+### Énumérations
+
+Une énumération est un vrai type : ses éléments ne se confondent pas avec des nombres ou du texte.
+
+```go
+enum Couleur { ROUGE, VERT, BLEU }
+enum Http { OK = 200, INTROUVABLE = 404 }
+enum Niveau { BAS = "bas", HAUT = "haut" }
+
+var c::Couleur = Couleur.ROUGE
+c = Couleur.VERT            // accepté
+c = 1                       // erreur : `c` est de type Couleur, pas int
+
+Http.OK.name                // "OK"
+Http.OK.value               // 200
+Http.values()               // [ Http.OK , Http.INTROUVABLE ]
+var noms = { [Couleur.ROUGE]: "rouge" }
+```
+
+- **Accès :** un élément s'écrit toujours `Couleur.ROUGE`, jamais `ROUGE` seul. Un élément inconnu est une erreur.
+- **Valeurs :** une valeur est un nombre ou un texte écrit tel quel, sans calcul. Sans `=`, c'est la valeur précédente + 1, et 0 pour la première. Après un texte, le `=` est obligatoire.
+- **Doublons :** deux noms ou deux valeurs identiques dans une énumération sont une erreur.
+- **Immuable :** `Couleur.ROUGE = 1`, `Couleur = 1` et `new Couleur()` sont des erreurs.
+- **Comparaison :** chaque élément n'existe qu'une fois. `==` compare son identité : `Couleur.ROUGE == 0` vaut `false`. `<` et les calculs sont des erreurs : on écrit `a.value < b.value`.
+- **Vers un élément :** `@Http(200)` donne `Http.OK`, et `@Http(999)` donne `none`. Une valeur qui n'est ni un nombre ni un texte est une erreur, et `@Http(Http.OK)` ou `@Http(none)` la rendent telle quelle.
+- **Depuis un élément :** `@int(Http.OK)` donne 200, et un élément dont la valeur est un texte ne se convertit pas en nombre. `@str(Http.OK)` donne `"OK"`.
+- **Texte :** `println(Http.OK)` et `"" + Http.OK` écrivent `Http.OK`.
+- **Portée :** une énumération suit les règles d'une structure pour les portées et les modules. Elle ne se redéfinit pas dans la même portée.
+- **Parcours :** `for var c in Couleur.values() { }`.
 
 ### Fonctions fournies
 
@@ -324,3 +361,40 @@ func main(argv) {
 - Un fichier ne s'exécute qu'une seule fois, même importé plusieurs fois.
 - Sans `export`, tous les noms du fichier sont publics. Avec `export :: [a, b]`, seuls ces noms le sont.
 - `from @"lib/math/libmath.so" import [mathSqrt]` charge des fonctions écrites en C.
+- Un module fourni par CeFlo, comme `os`, s'importe de la même façon. Un fichier `os.cf` trouvé par le chemin passe avant lui.
+
+### Le module `os`
+
+```go
+from os import [lire_lignes, dossier, commande]
+
+for var nom in dossier(".") {
+    println(nom)
+}
+println(commande("date").sortie)
+```
+
+CeFlo n'a pas d'exceptions : ce qui échoue, comme un fichier absent, retourne `none` ou `false`, et le script décide quoi faire. Seule une mauvaise utilisation, comme `lire(3)`, arrête le programme.
+
+| Fonction | Rôle | Si ça échoue |
+| --- | --- | --- |
+| `lire(chemin)` | le contenu du fichier | `none` |
+| `lire_lignes(chemin)` | la liste des lignes, sans leur fin de ligne | `none` |
+| `ecrire(chemin, texte)` | remplace le contenu du fichier | `false` |
+| `ajouter(chemin, texte)` | ajoute à la fin, et crée le fichier s'il manque | `false` |
+| `existe(chemin)` | le fichier ou le dossier existe-t-il ? | `false` |
+| `est_dossier(chemin)` | est-ce un dossier ? | `false` |
+| `taille(chemin)` | le nombre d'octets | `none` |
+| `dossier(chemin)` | les noms triés, sans `.` ni `..` | `none` |
+| `creer_dossier(chemin)` | crée le dossier et ses parents ; un dossier existant convient | `false` |
+| `supprimer(chemin)` | enlève un fichier ou un dossier vide, jamais un dossier plein | `false` |
+| `renommer(ancien, nouveau)` | renomme ou déplace | `false` |
+| `copier(source, cible)` | copie un fichier | `false` |
+| `chemin(a, b...)` | assemble un chemin, sans doubler les `/` | |
+| `dossier_courant()` | le dossier de travail | `none` |
+| `changer_dossier(chemin)` | change le dossier de travail | `false` |
+| `env(nom)` | la valeur d'une variable d'environnement | `none` |
+| `commande(texte)` | lance dans le shell, et retourne `{ code, sortie }` | `none` |
+| `lancer(texte)` | lance dans le shell, la commande affiche son texte ; retourne son code de sortie | `-1` |
+
+`commande` et `lancer` passent leur texte au shell. Un texte qui vient de l'extérieur, comme un argument du script, peut donc lancer autre chose que prévu : il ne faut pas l'y coller sans précaution.

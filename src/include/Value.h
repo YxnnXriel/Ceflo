@@ -25,6 +25,8 @@
         FUNCTION,
         BUILTIN,
         STRUCT,
+        ENUM,
+        ENUM_VALUE,
         GENERIC,
     }type_ceflo;
 
@@ -58,6 +60,18 @@
         struct SCOPE_STRUCT *self;
     }Obj_t;
 
+    // Une énumération range ses éléments dans un map, de leur nom vers leur valeur.
+    typedef struct{
+        ast_t *definition;
+        struct VALUE_STRUCT *members;
+    }Enum_t;
+
+    // Chaque élément n'existe qu'une fois : deux éléments se comparent par leur adresse.
+    typedef struct{
+        struct VALUE_STRUCT *owner;
+        ast_t *item;
+    }EnumValue_t;
+
     typedef struct VALUE_STRUCT{
         gc_object_t gc;
         type_ceflo type;
@@ -72,6 +86,8 @@
             Func_t functionValue;
             Builtin_t builtinValue;
             Struct_t structValue;
+            Enum_t enumValue;
+            EnumValue_t enumItem;
             void *GenericValue;
         }as;
     }value_t;
@@ -96,6 +112,7 @@
     value_t *makeFunction(ast_t *definition, struct SCOPE_STRUCT *closure);
     value_t *makeBuiltin(const char *name, ceflo_func_t function);
     value_t *makeStruct(ast_t *definition, struct SCOPE_STRUCT *closure);
+    value_t *makeEnum(ast_t *definition);
     value_t *makeGeneric(void *x);
     void freeValue(value_t *value);
 
@@ -107,6 +124,13 @@
     value_t *Value_map_get_name(value_t *map, const char *name);
     void Value_map_set_name(value_t *map, const char *name, value_t *value);
     value_t *Value_map_keys(value_t *map);
+
+    // Lire un élément d'énumération : Couleur.ROUGE, .name et .value. NULL s'il n'existe pas.
+    value_t *Value_enum_get(value_t *enumeration, const char *name);
+    value_t *Value_enum_item_name(value_t *item);
+    value_t *Value_enum_item_value(value_t *item);
+    // Retrouve l'élément qui a cette valeur, un number ou une str. NULL s'il n'existe pas.
+    value_t *Value_enum_find(value_t *enumeration, value_t *value);
 
     // Questions sur une valeur
     bool Value_is_true(value_t *value);

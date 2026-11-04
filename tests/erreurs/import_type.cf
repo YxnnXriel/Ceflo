@@ -1,0 +1,3 @@
+// attendu: erreur: `total` est de type int, pas str
+from "../modules/compteur.cf" import total
+total = "x"

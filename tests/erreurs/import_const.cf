@@ -1,0 +1,3 @@
+// attendu: erreur: `LIMITE` est une constante
+from "../modules/compteur.cf" import LIMITE
+LIMITE = 3

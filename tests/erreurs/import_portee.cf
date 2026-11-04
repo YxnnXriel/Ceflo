@@ -1,0 +1,4 @@
+// attendu: erreur: `carre` n'est pas définie
+func f() { from "../modules/geometrie/calculs.cf" import carre }
+f()
+carre(1)
