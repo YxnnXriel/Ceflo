@@ -96,6 +96,11 @@ compare(){
     limite "$REF" "$script" $(arguments "$name") < "$input" > "$TMP/ref.out" 2> "$TMP/ref.err"
     ref_code=$?
 
+    # Une récursion sans fin arrête Ceflo_ref quand la pile C est pleine : l'endroit
+    # dépend de la taille de cette pile (plus petite sur macOS). On compare le message seul.
+    if head -n 1 "$TMP/ref.err" | grep -q "trop d'appels imbriqués"; then
+        lines=1
+    fi
     new_err=$(head -n "$lines" "$TMP/new.err")
     ref_err=$(head -n "$lines" "$TMP/ref.err")
 
