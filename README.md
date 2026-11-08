@@ -179,6 +179,8 @@ Value mathCarre(VM *vm, int argc, Value *args){
 gcc -fPIC -shared -Isrc/vm -Isrc/include -o libcarre.so carre.c
 ```
 
+Sous macOS, ajoute `-undefined dynamic_lookup` : les fonctions comme `native_check_args` sont dans `Ceflo`, et le linker de macOS veut sinon les trouver tout de suite.
+
 ```go
 from @"./libcarre.so" import [mathCarre]
 println(mathCarre(4))

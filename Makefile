@@ -44,13 +44,20 @@ $(BUILD)/ref/%.o : %.c $(HEADERS)
 	$(CC) $(CFLAGS) $(REF_INCLUDES) -o $@ -c $<
 
 # Les bibliothèques natives : `from @"lib/math/libmath.so" import [mathPi]`
+# Elles appellent des fonctions de Ceflo (native_check_args...). Linux les trouve au
+# chargement ; macOS refuse de lier sans `-undefined dynamic_lookup`.
+LIB_FLAGS = -fPIC -shared
+ifeq ($(shell uname -s),Darwin)
+    LIB_FLAGS += -undefined dynamic_lookup
+endif
+
 libs : lib/math/libmath.so lib/file/libfile.so
 
 lib/math/libmath.so : lib/math/math.c $(HEADERS)
-	$(CC) $(CFLAGS) -fPIC -shared $(VM_INCLUDES) -o $@ $< -lm
+	$(CC) $(CFLAGS) $(LIB_FLAGS) $(VM_INCLUDES) -o $@ $< -lm
 
 lib/file/libfile.so : lib/file/file.c $(HEADERS)
-	$(CC) $(CFLAGS) -fPIC -shared $(VM_INCLUDES) -o $@ $<
+	$(CC) $(CFLAGS) $(LIB_FLAGS) $(VM_INCLUDES) -o $@ $<
 
 test : $(EXEC) libs
 	tests/run.sh ./$(EXEC)
