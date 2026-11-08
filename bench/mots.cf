@@ -1,0 +1,16 @@
+// Maps de chaînes : compter des mots, comme un vrai programme
+var syllabes = ["ka", "lo", "mi", "ra", "tu", "ze", "po", "ni"]
+var mots = []
+for var i = 0; i < 300000; i += 1 {
+    mots.append(syllabes[i % 8] + syllabes[@int(i / 8) % 8] + syllabes[(i * 7) % 5])
+}
+var compte = {}
+for var m in mots {
+    if compte.has(m) { compte[m] += 1 } else { compte[m] = 1 }
+}
+var plus = ""
+var max = 0
+for var m, n in compte {
+    if n > max { max = n; plus = m }
+}
+println(compte.lenght(), " ", plus, " ", max)

@@ -1,0 +1,7 @@
+// 20000 appels imbriqués : un parcours récursif d'une longue liste doit passer
+func p(n){ if n == 0 { return 0 } return 1 + p(n - 1) }
+println(p(20000))
+func longueur(l){ return l == none ? 0 : 1 + longueur(l.suite) }
+var tete = none
+for var i = 0; i < 20000; i += 1 { tete = { suite: tete } }
+println(longueur(tete))

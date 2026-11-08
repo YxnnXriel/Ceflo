@@ -1,0 +1,22 @@
+// Closures : un compteur, des fonctions créées dans une boucle, filter
+func compteur(){
+    var n = 0
+    return lfunc(){ n += 1; return n }
+}
+var c = compteur()
+var total = 0
+for var i = 0; i < 1000000; i += 1 { total += c() }
+
+var pas = []
+for var k = 0; k < 100; k += 1 { pas.append(k) }
+var ajouteurs = []
+for var k in pas { ajouteurs.append(lfunc(x){ return x + k }) }
+for var i = 0; i < 10000; i += 1 {
+    for var f in ajouteurs { total += f(i) }
+}
+
+var nombres = []
+for var i = 0; i < 200000; i += 1 { nombres.append(i) }
+var seuil = 1000
+total += nombres.filter(lfunc(x){ return x % 3 == 0 and x > seuil }).lenght()
+println(total)

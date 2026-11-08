@@ -1,0 +1,4 @@
+// attendu: erreur: `f` doit retourner une valeur de type int, pas str
+func f(n) : int { if n > 1 { return "x" } return n }
+println(f(1))
+println(f(2))

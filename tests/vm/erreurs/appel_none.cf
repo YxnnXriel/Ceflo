@@ -1,0 +1,4 @@
+// attendu: erreur: none n'est pas une fonction
+var t = { f: none }
+var g = t.f
+g()

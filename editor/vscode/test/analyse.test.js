@@ -276,20 +276,20 @@ test("les bibliothèques natives", { skip: !fs.existsSync(path.join(__dirname, "
     includes('from @"lib/math/libmath.so" import [mathPi]\n|', ["mathPi"], options);
 });
 
-test("les listes de l'éditeur suivent l'interpréteur", { skip: !fs.existsSync(path.join(__dirname, "../../../src/Value.c")) }, () => {
+test("les listes de l'éditeur suivent l'interpréteur", { skip: !fs.existsSync(path.join(__dirname, "../../../src/vm/natives/methods.c")) }, () => {
     const src = (name) => fs.readFileSync(path.join(__dirname, "../../../src", name), "utf8");
+    // Les noms d'une table C `{"nom",&fonction}` terminée par {NULL,NULL}
+    const table = (source, name) => {
+        const start = source.indexOf(`${name}[]`);
+        const body = source.slice(start, source.indexOf("{NULL,NULL}", start));
+        return [...body.matchAll(/\{"(\w+)"/g)].map((match) => match[1]).sort();
+    };
 
-    const value = src("Value.c");
-    for (const [kind, table] of [["list", "attr_value_list"], ["map", "attr_value_map"], ["str", "attr_value_str"], ["enum", "attr_value_enum"]]) {
-        const body = value.slice(value.indexOf(`${table}[]`), value.indexOf("{NULL,NULL}", value.indexOf(`${table}[]`)));
-        const names = [...body.matchAll(/\{"(\w+)"/g)].map((match) => match[1]).sort();
-        assert.deepStrictEqual(Object.keys(METHODS[kind]).sort(), names, kind);
-    }
+    const methods = src("vm/natives/methods.c");
+    for (const [kind, name] of [["list", "Method_List"], ["map", "Method_Map"], ["str", "Method_Str"], ["enum", "Method_Enum"]])
+        assert.deepStrictEqual(Object.keys(METHODS[kind]).sort(), table(methods, name), kind);
 
-    const bulletin = src("bulletin.c");
-    const list = bulletin.slice(bulletin.indexOf("Bulletin_List"), bulletin.indexOf("{NULL,NULL}"));
-    const builtins = [...list.matchAll(/\{"(\w+)"/g)].map((match) => match[1]).sort();
-    assert.deepStrictEqual(Object.keys(BUILTINS).sort(), builtins);
+    assert.deepStrictEqual(Object.keys(BUILTINS).sort(), table(src("vm/natives/core.c"), "Core_List"));
 
     const lexer = src("lexer.c");
     const words = lexer.slice(lexer.indexOf("keywords[]"), lexer.indexOf("};", lexer.indexOf("keywords[]")));
@@ -716,9 +716,10 @@ test("ce que match signale arrive vraiment à l'exécution", { skip: !fs.existsS
     assert.strictEqual(diagnose(fs.readFileSync(script, "utf8"))[0].message, "ce match ne traite pas C.B");
 });
 
-test("la description de os suit l'interpréteur", { skip: !fs.existsSync(path.join(RACINE, "src/os.c")) }, () => {
-    const source = fs.readFileSync(path.join(RACINE, "src/os.c"), "utf8");
-    const list = source.slice(source.indexOf("Os_List[]"), source.indexOf("{NULL,NULL}"));
+test("la description de os suit l'interpréteur", { skip: !fs.existsSync(path.join(RACINE, "src/vm/natives/os.c")) }, () => {
+    const source = fs.readFileSync(path.join(RACINE, "src/vm/natives/os.c"), "utf8");
+    const start = source.indexOf("Os_List[]");
+    const list = source.slice(start, source.indexOf("{NULL,NULL}", start));
     const inC = [...list.matchAll(/\{"(\w+)"/g)].map((match) => match[1]).sort();
     const os_ = STANDARD_MODULES.os;
     const decrites = [...os_.source.matchAll(/func (\w+)/g)].map((match) => match[1]).sort();

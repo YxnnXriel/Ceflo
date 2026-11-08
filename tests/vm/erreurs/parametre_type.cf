@@ -1,0 +1,4 @@
+// attendu: erreur: `n` est de type int, pas float
+func f(n::int){ return n }
+println(f(2))
+for var i = 0; i < 3; i += 1 { f(i + 0.5) }

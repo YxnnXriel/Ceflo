@@ -339,7 +339,7 @@ var noms = { [Couleur.ROUGE]: "rouge" }
 | `println(a, b...)`, `print(a, b...)` | affiche les valeurs, avec ou sans retour à la ligne |
 | `input(texte...)` | affiche le texte et lit une ligne ; `none` à la fin de l'entrée |
 | `nextInt(texte...)` | lit une ligne qui contient un nombre |
-| `format("${a + 1}")` | calcule chaque `${...}` ; `\${` écrit un vrai `${` |
+| `format("${a + 1}")` | calcule chaque `${...}` ; `\${` écrit un vrai `${`. Le texte doit être écrit dans le code |
 | `printf("${a}")` | affiche `format(...)` |
 | `exit(code)` | arrête le programme |
 | `argv` | la liste des arguments ; `argv[0]` est le nom du script |

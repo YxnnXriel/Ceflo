@@ -1,0 +1,80 @@
+// L'ordre d'évaluation, et les expressions calculées une seule fois
+var trace = []
+func t(x){ trace.append(x); return x }
+
+// Les arguments de gauche à droite
+func trois(a, b, c){ return a + b + c }
+trois(t(1), t(2), t(3))
+println(trace)
+
+// Les opérandes de gauche à droite
+trace = []
+var r = t(1) + t(2) * t(3) - t(4)
+println(r, " ", trace)
+
+// Les éléments d'une liste et d'un map
+trace = []
+var l = [t("a"), t("b")]
+var m = { x: t("c"), [t("k")]: t("d") }
+println(trace, " ", m)
+
+// l[f()] += 1 : f n'est appelée qu'une fois
+var appels = 0
+func f(){ appels += 1; return 1 }
+var l2 = [10, 20, 30]
+l2[f()] += 5
+println(l2, " ", appels)
+
+// La même chose sur un attribut, un map et une liste dans un map
+appels = 0
+func obj(){ appels += 1; return o }
+var o = { n: 1, tab: [1, 2] }
+obj().n += 10
+obj().tab[f()] *= 3
+obj()["n"] -= 1
+println(o, " ", appels)
+
+// L'index avant la valeur à droite
+trace = []
+var cible = [0, 0, 0]
+cible[t(1)] = t(2)
+println(cible, " ", trace)
+
+// and et or s'arrêtent dès que possible
+trace = []
+var x = t(false) and t(true)
+var y = t(true) or t(false)
+println(x, " ", y, " ", trace)
+
+// La condition ternaire n'évalue qu'un côté
+trace = []
+var z = t(true) ? t("oui") : t("non")
+println(z, " ", trace)
+
+// Un appel de méthode : l'objet puis les arguments
+struct S {
+    var v = 0
+    func ajoute(a, b){ v += a * 10 + b; return self }
+}
+trace = []
+var s = new S()
+func objet(){ trace.append("objet"); return s }
+objet().ajoute(t(1), t(2)).ajoute(t(3), t(4))
+println(s.v, " ", trace)
+
+// Une chaîne modifiée par index
+var mot = "chat"
+mot[0] = 'r'
+println(mot)
+var liste_mots = ["abc"]
+liste_mots[0][1] = 'X'
+println(liste_mots)
+
+// Affectation composée sur une variable capturée
+func compose(){
+    var k = 2
+    var g = lfunc(){ k *= 3; k += 1; return k }
+    g()
+    return g()
+}
+println(compose())

@@ -1,0 +1,5 @@
+println("c chargé")
+var depuis_c = "c"
+var compteur = 0
+func incremente(){ compteur += 1; return compteur }
+struct Boite { var v = "boite de c" }

@@ -1,0 +1,5 @@
+// attendu: erreur: ce match ne traite pas Feu.VERT
+enum Feu { ROUGE, VERT }
+func f(c){ match c { case Feu.ROUGE { return 1 } } }
+println(f(Feu.ROUGE))
+f(Feu.VERT)

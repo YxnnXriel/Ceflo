@@ -1,0 +1,4 @@
+// attendu: erreur: `lfunc` prend 2 argument(s), mais en reçoit 1
+var f = lfunc(a, b){ return a + b }
+println(f(1, 2))
+f(1)

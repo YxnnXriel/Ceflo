@@ -1,0 +1,75 @@
+// Variables typées réaffectées, paramètres et retours typés
+var a::int = 1
+a = 2
+a += 3
+a *= 2
+println(a)
+var f::float = 1
+f = 2.5
+f /= 2
+println(f)
+var s::str = "x"
+s += "y"
+s = s * 2
+println(s)
+var b::bool
+b = !b
+println(b)
+var c::char = 'a'
+c = @char(c + 1)
+println(c)
+var l::list = []
+l.append(1)
+l = l + [2]
+println(l)
+var m::map
+m.k = 1
+println(m)
+
+// Sans valeur : la valeur par défaut du type
+var i0::int
+var s0::string
+var n0::number
+var c0::char
+println(i0, " [", s0, "] ", n0, " ", @int(c0))
+
+// Une deuxième déclaration du même type
+var a::int = 10
+println(a)
+
+// Des paramètres et des retours typés
+func ajoute(x::int, y::int) : int { return x + y }
+func moitie(x::number) : number { return x / 2 }
+println(ajoute(2, 3), " ", moitie(3))
+
+// Un type dans une boucle et dans une closure
+for var i::int = 0; i < 3; i += 1 { print(i) }
+println()
+for var k::str, v::int in { un: 1, deux: 2 } { print(k, v, " ") }
+println()
+func typee(){
+    var total::int = 0
+    var ajout = lfunc(n){ total += n }
+    ajout(4); ajout(5)
+    return total
+}
+println(typee())
+
+// Des structures comme types
+struct Point { var x::int = 0; var y::number = 0.5 }
+var p::Point = new Point()
+p.x = 3
+p.x += 1
+p.y = 7.25
+println(p.x, " ", p.y)
+p = none
+println(p)
+func origine() : Point { return new Point() }
+println(origine().x)
+
+// Un type local qui cache un type global
+func cache(){
+    var a::str = "local"
+    return a
+}
+println(cache(), " ", a)

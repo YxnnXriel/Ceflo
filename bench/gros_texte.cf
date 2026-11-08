@@ -1,0 +1,21 @@
+// Gros texte : construire un fichier ligne par ligne, le découper, le relire
+func assemble(lignes){
+    var texte = ""
+    for var l in lignes { texte += l + "\n" }
+    return texte
+}
+var lignes = []
+for var i = 0; i < 30000; i += 1 {
+    lignes.append("ligne {} : valeur={} ok".format(i, i * 3))
+}
+var texte = assemble(lignes)
+var morceaux = texte.split("\n")
+var chiffres = 0
+var egal = 0
+for var l in morceaux {
+    for var c in l {
+        if c >= '0' and c <= '9' { chiffres += 1 }
+        if c == '=' { egal += 1 }
+    }
+}
+println(texte.lenght(), " ", morceaux.lenght(), " ", chiffres, " ", egal)

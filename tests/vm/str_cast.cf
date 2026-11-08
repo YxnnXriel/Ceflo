@@ -1,0 +1,39 @@
+// __str__ et __cast__
+struct Point {
+    var x = 0
+    var y = 0
+    func __init__(a, b){ x = a; y = b }
+    func __str__(){ return "(" + x + ", " + y + ")" }
+    func __cast__(v){ return new Point(v, v) }
+}
+var p = new Point(1, 2)
+println(p)
+println("p = " + p)
+println([p, new Point(3, 4)])
+println({ point: p })
+print(p, "\n")
+println(@str(p), " ", @str(p).lenght())
+println(@Point(7))
+println(@Point(p) == p)
+println(@Point(none))
+println(format("${p}"))
+
+// Un __str__ qui appelle d'autres méthodes et d'autres __str__
+struct Segment {
+    var a
+    var b
+    func __init__(x, y){ a = x; b = y }
+    func longueur(){ return b.x - a.x }
+    func __str__(){ return a + "->" + b + " [" + longueur() + "]" }
+}
+println(new Segment(new Point(0, 0), new Point(5, 0)))
+
+// Sans __str__
+struct Vide { var v = 1 }
+var s = @str(new Vide())
+println(s.lenght() > 0)
+
+// __str__ dans une boucle (le GC tourne pendant)
+var texte = ""
+for var i = 0; i < 2000; i += 1 { texte = "" + new Point(i, i) }
+println(texte)

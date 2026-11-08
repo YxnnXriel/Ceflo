@@ -1,0 +1,6 @@
+// attendu: erreur: division par zéro
+func fabrique(d){ return lfunc(x){ return x / d } }
+var f = fabrique(0)
+var ok = fabrique(2)
+println(ok(4))
+println(f(1))

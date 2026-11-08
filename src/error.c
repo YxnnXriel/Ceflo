@@ -92,6 +92,10 @@ void error_syntax(const char *file, int line, int colone, const char *format, ..
 void visitor_error(const ast_t *node, const char *format, ...){
     va_list args;
     va_start(args,format);
+    error_node_v(node,format,args);
+}
+
+void error_node_v(const ast_t *node, const char *format, va_list args){
     error_report(
         "erreur",
         node != NULL ? node->file : NULL,

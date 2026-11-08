@@ -1,6 +1,8 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 
+    #include <stdarg.h>
+
     struct AST_STRUCT;
 
     // Enregistre un texte source pour pouvoir l'afficher dans les erreurs.
@@ -13,5 +15,8 @@
         __attribute__((format(printf,4,5)));
     _Noreturn void visitor_error(const struct AST_STRUCT *node, const char *format, ...)
         __attribute__((format(printf,2,3)));
+    // La même, avec une va_list : la machine virtuelle s'en sert pour situer ses erreurs.
+    _Noreturn void error_node_v(const struct AST_STRUCT *node, const char *format, va_list args)
+        __attribute__((format(printf,2,0)));
 
 #endif

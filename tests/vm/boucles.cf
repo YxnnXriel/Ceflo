@@ -1,0 +1,85 @@
+// break et continue dans des boucles imbriquées, avec des closures
+var fs = []
+for var i in [0, 1, 2, 3, 4] {
+    if i == 1 { continue }
+    for var j in [0, 1, 2] {
+        if j == 2 { break }
+        if i == j { continue }
+        fs.append(lfunc(){ return i * 10 + j })
+    }
+    if i == 3 { break }
+}
+for var f in fs { print(f(), " ") }
+println()
+
+// Un while avec un bloc capturé, interrompu par break et continue
+var gs = []
+var n = 0
+while true {
+    n += 1
+    var copie = n
+    if n % 2 == 0 { continue }
+    gs.append(lfunc(){ return copie })
+    if n > 6 { break }
+}
+for var g in gs { print(g(), " ") }
+println()
+
+// Un for classique avec continue : l'incrément s'exécute
+var total = 0
+for var i = 0; i < 10; i += 1 {
+    if i % 2 == 0 { continue }
+    total += i
+}
+println(total)
+
+// Plusieurs incréments
+for var i = 0, j = 10; i < j; i += 1, j -= 1 { print(i, ":", j, " ") }
+println()
+
+// break au fond de trois boucles
+var trouve = ""
+for var a in [1, 2, 3] {
+    for var b in [1, 2, 3] {
+        var ok = false
+        for var c in [1, 2, 3] {
+            if a * b * c == 12 { ok = true; trouve = a + "," + b + "," + c; break }
+        }
+        if ok { break }
+    }
+    if trouve != "" { break }
+}
+println(trouve)
+
+// return dans une boucle imbriquée
+func cherche(l, x){
+    for var i, ligne in l {
+        for var j, v in ligne {
+            if v == x { return [i, j] }
+        }
+    }
+    return none
+}
+println(cherche([[1, 2], [3, 4]], 4), " ", cherche([[1]], 9))
+
+// return dans un for ... in sur un map, puis on relance
+func premiere_cle(m){ for var k in m { return k } }
+println(premiere_cle({ z: 1, a: 2 }), " ", premiere_cle({}))
+
+// Une variable de boucle sous un bloc qui déclare des noms
+var hs = []
+for var i in [1, 2] {
+    var x = i * 100
+    if true {
+        var y = x + 1
+        hs.append(lfunc(){ return y })
+    }
+}
+println(hs[0](), " ", hs[1]())
+
+// Beaucoup de tours : les variables de boucle ne fuient pas
+var compte = 0
+for var i = 0; i < 100000; i += 1 {
+    for var x in [1] { compte += x }
+}
+println(compte)

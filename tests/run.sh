@@ -4,18 +4,38 @@
 #   tests/x.cf + tests/x.out   la sortie du programme doit être exactement x.out
 #   tests/x.in                 (facultatif) ce qui est donné sur l'entrée standard
 #   tests/erreurs/x.cf         doit échouer, et sa première ligne dit le message attendu
+#   tests/vm/                  les mêmes règles, pour ce qu'une VM casse facilement
 #   exemple/*.cf               doit se terminer sans erreur
 #
 # CEFLO_TEST_SKIP="x y" permet de sauter les tests x et y.
 
-CEFLO=$(realpath "$1")
-ROOT=$(dirname "$(dirname "$(realpath "$0")")")
+# Sans realpath ni readlink -f, qui manquent sur certains macOS.
+CEFLO=$(cd "$(dirname "$1")" && echo "$(pwd)/$(basename "$1")")
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
+LIMIT=120
 
-# Un test qui boucle ne doit pas bloquer toute la suite.
+# Un test qui boucle ne doit pas bloquer toute la suite. Sans `timeout`
+# (macOS), un guetteur tue le programme quand la limite est passée.
 ceflo(){
-    timeout 120 "$CEFLO" "$@"
+    if command -v timeout > /dev/null 2>&1; then
+        timeout $LIMIT "$CEFLO" "$@"
+        return
+    fi
+    exec 3<&0
+    "$CEFLO" "$@" <&3 3<&- &
+    pid=$!
+    exec 3<&-
+    (
+        i=0
+        while [ $i -lt $LIMIT ] && kill -0 $pid 2> /dev/null; do
+            sleep 1
+            i=$((i + 1))
+        done
+        kill -9 $pid 2> /dev/null
+    ) > /dev/null 2>&1 &
+    wait $pid
 }
 
 should_skip(){
@@ -34,57 +54,66 @@ fail(){
     [ -n "$2" ] && echo "$2" | head -15
 }
 
-cd "$ROOT/tests" || exit 1
+# Chaque x.cf d'un dossier doit donner exactement x.out.
+run_outputs(){
+    cd "$ROOT/$1" || exit 1
+    for script in *.cf; do
+        name=${script%.cf}
+        input=/dev/null
+        [ -f "$name.in" ] && input="$name.in"
 
-for script in *.cf; do
-    name=${script%.cf}
-    input=/dev/null
-    [ -f "$name.in" ] && input="$name.in"
+        should_skip "$name" && continue
 
-    should_skip "$name" && continue
+        case $name in
+            natif) arguments="$TMP/natif.txt" ;;
+            module_os) arguments="$TMP/os" ;;
+            entree|main) arguments="un deux" ;;
+            *) arguments="" ;;
+        esac
 
-    case $name in
-        natif) arguments="$TMP/natif.txt" ;;
-        module_os) arguments="$TMP/os" ;;
-        entree|main) arguments="un deux" ;;
-        *) arguments="" ;;
-    esac
+        ceflo "$script" $arguments < "$input" > "$TMP/out" 2> "$TMP/err"
+        code=$?
 
-    ceflo "$script" $arguments < "$input" > "$TMP/out" 2> "$TMP/err"
-    code=$?
+        if [ $code -ne 0 ]; then
+            fail "$2$name (code $code)" "$(cat "$TMP/err")"
+        elif ! difference=$(diff "$name.out" "$TMP/out"); then
+            fail "$2$name" "$difference"
+        else
+            passed=$((passed + 1))
+        fi
+    done
+}
 
-    if [ $code -ne 0 ]; then
-        fail "$name (code $code)" "$(cat "$TMP/err")"
-    elif ! difference=$(diff "$name.out" "$TMP/out"); then
-        fail "$name" "$difference"
-    else
-        passed=$((passed + 1))
-    fi
-done
+# Chaque x.cf d'un dossier doit échouer avec le message de sa première ligne.
+run_errors(){
+    cd "$ROOT/$1" || exit 1
+    for script in *.cf; do
+        should_skip "${script%.cf}" && continue
 
-cd "$ROOT/tests/erreurs" || exit 1
+        expected=$(head -n 1 "$script" | sed 's|^// attendu: ||')
+        ceflo "$script" < /dev/null > "$TMP/out" 2> "$TMP/err"
+        code=$?
+        actual=$(head -n 1 "$TMP/err")
 
-for script in *.cf; do
-    should_skip "${script%.cf}" && continue
+        # Le début du message suffit : la fin peut venir du système.
+        case $actual in
+            "$expected"*) matches=1 ;;
+            *) matches=0 ;;
+        esac
 
-    expected=$(head -n 1 "$script" | sed 's|^// attendu: ||')
-    ceflo "$script" < /dev/null > "$TMP/out" 2> "$TMP/err"
-    code=$?
-    actual=$(head -n 1 "$TMP/err")
-
-    # Le début du message suffit : la fin peut venir du système.
-    case $actual in
-        "$expected"*) matches=1 ;;
-        *) matches=0 ;;
-    esac
-
-    if [ $code -ne 1 ] || [ $matches -ne 1 ]; then
-        fail "erreurs/$script (code $code)" "attendu : $expected
+        if [ $code -ne 1 ] || [ $matches -ne 1 ]; then
+            fail "$1/$script (code $code)" "attendu : $expected
 obtenu  : $(head -n 3 "$TMP/err")"
-    else
-        passed=$((passed + 1))
-    fi
-done
+        else
+            passed=$((passed + 1))
+        fi
+    done
+}
+
+run_outputs tests ""
+run_errors tests/erreurs
+run_outputs tests/vm "vm/"
+run_errors tests/vm/erreurs
 
 # Du code démesuré doit donner une erreur, pas un segfault. Ces fichiers sont trop
 # gros pour le dépôt : on les crée ici.

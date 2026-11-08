@@ -1,0 +1,30 @@
+// `x += e` lit x, puis calcule e (comme Python, JS et Java).
+// Ceflo_ref calcule e d'abord : c'est une différence voulue (docs/VM.md).
+var x = 1
+func change(){ x = 100; return 1 }
+x += change()
+println(x)
+
+var l = [1]
+func change_liste(){ l[0] = 100; return 1 }
+l[0] += change_liste()
+println(l)
+
+var o = { n: 1 }
+func change_map(){ o.n = 100; return 1 }
+o.n += change_map()
+println(o)
+
+struct C { var n = 1 }
+var c = new C()
+func change_objet(){ c.n = 100; return 1 }
+c.n *= change_objet() + 1
+println(c.n)
+
+func locale(){
+    var k = 1
+    var g = lfunc(){ k = 100; return 1 }
+    k -= g()
+    return k
+}
+println(locale())

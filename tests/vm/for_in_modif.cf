@@ -1,0 +1,56 @@
+// Modifier ce qu'on parcourt avec for ... in
+
+// Map : les clés sont relevées avant le premier tour
+var m = { a: 1, b: 2, c: 3, d: 4 }
+for var k, v in m {
+    print(k, "=", v, " ")
+    if k == "a" { m.remove("b"); m["z"] = 26; m.c = 30 }
+}
+println()
+println(m.keys(), " ", m.lenght())
+
+// Une clé enlevée puis remise pendant la boucle
+var r = { x: 1, y: 2 }
+for var k in r {
+    print(k, " ")
+    if k == "x" { r.remove("y"); r.y = 99 }
+}
+println(r.y)
+
+// Liste : sa taille est relue à chaque tour
+var l = [1, 2, 3]
+for var x in l {
+    if x < 3 { l.append(x + 10) }
+    print(x, " ")
+}
+println()
+
+// Retirer pendant le parcours
+var l2 = [1, 2, 3, 4, 5]
+for var i, x in l2 {
+    if x == 2 { l2.remove(i) }
+    print(x, " ")
+}
+println(l2)
+
+// Changer la variable ne touche pas la liste
+var l3 = [1, 2, 3]
+for var x in l3 { x *= 10 }
+for var i, x in l3 { l3[i] = x * 2 }
+println(l3)
+
+// Une chaîne : c'est celle du départ qui est parcourue
+var s = "abc"
+for var c in s { s += "!"; print(c) }
+println(" ", s)
+
+// Boucles imbriquées sur le même map
+var t = { un: 1, deux: 2 }
+for var a in t { for var b in t { print(a, "-", b, " ") } }
+println()
+
+// Parcourir un map vide, une liste vide, une chaîne vide
+for var k in {} { println("jamais") }
+for var x in [] { println("jamais") }
+for var c in "" { println("jamais") }
+println("fin")

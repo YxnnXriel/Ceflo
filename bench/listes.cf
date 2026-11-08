@@ -1,0 +1,7 @@
+// Listes : ajout, lecture et parcours
+var l = []
+for var i = 0; i < 1000000; i += 1 { l.append(i * 2) }
+var total = 0
+for var x in l { total += x }
+for var i = 0; i < l.lenght(); i += 1 { total -= l[i] / 2 }
+println(total)

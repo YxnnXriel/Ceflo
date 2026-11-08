@@ -1,0 +1,4 @@
+from "c.cf" import *
+println("b chargé")
+var depuis_b = depuis_c + "b"
+func compte_b(){ return incremente() * 10 }

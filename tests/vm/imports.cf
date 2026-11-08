@@ -1,0 +1,20 @@
+// Des imports en chaîne : a importe b qui importe c
+from chaine.a import *
+from chaine.c import [compteur, incremente, Boite]
+from "chaine/b.cf" import depuis_b
+println(depuis_a, " ", depuis_b)
+println(appel_a(), " ", appel_a(), " ", incremente())
+// compteur est une copie prise à l'import
+println(compteur)
+println(new Boite().v)
+
+// export : une fonction exportée voit les noms cachés de son module
+from chaine.prive import *
+println(publique(), " ", new Boite2().lit())
+
+// Un import dans une fonction
+func charge(){
+    from chaine.c import depuis_c
+    return depuis_c
+}
+println(charge(), " ", charge())

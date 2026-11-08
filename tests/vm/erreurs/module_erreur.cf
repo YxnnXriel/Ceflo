@@ -1,0 +1,4 @@
+// attendu: erreur: `inconnue` n'est pas définie
+from modules.casse import casse
+println("avant")
+casse()

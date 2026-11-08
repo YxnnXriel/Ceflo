@@ -1,0 +1,4 @@
+// attendu: erreur: division par zéro
+struct S { func __str__(){ return "" + 1 / 0 } }
+println("avant")
+println(new S())

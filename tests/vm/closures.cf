@@ -1,0 +1,117 @@
+// Closures et upvalues : ce qu'une VM casse le plus souvent
+
+// Chaque tour d'un for ... in a sa propre variable
+var fs = []
+for var x in [1, 2, 3] { fs.append(lfunc(){ return x }) }
+for var f in fs { print(f(), " ") }
+println()
+
+// Les deux variables d'un for ... in
+var gs = []
+for var i, v in ["a", "b"] { gs.append(lfunc(){ return i + v }) }
+println(gs[0](), " ", gs[1]())
+
+// Un for classique : une seule variable pour toute la boucle
+var hs = []
+for var i = 0; i < 3; i += 1 { hs.append(lfunc(){ return i }) }
+for var h in hs { print(h(), " ") }
+println()
+
+// Une variable modifiée après la création de la closure
+func plus_tard(){
+    var n = 1
+    var f = lfunc(){ return n }
+    n = 42
+    return f
+}
+println(plus_tard()())
+
+// Deux closures qui partagent la même variable
+func paire(){
+    var n = 0
+    var inc = lfunc(){ n += 1; return n }
+    var lit = lfunc(){ return n }
+    return [inc, lit]
+}
+var p = paire()
+p[0](); p[0](); p[0]()
+println(p[1]())
+
+// Chaque appel crée sa propre variable
+var a = paire()
+var b = paire()
+a[0](); a[0](); b[0]()
+println(a[1](), " ", b[1]())
+
+// Closures imbriquées sur trois niveaux
+func niveau1(x){
+    return lfunc(y){
+        return lfunc(z){ return x * 100 + y * 10 + z }
+    }
+}
+println(niveau1(1)(2)(3))
+
+// Une closure interne modifie une variable de deux niveaux au-dessus
+func externe(){
+    var total = 0
+    var milieu = lfunc(){
+        var interne = lfunc(k){ total += k }
+        interne(5); interne(7)
+    }
+    milieu()
+    return total
+}
+println(externe())
+
+// Un paramètre capturé, puis modifié
+func capture_param(n){
+    var f = lfunc(){ return n }
+    n += 10
+    return f()
+}
+println(capture_param(1))
+
+// Une closure qui survit à plusieurs appels de fonctions entre-temps
+func fabrique(base){ return lfunc(x){ return base + x } }
+var f1 = fabrique(100)
+var f2 = fabrique(200)
+func bruit(n){ var a = n; var b = n * 2; var c = a + b; return c }
+bruit(1); bruit(2)
+println(f1(1), " ", f2(2))
+
+// Une closure dans un bloc qui se ferme
+var g
+if true {
+    var local = "bloc"
+    g = lfunc(){ return local }
+}
+println(g())
+
+// Une closure capturée dans un while, avec un bloc par tour
+var ws = []
+var j = 0
+while j < 3 {
+    var copie = j
+    ws.append(lfunc(){ return copie })
+    j += 1
+}
+for var w in ws { print(w(), " ") }
+println()
+
+// Une fonction récursive locale
+func outer(){
+    var fact = none
+    fact = lfunc(n){ return n <= 1 ? 1 : n * fact(n - 1) }
+    return fact(10)
+}
+println(outer())
+
+// Une closure globale qui lit une globale changée plus tard
+var glob = 1
+var lit_glob = lfunc(){ return glob }
+glob = 2
+println(lit_glob())
+
+// filter avec une closure
+var seuil = 3
+println([1, 5, 2, 7, 3].filter(lfunc(x){ return x > seuil }))

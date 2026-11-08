@@ -1,0 +1,68 @@
+// Le GC : beaucoup d'objets, des cycles, des listes qui se contiennent
+
+// Beaucoup de petits objets jetés
+struct Noeud {
+    var valeur
+    var suivant
+    func __init__(v){ valeur = v }
+}
+var garde = []
+for var i = 0; i < 20000; i += 1 {
+    var n = new Noeud(i)
+    if i % 100 == 0 { garde.append(n) }
+}
+var s = 0
+for var n in garde { s += n.valeur }
+println(garde.lenght(), " ", s)
+
+// Des cycles entre objets
+for var i = 0; i < 5000; i += 1 {
+    var a = new Noeud(1)
+    var b = new Noeud(2)
+    a.suivant = b
+    b.suivant = a
+}
+var a = new Noeud("a")
+a.suivant = new Noeud("b")
+a.suivant.suivant = a
+println(a.suivant.suivant.valeur, " ", a.suivant.suivant.suivant.valeur)
+
+// Une liste qui se contient elle-même
+var l = [1, 2]
+l.append(l)
+for var i = 0; i < 10000; i += 1 { var x = [i, [i]] }
+println(l[2][2][2][0], " ", l.lenght())
+
+// Un map qui se contient
+var m = { nom: "m" }
+m.moi = m
+for var i = 0; i < 10000; i += 1 { var t = { k: i, autre: { j: i } } }
+println(m.moi.moi.nom)
+
+// Des chaînes construites en boucle
+var texte = ""
+for var i = 0; i < 5000; i += 1 { texte += @str(i % 10) }
+var pieces = []
+for var i = 0; i < 2000; i += 1 { pieces.append("p" + i) }
+println(texte.lenght(), " ", texte[4999], " ", pieces[1999], " ", pieces.lenght())
+
+// Des maps de chaînes qui grandissent et rétrécissent
+var dico = {}
+for var i = 0; i < 3000; i += 1 { dico["cle" + i] = [i] }
+for var i = 0; i < 3000; i += 2 { dico.remove("cle" + i) }
+println(dico.lenght(), " ", dico["cle2999"][0], " ", dico.get("cle0"))
+
+// Des closures qui gardent des objets
+var fs = []
+for var i = 0; i < 200; i += 1 {
+    var o = new Noeud([i])
+    fs.append(lfunc(){ return o.valeur[0] })
+}
+for var i = 0; i < 3000; i += 1 { var poubelle = new Noeud(i) }
+println(fs[199](), " ", fs[0]())
+
+// Des valeurs temporaires pendant un calcul long
+func cree(n){ return [n, "x" + n, { n }] }
+var total = 0
+for var i = 0; i < 3000; i += 1 { total += cree(i)[0] + cree(i + 1)[2].n }
+println(total)

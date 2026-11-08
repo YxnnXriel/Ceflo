@@ -1,0 +1,8 @@
+// Map : écriture et lecture par clé
+var m = {}
+for var i = 0; i < 200000; i += 1 { m[i] = i }
+var total = 0
+for var i = 0; i < 200000; i += 1 { total += m[i] }
+var mots = { un: 1, deux: 2, trois: 3 }
+for var i = 0; i < 1000000; i += 1 { total += mots.deux }
+println(total)

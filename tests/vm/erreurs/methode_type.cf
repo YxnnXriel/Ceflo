@@ -1,0 +1,8 @@
+// attendu: erreur: `x` est de type int, pas str
+struct P {
+    var x::int = 0
+    func change(v){ x = v }
+}
+var p = new P()
+p.change(3)
+p.change("trois")

@@ -1,0 +1,66 @@
+// Méthodes : self implicite, chaînage, attributs et noms qui se cachent
+struct Compteur {
+    var n = 0
+    var nom = "c"
+    func inc(){ n += 1; return self }
+    func inc2(){ inc(); self.inc(); return self }
+    func lit(){ return n }
+    func double(){ return lit() * 2 }
+    func renomme(nom){ self.nom = nom; return nom }
+    func cache(){ var n = 100; return n + self.n }
+    func appelle(f){ return f(n) }
+}
+var c = new Compteur()
+c.inc().inc2().inc()
+println(c.n, " ", c.lit(), " ", c.double())
+println(c.renomme("x"), " ", c.nom, " ", c.cache())
+println(c.appelle(lfunc(v){ return v + 1 }))
+
+// Une méthode qui crée une closure qui utilise un attribut
+struct Banque {
+    var solde = 10
+    func retrait(){ return lfunc(m){ solde -= m; return solde } }
+}
+var b = new Banque()
+var r = b.retrait()
+r(3); r(2)
+println(b.solde)
+
+// Une méthode passée comme valeur
+var m = c.lit
+println(m())
+
+// Des objets dans des objets
+struct Moteur { var puissance = 90; func info(){ return "moteur " + puissance } }
+struct Voiture {
+    var moteur
+    func __init__(){ moteur = new Moteur() }
+    func info(){ return "voiture, " + moteur.info() }
+    func boost(){ moteur.puissance += 10; return info() }
+}
+var v = new Voiture()
+println(v.boost(), " | ", v.moteur.puissance)
+
+// Plusieurs __init__
+struct P {
+    var x = 0
+    var y = 0
+    func __init__(){ }
+    func __init__(a){ x = a }
+    func __init__(a, b){ x = a; y = b }
+}
+println(new P().x, " ", new P(1).x, " ", new P(1, 2).y, " ", new P.x)
+
+// Une méthode récursive sans self
+struct Math {
+    func fact(n){ return n <= 1 ? 1 : n * fact(n - 1) }
+}
+println(new Math().fact(10))
+
+// Un attribut qui contient une fonction
+struct Rappel {
+    var f
+    func __init__(g){ f = g }
+    func lance(x){ return f(x) }
+}
+println(new Rappel(lfunc(x){ return x * 3 }).lance(5))

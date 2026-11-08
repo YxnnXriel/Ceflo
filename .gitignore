@@ -4,6 +4,9 @@ Ceflo
 Ceflo_asan
 Ceflo_stress
 Ceflo_val
+Ceflo_ref
 *.vsix
 test.cf
 *.dSYM/
+
+build/

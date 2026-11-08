@@ -1,0 +1,6 @@
+// Chaînes : concaténation et parcours
+var s = ""
+for var i = 0; i < 100000; i += 1 { s += "ab" }
+var n = 0
+for var c in s { if c == 'a' { n += 1 } }
+println(n, " ", s.lenght())

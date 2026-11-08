@@ -1,0 +1,4 @@
+// attendu: erreur: `S` n'a pas d'attribut `y`
+struct S { var x = 1; func lit(){ return self.y } }
+println(new S().x)
+new S().lit()

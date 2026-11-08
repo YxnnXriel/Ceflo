@@ -1,0 +1,4 @@
+// attendu: erreur: trop d'appels imbriqués : la récursion ne s'arrête peut-être jamais
+var f = none
+f = lfunc(n){ var r = f(n + 1); return r }
+f(0)

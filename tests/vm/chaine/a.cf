@@ -1,0 +1,5 @@
+// Le premier maillon : il importe b, qui importe c
+from chaine.b import [depuis_b, compte_b]
+println("a chargé")
+var depuis_a = depuis_b + "a"
+func appel_a(){ return compte_b() + 1 }

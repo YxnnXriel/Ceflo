@@ -1,0 +1,9 @@
+// Arithmétique et variables locales dans une boucle
+func somme(n){
+    var total = 0
+    for var i = 0; i < n; i += 1 {
+        total += i % 7
+    }
+    return total
+}
+println(somme(10000000))

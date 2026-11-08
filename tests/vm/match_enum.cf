@@ -1,0 +1,97 @@
+// match sur des énumérations, des nombres, des textes
+enum Feu { ROUGE, ORANGE, VERT }
+enum Http { OK = 200, INTROUVABLE = 404, ERREUR = 500 }
+enum Niveau { BAS = "bas", HAUT = "haut" }
+
+func action(f::Feu){
+    match f {
+        case Feu.ROUGE { return "stop" }
+        case Feu.ORANGE { return "ralentir" }
+        case Feu.VERT { return "passer" }
+    }
+    return "jamais"
+}
+for var f in Feu.values() { print(action(f), " ") }
+println()
+
+func statut(code){
+    match @Http(code) {
+        case Http.OK { return "ok" }
+        case Http.INTROUVABLE, Http.ERREUR { return "problème" }
+        case none { return "inconnu" }
+    }
+}
+println(statut(200), " ", statut(404), " ", statut(500), " ", statut(1))
+
+// Le sujet n'est calculé qu'une fois
+var appels = 0
+func sujet(){ appels += 1; return Niveau.HAUT }
+match sujet() {
+    case Niveau.BAS { println("bas") }
+    case Niveau.HAUT { println("haut") }
+}
+println(appels)
+
+// Les valeurs s'arrêtent à la première égale
+var vus = []
+func v(x){ vus.append(x); return x }
+match 2 {
+    case v(1), v(2), v(3) { println("trouvé") }
+    case v(4) { println("non") }
+}
+println(vus)
+
+// match dans une boucle, avec break et continue
+var n = 0
+for var i = 0; i < 10; i += 1 {
+    match i % 3 {
+        case 0 { continue }
+        case 1 { n += 1 }
+        else { if i > 7 { break } }
+    }
+    n += 10
+}
+println(n)
+
+// match true, des caractères et des textes
+func classe(c){
+    match true {
+        case c >= '0' and c <= '9' { return "chiffre" }
+        case c >= 'a' and c <= 'z' { return "lettre" }
+        else { return "autre" }
+    }
+}
+println(classe('5'), " ", classe('q'), " ", classe('!'))
+match "abc" {
+    case "x" { println("x") }
+    case "abc" { println("abc") }
+}
+match 'A' {
+    case 65 { println("65") }
+}
+
+// Des énumérations comme clés de map et dans des listes
+var noms = { [Feu.ROUGE]: "rouge", [Feu.VERT]: "vert" }
+println(noms[Feu.ROUGE], " ", noms.get(Feu.ORANGE), " ", noms.has(Feu.VERT))
+println(Feu.values(), " ", Http.OK.name, " ", Http.OK.value, " ", Niveau.HAUT.value)
+println(@int(Http.ERREUR), " ", @str(Feu.ORANGE), " ", @Feu(2), " ", @Niveau("bas"))
+
+// Une variable typée par une énumération
+var feu::Feu = Feu.ROUGE
+feu = Feu.VERT
+feu = none
+println(feu)
+
+// Un match imbriqué dans un match
+func double(a, b){
+    match a {
+        case Feu.ROUGE {
+            match b {
+                case Feu.ROUGE { return 1 }
+                else { return 2 }
+            }
+        }
+        else { return 3 }
+    }
+}
+println(double(Feu.ROUGE, Feu.ROUGE), double(Feu.ROUGE, Feu.VERT), double(Feu.VERT, Feu.VERT))

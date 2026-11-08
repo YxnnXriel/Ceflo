@@ -1,0 +1,23 @@
+// Méthodes : un objet qui s'appelle lui-même, sans self, et modifie ses attributs
+struct Compte {
+    var solde::number = 0
+    var operations::int = 0
+    func depose(n){ solde += n; compte_operation(); return self }
+    func retire(n){
+        if peut_retirer(n) { solde -= n; compte_operation() }
+        return self
+    }
+    func peut_retirer(n){ return solde >= n }
+    func compte_operation(){ operations += 1 }
+}
+var comptes = []
+for var i = 0; i < 100; i += 1 { comptes.append(new Compte()) }
+for var tour = 0; tour < 10000; tour += 1 {
+    for var c in comptes {
+        c.depose(3).retire(2)
+    }
+}
+var total = 0
+var ops = 0
+for var c in comptes { total += c.solde; ops += c.operations }
+println(total, " ", ops)

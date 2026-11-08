@@ -1,0 +1,56 @@
+// Récursion profonde : la pile de la VM doit suivre
+func profond(n){
+    if n == 0 { return 0 }
+    return 1 + profond(n - 1)
+}
+println(profond(5000))
+
+// Récursion croisée
+func pair(n){ return n == 0 ? true : impair(n - 1) }
+func impair(n){ return n == 0 ? false : pair(n - 1) }
+println(pair(3000), " ", impair(3001))
+
+// Beaucoup de variables locales à chaque niveau
+func large(n){
+    var a = n
+    var b = a + 1
+    var c = b + 1
+    var d = c + 1
+    var e = d + 1
+    if n == 0 { return a + b + c + d + e }
+    var r = large(n - 1)
+    return r + a + e
+}
+println(large(2000))
+
+// Une méthode récursive
+struct Arbre {
+    var gauche
+    var droite
+    func __init__(g, d){ gauche = g; droite = d }
+    func taille(){
+        var t = 1
+        if gauche != none { t += gauche.taille() }
+        if droite != none { t += droite.taille() }
+        return t
+    }
+}
+func construit(n){ return n == 0 ? none : new Arbre(construit(n - 1), construit(n - 1)) }
+println(construit(12).taille())
+
+// Une liste chaînée longue, parcourue récursivement
+func liste(n){
+    var tete = none
+    for var i = 0; i < n; i += 1 { tete = { v: i, suite: tete } }
+    return tete
+}
+func somme(l){ return l == none ? 0 : l.v + somme(l.suite) }
+println(somme(liste(3000)))
+
+// Récursion avec une closure à chaque niveau
+func fermetures(n){
+    if n == 0 { return lfunc(){ return 0 } }
+    var suivant = fermetures(n - 1)
+    return lfunc(){ return n + suivant() }
+}
+println(fermetures(1000)())

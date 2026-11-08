@@ -1,0 +1,4 @@
+var cachee = "cachée"
+func publique(){ return cachee + " vue par publique" }
+struct Boite2 { var v = 2; func lit(){ return cachee } }
+export :: [publique, Boite2]

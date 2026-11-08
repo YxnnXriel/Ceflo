@@ -1,0 +1,45 @@
+// Une structure et une énumération définies dans une fonction
+func fabrique(depart){
+    struct Local {
+        var v = 0
+        func __init__(x){ v = x + depart }
+        func double(){ return v * 2 }
+    }
+    return new Local(1)
+}
+var a = fabrique(10)
+var b = fabrique(20)
+println(a.v, " ", b.v, " ", a.double(), " ", b.double())
+
+func couleur(){
+    enum Feu { ROUGE, VERT }
+    return Feu.VERT
+}
+println(couleur(), " ", couleur().value, " ", couleur() == couleur())
+
+// Une structure dans un bloc
+if true {
+    struct Bloc { var nom = "bloc" }
+    println(new Bloc().nom)
+}
+
+// Une structure locale qui utilise une variable de la fonction modifiée après
+func compteur(){
+    var total = 0
+    struct Ajout {
+        func ajoute(n){ total += n; return total }
+    }
+    var o = new Ajout()
+    o.ajoute(5)
+    o.ajoute(6)
+    return total
+}
+println(compteur())
+
+// Une fonction locale qui porte le nom d'une globale
+func externe(){
+    func aide(){ return "locale" }
+    return aide()
+}
+func aide(){ return "globale" }
+println(externe(), " ", aide())
