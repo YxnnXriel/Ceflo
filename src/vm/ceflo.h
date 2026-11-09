@@ -10,7 +10,7 @@
  *          return NUMBER_VAL(AS_STRING(args[0])->length);
  *      }
  *
- * et s'importe avec `from "chemin/libtruc.so" import [ma_fonction]`.
+ * et s'importe avec `from @"./chemin/libtruc.so" import [ma_fonction]`.
  */
 
 #ifndef __CEFLO_H__

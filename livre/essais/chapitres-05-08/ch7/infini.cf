@@ -1,0 +1,2 @@
+func sans_fin(n) { return sans_fin(n + 1) }
+sans_fin(0)

@@ -1,0 +1,6 @@
+struct Point {
+    var x = 0
+    var y = 0
+    func __init__(a, b) { x = a; y = b }
+    func __str__() { return "(" + x + ", " + y + ")" }
+}

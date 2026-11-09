@@ -1,0 +1,10 @@
+println(1 == true)
+println('A' == 65)
+println('a' == "a")
+println("1" == 1)
+println([1, [2, 3]] == [1, [2, 3]])
+var t = { a: 1 }
+println(t == { a: 1 })
+println(t == t)
+println(none == none)
+println("abc" < "abd", " ", "b" > "abc")

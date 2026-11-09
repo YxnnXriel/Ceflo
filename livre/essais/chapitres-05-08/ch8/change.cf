@@ -1,0 +1,6 @@
+var x = ["ancienne", "liste"]
+func change() {
+    x = "autre chose"
+    return "fin"
+}
+println(x, " ", change())

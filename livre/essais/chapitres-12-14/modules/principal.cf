@@ -1,0 +1,7 @@
+from outils import [double, VERSION]
+from outils import [appels]
+from geo.point import *
+
+println(double(21), " ", VERSION)
+println(new Point(1, 2))
+println(appels)

@@ -1,0 +1,10 @@
+func impairs(n){
+    var total = 0
+    for var i = 0; i < n; i += 1 {
+        if i % 2 == 0 { continue }
+        if i > 7 { break }
+        total += i
+    }
+    return total
+}
+println(impairs(100))

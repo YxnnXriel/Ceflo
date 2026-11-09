@@ -10,3 +10,7 @@ test.cf
 *.dSYM/
 
 build/
+
+# Ce que le lecteur compile en suivant le livre
+livre/essais/**/*.o
+livre/essais/**/*.so

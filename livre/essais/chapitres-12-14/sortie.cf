@@ -1,0 +1,10 @@
+var gardees = []
+for var mot in ["un", "deux", "stop", "trois"] {
+    var copie = mot + "!"
+    gardees.append(lfunc() { return copie })
+    if mot == "stop" { break }
+}
+for var f in gardees {
+    print(f(), " ")
+}
+println()

@@ -1,0 +1,4 @@
+func plus_un(a){
+    return a + 1
+}
+println(plus_un(41))

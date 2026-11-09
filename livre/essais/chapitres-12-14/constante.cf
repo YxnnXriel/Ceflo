@@ -1,0 +1,7 @@
+struct Point {
+    var x::int = 0
+    const DIMENSION = 2
+}
+var p = new Point()
+println(p.DIMENSION)
+p.DIMENSION = 3

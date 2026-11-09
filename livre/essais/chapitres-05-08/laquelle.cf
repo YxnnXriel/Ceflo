@@ -1,0 +1,12 @@
+var x = "globale"
+
+func montre() {
+    println(x)
+}
+
+func appelle() {
+    var x = "locale"
+    montre()
+}
+
+appelle()

@@ -1,0 +1,16 @@
+struct Compte {
+    var solde = 0
+    func depose(n) { solde += n }
+    func plus_tard() {
+        return lfunc(n) { depose(n) }
+    }
+}
+
+var c = new Compte()
+var f = c.depose
+f(10)
+println(f)
+var g = c.plus_tard()
+g(5)
+println(c.solde)
+c.depose = 3

@@ -1,0 +1,13 @@
+bench/run.sh ./Ceflo ./Ceflo_ref
+                    VM    ancien    Python   vs ancien   vs Python
+boucle            0.37      2.14      0.88        5.8x        2.4x
+closures          0.10      0.62      0.41        6.2x        4.1x
+fib               0.09      0.50      0.16        5.6x        1.8x
+gros_texte        1.99      5.63      0.15        2.8x        0.1x
+listes            0.10      1.69      0.37       16.9x        3.7x
+maps              0.07      0.46      0.20        6.6x        2.9x
+methodes          0.18      0.80      0.40        4.4x        2.2x
+mots              0.10      0.65      0.20        6.5x        2.0x
+objets            0.22      0.69      0.34        3.1x        1.5x
+texte             0.82      1.06      0.92        1.3x        1.1x
+fini

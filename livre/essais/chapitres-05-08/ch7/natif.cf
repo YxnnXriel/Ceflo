@@ -1,0 +1,3 @@
+from @"./libcarre.so" import [carre]
+println(carre(12))
+println(carre("douze"))

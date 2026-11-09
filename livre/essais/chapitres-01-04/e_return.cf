@@ -1,0 +1,5 @@
+func f() {
+    return
+        42
+}
+println(f())

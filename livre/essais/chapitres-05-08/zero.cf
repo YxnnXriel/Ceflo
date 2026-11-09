@@ -1,0 +1,2 @@
+var s = "a\0b"
+println(s.lenght())

@@ -1,0 +1,12 @@
+func Compteur() {
+    var n = 0
+    return lfunc() {
+        n += 1
+        return n
+    }
+}
+
+var a = Compteur()
+var b = Compteur()
+println(a(), " ", a(), " ", a())
+println(b())

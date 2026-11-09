@@ -1,0 +1,3 @@
+struct P { var x = 0 }
+var p = new P()
+p.z = 3

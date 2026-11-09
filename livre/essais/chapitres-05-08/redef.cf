@@ -1,0 +1,4 @@
+func f() { return 1 }
+var f = 2
+println(f)
+func f() { return 3 }

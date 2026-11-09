@@ -1,0 +1,10 @@
+func somme(n){
+    var total = 0
+    var i = 0
+    while i < n {
+        total += i
+        i += 1
+    }
+    return total
+}
+println(somme(10))

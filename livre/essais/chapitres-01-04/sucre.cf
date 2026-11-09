@@ -1,0 +1,3 @@
+x += 1
+var t = n > 0 ? "oui"
+if a { } else if b { }

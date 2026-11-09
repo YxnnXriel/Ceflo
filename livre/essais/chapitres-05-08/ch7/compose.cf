@@ -1,0 +1,4 @@
+var x = 1
+func change(){ x = 100; return 1 }
+x += change()
+println(x)

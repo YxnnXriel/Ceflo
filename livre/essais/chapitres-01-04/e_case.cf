@@ -1,0 +1,4 @@
+match 3 {
+    case 1 { }
+    case 2, 1 { }
+}

@@ -1,0 +1,7 @@
+from os import [commande, existe]
+var nom = "Yann"
+var age = 22
+println(format("${nom} aura ${age + 1} ans, \${pas calculé}"))
+println(existe("fournies.cf"), " ", existe("absent.txt"))
+var r = commande("echo depuis le shell")
+println(r.code, " ", r.sortie)

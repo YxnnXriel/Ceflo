@@ -1,0 +1,5 @@
+var x = 4
+var nom = "CeFlo"
+println(1 + 2 * 3)
+println(x * x, " ", nom + "!")
+println("x vaut ", x, ", et x == 4 vaut ", x == 4)

@@ -1,0 +1,6 @@
+func noms(l){
+    for var i, nom in l {
+        println(i, " : ", nom)
+    }
+}
+noms(["Ada", "Alan"])

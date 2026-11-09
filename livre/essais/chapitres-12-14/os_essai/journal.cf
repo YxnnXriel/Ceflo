@@ -1,0 +1,14 @@
+from os import [creer_dossier, ecrire, ajouter, lire_lignes, dossier, existe, chemin, commande]
+
+creer_dossier("notes")
+var fichier = chemin("notes", "journal.txt")
+ecrire(fichier, "lundi : lexer\n")
+ajouter(fichier, "mardi : parser\n")
+
+for var i, ligne in lire_lignes(fichier) {
+    println(i, " ", ligne)
+}
+println(dossier("notes"), " ", existe("notes/absent.txt"))
+println(lire_lignes("notes/absent.txt"))
+var r = commande("wc -l < notes/journal.txt")
+println(r.code, " ", r.sortie)

@@ -1,0 +1,10 @@
+func Externe() {
+    var x = "externe"
+    func Milieu() {
+        return lfunc() { return x }
+    }
+    return Milieu()
+}
+
+var f = Externe()
+println(f())

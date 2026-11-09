@@ -1,0 +1,5 @@
+func salue(){
+    println(message)
+}
+salue()
+var message = "bonjour"

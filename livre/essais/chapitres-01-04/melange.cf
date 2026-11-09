@@ -1,0 +1,6 @@
+/* un peu de tout */
+func aire -> l::int, h : int {
+    return l * h  // le produit
+}
+var t = "a\tb\n"
+println(1.5, 1.lenght(), t != 'x')

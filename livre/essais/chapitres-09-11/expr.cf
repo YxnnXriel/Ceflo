@@ -1,0 +1,2 @@
+println(2 * (3 + 4) - 1)
+println("moins : ", -5, " ", 10 / 4)

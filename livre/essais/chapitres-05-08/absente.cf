@@ -1,0 +1,5 @@
+func f() {
+    var cache = 1
+}
+f()
+println(cache)

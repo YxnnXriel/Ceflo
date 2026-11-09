@@ -1,0 +1,6 @@
+func calcule() {
+    from outils import [double]
+    return double(5)
+}
+println(calcule())
+println(calcule())

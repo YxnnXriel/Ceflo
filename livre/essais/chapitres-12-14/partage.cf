@@ -1,0 +1,13 @@
+func Paire() {
+    var n = 0
+    var plus = lfunc() { n += 1 }
+    var lire = lfunc() { return n }
+    plus()
+    plus()
+    println("dans Paire : ", n, " ", lire())
+    return [plus, lire]
+}
+
+var p = Paire()
+p[0]()
+println("après : ", p[1]())

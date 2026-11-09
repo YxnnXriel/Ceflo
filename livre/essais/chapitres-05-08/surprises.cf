@@ -1,0 +1,7 @@
+println(1 + "a")
+println('A' + 1)
+println([1, 2] == [1, 2])
+println({} == {})
+println(0.1 + 0.2)
+println(1000000 * 1000000)
+println("ab" * 3)

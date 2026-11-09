@@ -1,0 +1,7 @@
+from @"./libmots_sans.so" import [mots_majuscules, mots_applique]
+
+println(mots_majuscules("bonjour ceflo"))
+var carres = mots_applique([1, 2, 3, 4], lfunc(x) { return x * x })
+println(carres)
+println(mots_applique(["a", "b"], mots_majuscules))
+mots_majuscules(42)

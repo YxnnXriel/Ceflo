@@ -1,0 +1,17 @@
+var fonctions = []
+for var i = 0; i < 3; i += 1 {
+    fonctions.append(lfunc() { return i })
+}
+for var f in fonctions {
+    print(f(), " ")
+}
+println()
+
+var autres = []
+for var j in [0, 1, 2] {
+    autres.append(lfunc() { return j })
+}
+for var f in autres {
+    print(f(), " ")
+}
+println()

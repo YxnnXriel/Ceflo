@@ -1,0 +1,9 @@
+var a = 1
+if true {
+    a = 2
+}
+if true {
+    var a = 3
+    println(a)
+}
+println(a)

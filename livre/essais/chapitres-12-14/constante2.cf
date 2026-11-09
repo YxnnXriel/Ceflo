@@ -1,0 +1,6 @@
+struct Point {
+    var x::int = 0
+    const DIMENSION = 2
+    func avance(n) { DIMENSION = 3 }
+}
+println("debut")

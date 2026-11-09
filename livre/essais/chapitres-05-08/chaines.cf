@@ -1,0 +1,10 @@
+var a = "chat"
+var b = a
+a[0] = 'p'
+println(a, " ", b)
+
+var l = [1, 2]
+var m = l
+l[0] = 9
+println(l, " ", m)
+println("é".lenght())

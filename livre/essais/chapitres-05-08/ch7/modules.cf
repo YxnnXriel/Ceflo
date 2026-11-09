@@ -1,0 +1,4 @@
+from outils.texte import [crie]
+from outils.texte import [crie, compteur]
+println(crie("bonjour"), " ", compteur)
+from outils.texte import [secret]

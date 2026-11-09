@@ -1,0 +1,61 @@
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/lexer.o -c src/lexer.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/parser.o -c src/parser.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/ast.o -c src/ast.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/token.o -c src/token.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/error.o -c src/error.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/str.o -c src/str.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/list.o -c src/list.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/common.o -c src/common.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/binary.o -c src/vm/binary.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/chunk.o -c src/vm/chunk.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/compiler.o -c src/vm/compiler.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/debug.o -c src/vm/debug.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/main.o -c src/vm/main.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/map.o -c src/vm/map.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/memory.o -c src/vm/memory.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/module.o -c src/vm/module.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/object.o -c src/vm/object.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/print.o -c src/vm/print.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/table.o -c src/vm/table.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/value.o -c src/vm/value.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/vm.o -c src/vm/vm.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/natives/console.o -c src/vm/natives/console.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/natives/core.o -c src/vm/natives/core.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/natives/library.o -c src/vm/natives/library.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/natives/methods.o -c src/vm/natives/methods.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/natives/os.o -c src/vm/natives/os.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/vm -Isrc/include -o build/vm/src/vm/natives/typer.o -c src/vm/natives/typer.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -o Ceflo build/vm/src/lexer.o build/vm/src/parser.o build/vm/src/ast.o build/vm/src/token.o build/vm/src/error.o build/vm/src/str.o build/vm/src/list.o build/vm/src/common.o build/vm/src/vm/binary.o build/vm/src/vm/chunk.o build/vm/src/vm/compiler.o build/vm/src/vm/debug.o build/vm/src/vm/main.o build/vm/src/vm/map.o build/vm/src/vm/memory.o build/vm/src/vm/module.o build/vm/src/vm/object.o build/vm/src/vm/print.o build/vm/src/vm/table.o build/vm/src/vm/value.o build/vm/src/vm/vm.o build/vm/src/vm/natives/console.o build/vm/src/vm/natives/core.o build/vm/src/vm/natives/library.o build/vm/src/vm/natives/methods.o build/vm/src/vm/natives/os.o build/vm/src/vm/natives/typer.o -rdynamic -lm -ldl
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/lexer.o -c src/lexer.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/parser.o -c src/parser.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/ast.o -c src/ast.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/token.o -c src/token.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/error.o -c src/error.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/str.o -c src/str.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/list.o -c src/list.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/common.o -c src/common.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/bulletin.o -c src/bulletin.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/console.o -c src/console.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/gc.o -c src/gc.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/main.o -c src/main.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/map.o -c src/map.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/os.o -c src/os.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/scope.o -c src/scope.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/typer.o -c src/typer.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/Value.o -c src/Value.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/value_expr.o -c src/value_expr.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -Isrc/include -o build/ref/src/visitor.o -c src/visitor.c
+gcc -std=c11 -D_GNU_SOURCE -Wall -Wextra -O3 -g -flto=auto -o Ceflo_ref build/ref/src/lexer.o build/ref/src/parser.o build/ref/src/ast.o build/ref/src/token.o build/ref/src/error.o build/ref/src/str.o build/ref/src/list.o build/ref/src/common.o build/ref/src/bulletin.o build/ref/src/console.o build/ref/src/gc.o build/ref/src/main.o build/ref/src/map.o build/ref/src/os.o build/ref/src/scope.o build/ref/src/typer.o build/ref/src/Value.o build/ref/src/value_expr.o build/ref/src/visitor.o -rdynamic -lm -ldl
+bench/run.sh ./Ceflo ./Ceflo_ref
+                    VM    ancien    Python   vs ancien   vs Python
+boucle            0.31      2.15      0.77        6.9x        2.5x
+closures          0.11      0.70      0.42        6.4x        3.8x
+fib               0.09      0.52      0.17        5.8x        1.9x
+gros_texte        2.07      5.32      0.16        2.6x        0.1x
+listes            0.13      1.76      0.43       13.5x        3.3x
+maps              0.08      0.47      0.18        5.9x        2.2x
+methodes          0.19      0.82      0.40        4.3x        2.1x
+mots              0.11      0.66      0.20        6.0x        1.8x
+objets            0.23      0.69      0.43        3.0x        1.9x
+texte             0.92      1.17      0.84        1.3x        0.9x
+FIN

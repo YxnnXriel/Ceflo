@@ -1,0 +1,6 @@
+var total = 0
+for var i = 0; i < 3000000; i += 1 {
+    var double = i
+    total += double
+}
+println(total)

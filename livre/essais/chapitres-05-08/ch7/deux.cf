@@ -1,0 +1,12 @@
+var i = 1
+var total = 0
+while i <= 10 {
+    if i % 2 == 0 {
+        total += i
+    } else if i == 5 {
+        println("cinq")
+    }
+    i += 1
+}
+println("somme des pairs : ", total)
+println(total > 20 ? "grand" : "petit", " ", !true, " ", -i)

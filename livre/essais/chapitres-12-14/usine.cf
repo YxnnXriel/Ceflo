@@ -1,0 +1,11 @@
+func Usine(depart) {
+    struct Boite {
+        var v = depart
+    }
+    return new Boite()
+}
+
+var a = Usine(1)
+var b = Usine(2)
+println(a.v, " ", b.v, " ", @bool(a == b))
+var p::Boite = a

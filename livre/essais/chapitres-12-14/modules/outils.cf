@@ -1,0 +1,13 @@
+println("outils.cf s'exécute")
+
+const VERSION = "1.0"
+var appels = 0
+
+func double(x) {
+    appels += 1
+    return x * 2
+}
+
+func secret() { return 42 }
+
+export :: [VERSION, double, appels]

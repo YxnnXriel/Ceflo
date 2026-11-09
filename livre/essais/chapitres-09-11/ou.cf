@@ -1,0 +1,4 @@
+var a = 0
+var b = "texte"
+var c = a or b
+println(c)

@@ -1,0 +1,9 @@
+struct Compte {
+    var solde = 0
+    func depose(n) { solde += n }
+}
+var c = new Compte()
+for var i = 0; i < 3000000; i += 1 {
+    c.depose(1)
+}
+println(c.solde)

@@ -1,0 +1,4 @@
+func println(x) {
+    print("[", x, "]\n")
+}
+println("bonjour")

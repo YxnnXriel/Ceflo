@@ -1,0 +1,24 @@
+struct Personne {
+    var Nom
+    var Age::int
+
+    func __init__() {
+        Nom = "inconnu"
+    }
+    func __init__(nom, age) {
+        Nom = nom
+        Age = age
+    }
+    func __str__() {
+        return Nom + " a " + Age + " ans"
+    }
+    func __cast__(texte) {
+        var morceaux = texte.split(":")
+        return new Personne(morceaux[0], @int(morceaux[1]))
+    }
+}
+
+println(new Personne())
+println(new Personne("Yann", 22))
+println(@Personne("Grace:18"))
+println(new Personne("Ali"))

@@ -1,0 +1,4 @@
+var x = 10
+var y = 0
+println("x vaut ", x)
+println(x + 1, " ", x / y)

@@ -1,0 +1,7 @@
+var mots = "un,deux,trois".split(",")
+mots.append("quatre")
+println(mots, " ", mots.lenght())
+println("{} a {} ans".format("Yann", 22))
+var t = { a: 1 }
+println(t.get("b", 0), " ", t.has("a"), " ", t.keys())
+mots.push("cinq")

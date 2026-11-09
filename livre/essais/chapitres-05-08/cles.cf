@@ -1,0 +1,7 @@
+var t = {}
+t[1] = "un nombre"
+t["1"] = "une chaîne"
+t['a'] = "un caractère"
+println(t)
+println(t["a"])
+t[[1]] = "une liste"

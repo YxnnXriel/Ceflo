@@ -1,0 +1,8 @@
+var valeurs = [none, false, 0, "", [], {}, "0", [0], -1]
+for var v in valeurs {
+    if v {
+        println(v, " : vrai")
+    } else {
+        println(v, " : faux")
+    }
+}

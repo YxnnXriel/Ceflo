@@ -30,7 +30,7 @@
     // Le TypeKind d'un nom de type écrit dans le code ("int", "str", "Point"...).
     TypeKind typer_kind(const char *type_name);
 
-    // `from "lib/file/libfile.so" import [file_fopen]` : la fonction C de ce nom.
+    // `from @"lib/file/libfile.so" import [file_fopen]` : la fonction C de ce nom.
     Value natives_load_library(VM *vm, const char *path, ObjString *name);
     // Ferme les bibliothèques à la fin du programme.
     void natives_free(VM *vm);

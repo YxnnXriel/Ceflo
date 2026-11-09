@@ -1,0 +1,10 @@
+func essai(a){
+    var x = a * 2
+    if x > 5 {
+        var y = x + 1
+        var x = x + 10
+        println(x, " ", y)
+    }
+    println(x)
+}
+essai(4)

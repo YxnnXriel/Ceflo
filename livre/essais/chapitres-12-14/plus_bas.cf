@@ -1,0 +1,6 @@
+func essai() {
+    var g = lfunc() { return y }
+    var y = 3
+    return g()
+}
+println(essai())

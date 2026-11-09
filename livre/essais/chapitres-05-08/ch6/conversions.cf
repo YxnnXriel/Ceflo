@@ -1,0 +1,4 @@
+println(@int("42") + 1, " ", @int(" 42 "), " ", @int("4a"), " ", @int(3.9))
+println(@float("3.5") + 1, " ", @bool(""), " ", @bool([0]), " ", @char(66))
+println(@str(12) + "!", " ", @list(1, 2), " ", @int())
+println(@map([1]))

@@ -1,0 +1,21 @@
+func fib(n) {
+    if n < 2 { return n }
+    return fib(n - 1) + fib(n - 2)
+}
+println(fib(20))
+
+func premier_multiple(n, de) {
+    for var k = 1; k <= n; k += 1 {
+        if k % de != 0 { continue }
+        return k
+    }
+    return none
+}
+println(premier_multiple(100, 7), " ", premier_multiple(5, 7))
+
+var j = 0
+while true {
+    j += 1
+    if j == 3 { break }
+}
+println("sorti à ", j)

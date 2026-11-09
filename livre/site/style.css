@@ -1,0 +1,272 @@
+/* Écrire CeFlo : la feuille de style du site (générée par construire.py). */
+:root{
+  --encre:#111111; --texte:#2B2B2B; --trait:#E4E4E4; --gris:#6B6B6B; --gris-num:#6E6E6E;
+  --cyan:#34C1EE; --menthe:#A6E3C6; --jaune:#F7DFA2; --bleu:#BDE8F8; --rose:#F4A3BD;
+  --mono:'DM Mono',ui-monospace,monospace; --code:'JetBrains Mono',ui-monospace,monospace;
+  --main:'Just Me Again Down Here',cursive; --titre:'Unbounded',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:24px}
+body{margin:0;background:#FFFFFF;color:var(--encre);font-family:'Geist',system-ui,sans-serif;overflow-x:hidden}
+a{color:var(--encre);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:#444444}
+a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+code{font-family:var(--code);font-variant-ligatures:none;font-size:.84em;background:#F1F1F1;padding:.12em .38em;overflow-wrap:anywhere}
+.evitement{position:absolute;left:-9999px;top:0;background:var(--encre);color:#FFF;padding:10px 16px;z-index:10}
+.evitement:focus{left:8px;top:8px}
+.main{font-family:var(--main);font-weight:400}
+
+.grille{background-image:linear-gradient(#F3F3F3 1px,transparent 1px),linear-gradient(90deg,#F3F3F3 1px,transparent 1px);background-size:100px 100px}
+.regle{height:34px;border-bottom:1px solid var(--trait);display:flex;overflow:hidden;font-family:var(--mono);font-size:11px;color:#9A9A9A;
+  background-image:linear-gradient(90deg,#C8C8C8 1px,transparent 1px),linear-gradient(90deg,#E2E2E2 1px,transparent 1px);
+  background-size:100px 12px,20px 6px;background-repeat:repeat-x}
+.regle span{width:100px;flex:none;padding-top:16px;transform:translateX(-8px)}
+.regle span:first-child{transform:none;padding-left:2px}
+
+/* La barre de navigation */
+.barre{border-bottom:1px solid var(--trait);background:#FFFFFF}
+.barre-int{padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 12px;font-family:var(--mono);font-size:14px;text-transform:uppercase}
+.nav-livre{display:flex;flex-wrap:wrap;align-items:stretch}
+.nav-livre a{display:flex;align-items:center;gap:8px;padding:14px 16px;text-decoration:none}
+.nav-livre a.actif{background:var(--cyan)}
+.nav-livre a:hover{background:#F1F1F1;color:var(--encre)}
+.nav-livre a.actif:hover{background:var(--cyan)}
+.compteur{padding:8px 0;color:var(--gris)}
+.barre-droite{display:flex;align-items:center;gap:10px;padding:8px 0}
+.pastille{background:#F1F1F1;border-radius:999px;padding:7px 12px}
+.bouton-ligne{display:flex;align-items:center;gap:8px;border:1px solid var(--encre);padding:8px 14px;text-decoration:none}
+.bouton-ligne:hover{background:var(--encre);color:#FFF}
+
+/* Le cadre de sélection et ses poignées */
+.cadre{position:relative;border:2px solid var(--cyan)}
+.cadre .p{position:absolute;width:12px;height:12px;background:var(--cyan);border:1px solid var(--encre)}
+.cadre .hg{left:-7px;top:-7px}.cadre .hd{right:-7px;top:-7px}.cadre .bg{left:-7px;bottom:-7px}.cadre .bd{right:-7px;bottom:-7px}
+.cadre-fin{border:1.5px solid var(--encre);padding:6px 14px}
+.cadre-fin .p{width:8px;height:8px;background:#FFF;border:1.5px solid var(--encre)}
+.cadre-fin .hg{left:-5px;top:-5px}.cadre-fin .hd{right:-5px;top:-5px}.cadre-fin .bg{left:-5px;bottom:-5px}.cadre-fin .bd{right:-5px;bottom:-5px}
+.cadre-fin h2{margin:0;font-weight:500;font-size:40px;letter-spacing:-.03em}
+
+.etiquette{align-self:flex-start;font-family:var(--mono);font-size:12px;text-transform:uppercase;padding:3px 8px}
+.etiquette.grande{font-size:14px;padding:5px 10px}
+.bientot{display:inline-block;font-family:var(--mono);font-size:11px;text-transform:uppercase;background:#F1F1F1;color:#595959;padding:1px 6px;margin-left:4px;transform:rotate(-2deg);vertical-align:1px}
+
+/* La page d'un chapitre */
+.page{max-width:1360px;margin:0 auto;padding:64px 32px 110px;display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start}
+.colonne{flex:1 1 220px;max-width:250px;display:flex;flex-direction:column;gap:26px;background:#FFF;border:1px solid var(--trait);padding:20px;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}
+.colonne .partie{display:flex;flex-direction:column;gap:9px}
+.colonne ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.colonne li > a,.colonne li.absent{display:flex;gap:10px;text-decoration:none;font-size:15px;line-height:1.4;color:#444444}
+.colonne li.absent{color:#6E6E6E}
+.colonne li > a:hover{color:var(--encre);text-decoration:underline}
+.colonne .n{width:22px;flex:none;font-family:var(--mono);font-size:12.5px;padding-top:2px;color:var(--gris-num)}
+.colonne li.courant > a{color:var(--encre);font-weight:600}
+.colonne ol.sous{gap:6px;margin:8px 0 4px 32px;padding-left:10px;border-left:2px solid var(--cyan)}
+.colonne ol.sous a{display:flex;gap:8px;text-decoration:none;font-size:14px;line-height:1.35;color:#444444}
+.colonne ol.sous a:hover{color:var(--encre);text-decoration:underline}
+.colonne ol.sous .n{width:auto;min-width:28px;font-size:11.5px}
+
+.article{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:28px;container-type:inline-size;container-name:article}
+.entete{display:flex;flex-direction:column;align-items:flex-start;gap:18px;margin-bottom:6px}
+.ligne-etiquette{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.note-titre{font-size:30px;line-height:1.1;transform:rotate(-3deg)}
+.cadre-chapitre{padding:10px 24px;margin-left:6px;max-width:calc(100% - 12px)}
+.cadre-chapitre h1{margin:0;font-family:var(--titre);font-weight:800;font-size:clamp(38px,9vw,76px);line-height:1.05;letter-spacing:-.04em;overflow-wrap:anywhere}
+
+/* Le corps : une grille, le texte à gauche et les notes dans la marge */
+.corps{display:grid;grid-template-columns:minmax(0,1fr);row-gap:22px;font-size:19px;line-height:1.7;color:var(--texte)}
+.corps > *{min-width:0}
+.b-texte{max-width:700px}
+.b-large{max-width:760px;margin:6px 0}
+.corps p{margin:0}
+.corps p + p,.corps p + ul,.corps p + ol,.corps ul + p,.corps ol + p{margin-top:22px}
+.corps .chapeau{font-size:25px;line-height:1.45;font-weight:500;letter-spacing:-.015em;color:var(--encre)}
+.corps h2{margin:28px 0 0;font-weight:600;font-size:34px;line-height:1.2;letter-spacing:-.03em;color:var(--encre)}
+.corps h2 .num{font-family:var(--mono);font-weight:400;font-size:.5em;letter-spacing:0;vertical-align:.35em;margin-right:6px;padding:2px 7px;background:var(--bleu);text-decoration:none}
+.corps h2 .num:hover{background:var(--cyan)}
+.corps h3{margin:10px 0 0;font-weight:600;font-size:23px;letter-spacing:-.02em;color:var(--encre)}
+.corps ul,.corps ol{margin:0;padding-left:1.3em}
+.corps li{margin:4px 0}
+.corps li > p + ul,.corps li > p + ol{margin-top:4px}
+.corps li::marker{font-family:var(--mono);color:#555}
+.corps ul > li::marker{content:"■  ";font-size:.6em;color:var(--cyan)}
+.corps strong{font-weight:600;color:var(--encre)}
+.corps blockquote{margin:0;padding:4px 0 4px 20px;border-left:3px solid var(--trait)}
+
+/* Les post-it de la marge */
+.marge{display:flex;flex-direction:column;gap:18px;max-width:340px}
+.postit{background:var(--jaune);padding:16px 18px;transform:rotate(var(--a,1.5deg));font-size:15px;line-height:1.5;color:#222;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.postit p + p{margin-top:10px}
+.postit code,.encadre code{background:rgba(255,255,255,.55)}
+
+/* À toi, Attention */
+.encadre{border:2px solid var(--encre);padding:22px 24px 22px;margin:8px 0;position:relative;color:var(--encre)}
+.encadre.essaie{background:var(--menthe)}
+.encadre.attention{background:var(--rose)}
+.encadre p + p{margin-top:14px}
+.etiquette-noire{display:inline-flex;align-items:center;gap:10px;background:var(--encre);color:#FFF;font-family:var(--mono);font-size:14px;text-transform:uppercase;padding:4px 14px 4px 4px;margin:-38px 0 12px -8px;transform:rotate(-2deg)}
+.etiquette-noire .carre{width:28px;height:28px;background:var(--cyan);display:flex;align-items:center;justify-content:center}
+.etiquette-noire .carre.rose{background:var(--rose)}
+.encadre > .etiquette-noire{display:flex;width:max-content}
+
+/* Les figures */
+.fig-jetons,.fig-etapes{margin:10px 0;display:flex;flex-direction:column;gap:16px}
+.jetons,.etapes{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.jetons li{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin:0}
+.jeton{font-family:var(--code);font-variant-ligatures:none;font-size:26px;line-height:1.3;border:2px solid var(--encre);padding:10px 20px;white-space:pre;color:var(--encre)}
+.sorte{font-family:var(--mono);font-size:12.5px;color:#555}
+.etapes{align-items:center;gap:10px}
+.etapes li{display:flex;align-items:center;gap:10px;margin:0}
+.etapes li:not(:last-child)::after{content:"";width:30px;height:14px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 14'%3E%3Cpath d='M0 7h27M21 1l6 6-6 6' stroke='%23111' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat center}
+.etape{font-family:var(--mono);font-size:16px;text-transform:uppercase;border:2px solid var(--encre);padding:9px 16px;color:var(--encre);line-height:1.3}
+.etape code{background:transparent;padding:0;font-size:1em;text-transform:none}
+figcaption.main{font-size:24px;line-height:1.2;color:#444}
+
+/* L'éditeur façon VS Code, thème Dark+ */
+.editeur,.terminal{margin:0;display:flex;flex-direction:column;background:#1E1E1E;border:1px solid var(--encre);overflow:hidden}
+.onglets{display:flex;align-items:stretch;background:#252526;font-family:var(--code);font-size:13px}
+.onglet{padding:10px 16px;background:#1E1E1E;color:#FFF;border-top:2px solid var(--cyan)}
+.ariane{padding:6px 18px 2px;font-family:var(--code);font-size:12px;color:#A9A9A9;white-space:pre;overflow:hidden;text-overflow:ellipsis}
+.defile{margin:0;overflow-x:auto;font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0;font-family:var(--code);font-size:15px;line-height:1.65;color:#D4D4D4;tab-size:4;-webkit-overflow-scrolling:touch}
+.defile code{display:block;min-width:max-content;background:transparent;padding:0;font-size:1em;overflow-wrap:normal;white-space:pre}
+.editeur .defile{padding:8px 0 16px}
+.editeur .l{display:inline-block;min-width:100%;padding-right:22px}
+.editeur .l::before{content:attr(data-n);display:inline-block;width:58px;padding-right:22px;text-align:right;color:#858585;user-select:none;-webkit-user-select:none}
+.editeur .l.f{background:#2A2D2E}
+.editeur .l.f::before{color:#C6C6C6}
+.defile::-webkit-scrollbar{height:10px}
+.defile::-webkit-scrollbar-thumb{background:#424242}
+.defile::-webkit-scrollbar-track{background:#1E1E1E}
+
+.onglets-term{display:flex;gap:22px;padding:10px 18px 6px;font-family:var(--code);font-size:11.5px;letter-spacing:.04em;color:#969696}
+.onglets-term .actif{color:#E7E7E7;border-bottom:1px solid #E7E7E7;padding-bottom:3px}
+.terminal .defile{padding:10px 22px 18px;color:#CCCCCC}
+.terminal .l{display:inline-block;min-width:100%}
+.terminal .invite{color:var(--cyan);user-select:none;-webkit-user-select:none}
+.terminal .cmd{color:#E7E7E7}
+.terminal .err{color:#F14C4C}
+.terminal .gris{color:#8A8A8A}
+
+/* Précédent, suivant */
+.pied{max-width:760px;display:flex;flex-wrap:wrap;gap:16px;padding-top:44px;margin-top:20px;border-top:1px solid var(--trait)}
+.pied a,.pied .attente{flex:1 1 260px;text-decoration:none}
+.prec{display:flex;flex-direction:column;gap:6px;background:#FFF;border:1px solid var(--encre);padding:16px 20px}
+.prec:hover{background:#F6F6F6}
+.suiv{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--encre);color:#FFF;padding:10px 20px 10px 10px}
+.suiv:hover{color:#FFF;background:#2A2A2A}
+.suiv .carre,.bouton .carre{width:44px;height:44px;flex:none;background:var(--cyan);display:flex;align-items:center;justify-content:center}
+.suiv .txt{display:flex;flex-direction:column;gap:4px;align-items:flex-end;text-align:right}
+.petit{font-family:var(--mono);font-size:12.5px;text-transform:uppercase;color:var(--gris)}
+.suiv .petit{color:#BDBDBD}
+.grand{font-size:20px;font-weight:500}
+.suiv.attente{background:#FFF;color:#595959;border:1px dashed #9A9A9A;justify-content:flex-end;padding:16px 20px}
+.suiv.attente .petit{color:#595959}
+
+/* L'accueil */
+.heros{position:relative;overflow:hidden;padding:120px 24px 110px}
+.heros-int{position:relative;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:34px}
+.sur-titre{font-size:40px;line-height:1}
+.cadre-heros{padding:18px 36px}
+.cadre-heros h1{margin:0;font-family:var(--titre);font-weight:800;font-size:clamp(64px,17vw,150px);line-height:1;letter-spacing:-.04em}
+.sous-titre{margin:0;display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:15px;text-transform:uppercase;letter-spacing:.02em;text-align:center}
+.sous-titre .point{width:13px;height:13px;border-radius:999px;background:var(--cyan);flex:none}
+.promesse{margin:70px 0 0;font-size:clamp(28px,5vw,46px);font-weight:500;line-height:1.14;letter-spacing:-.035em;text-align:center;max-width:820px}
+.promesse .pic{vertical-align:-3px;width:.74em;height:.74em}
+.bouton{display:flex;align-items:center;gap:12px;background:var(--encre);color:#FFF;text-decoration:none;padding:8px 18px 8px 8px;font-family:var(--mono);font-size:15px;text-transform:uppercase}
+.bouton:hover{color:#FFF;background:#2A2A2A}
+.bouton .carre{width:40px;height:40px}
+.deco{position:absolute}
+.d1{left:30px;top:70px;transform:rotate(-10deg);background:var(--menthe);padding:12px 20px;font-size:19px;font-weight:500}
+.d2{right:20px;top:92px;transform:rotate(-4deg);background:var(--jaune);padding:12px 20px;font-size:19px;font-weight:500}
+.d3{right:10px;top:600px;display:flex;flex-direction:column;align-items:flex-start}
+.d3 svg{transform:translate(-14px,4px)}
+.d3 span{transform:rotate(12deg);background:#E5245F;color:#FFF;border:2px solid var(--encre);border-radius:999px;padding:10px 26px;font-family:var(--mono);font-size:16px;text-transform:uppercase}
+.d4{left:0;top:690px;display:flex;align-items:flex-start;gap:6px}
+.d4 span{transform:rotate(-3deg);background:#F2B33D;border:2px solid var(--encre);border-radius:999px;padding:12px 26px;font-family:var(--mono);font-size:16px;text-transform:uppercase}
+.d4 svg{transform:rotate(80deg) translate(-20px,0)}
+.d5{left:20px;top:600px;font-size:30px;transform:rotate(-6deg)}
+
+.sommaire{border-top:1px solid var(--trait);padding:90px 24px 120px}
+.sommaire-int{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:60px}
+.cartes{width:100%;display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.carte{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;background:#FFF;border:1px solid var(--trait)}
+.carte-tete{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--trait)}
+.carte-tete h3{margin:0;font-size:24px;font-weight:500;letter-spacing:-.02em}
+.carte-tete span{font-family:var(--mono);font-size:13px;text-transform:uppercase;white-space:nowrap}
+.carte ol{list-style:none;margin:0;padding:0}
+.carte li > a,.carte li.absent > div{display:flex;gap:14px;text-decoration:none;padding:14px 18px;border-top:1px solid #F0F0F0}
+.carte li:first-child > a,.carte li:first-child > div{border-top:0}
+.carte li > a:hover{background:#F7F7F7}
+.carte li > a:hover .titre{text-decoration:underline}
+.carte .n{width:26px;flex:none;font-family:var(--mono);font-size:14px;padding-top:3px;color:var(--gris-num)}
+.carte .txt{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.carte .titre{font-size:19px;font-weight:500}
+.carte .resume{font-size:15.5px;line-height:1.5;color:#555}
+.carte li.absent .titre{color:#595959}
+.carte li.absent .bientot{align-self:flex-start;flex:none}
+
+/* Les dessins en texte */
+.dessin{margin:0;background:#FAFAFA;border:1px solid var(--trait);padding:16px 20px;font-family:var(--code);font-variant-ligatures:none;font-size:14.5px;line-height:1.5;color:#222;overflow-x:auto;white-space:pre;tab-size:4}
+
+/* Les sections de fin : Défis et Note de conception */
+.corps h2.h2-fin{display:flex;align-items:center;gap:14px;margin-top:44px;padding-top:30px;border-top:1px solid var(--trait)}
+.pic-fin{width:40px;height:40px;flex:none;background:var(--encre);display:flex;align-items:center;justify-content:center}
+.pic-fin svg{width:18px;height:18px}
+.pic-fin svg path{fill:var(--cyan)}
+.defis{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:30px}
+.corps .defis > li.defi{margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.etiquette-defi{font-family:var(--mono);font-size:14px;text-transform:uppercase;border:2px solid var(--encre);padding:5px 12px;color:var(--encre);line-height:1.2}
+.defi-corps{border-left:2px solid var(--encre);padding:2px 0 2px 20px;margin-left:10px;width:calc(100% - 10px)}
+.defi-corps h3{margin:0 0 6px;font-size:21px}
+.defi-corps > * + *{margin-top:14px}
+.conception{position:relative;background:#FFF;border:1px solid var(--encre);box-shadow:6px 6px 0 var(--bleu);padding:26px 26px 24px;margin-top:6px}
+.conception-note{position:absolute;right:18px;top:-24px;font-size:26px;line-height:1;background:#FFF;padding:0 8px;transform:rotate(-2deg)}
+.conception > * + *{margin-top:16px}
+.postit.en-ligne{max-width:340px;margin:18px 0 0 auto}
+
+/* Deux colonnes dans le corps quand l'article est assez large */
+@container article (min-width: 940px){
+  .corps{grid-template-columns:minmax(0,700px) minmax(180px,240px);column-gap:48px}
+  .b-texte{grid-column:1;grid-row:var(--r)}
+  .b-large{grid-column:1 / -1;grid-row:var(--r)}
+  .marge{grid-column:2;grid-row:var(--r) / span var(--s,1);align-self:start}
+}
+
+/* Tablette et téléphone */
+@media (max-width: 899px){
+  .page{padding:40px 16px 80px;gap:40px}
+  .colonne{order:2;max-width:none;flex-basis:100%;position:static;max-height:none}
+  .article{order:1}
+}
+@media (max-width: 1180px){.deco{display:none}}
+@media (max-width: 600px){
+  .barre-int{padding:0 4px;font-size:12.5px}
+  .nav-livre a{padding:12px 7px;gap:5px}
+  .compteur{padding:0 10px 10px}
+  .barre-droite{padding:0 10px 10px}
+  .corps{font-size:17px;line-height:1.65}
+  .corps .chapeau{font-size:21px}
+  .corps h2{font-size:27px}
+  .note-titre{font-size:26px}
+  .cadre-chapitre{padding:8px 14px}
+  .defile{font-size:13px}
+  .editeur .l::before{width:44px;padding-right:14px}
+  .terminal .defile{padding:10px 14px 16px}
+  .jeton{font-size:20px;padding:8px 14px}
+  .encadre{padding:20px 16px 18px}
+  .conception{padding:30px 16px 18px;box-shadow:4px 4px 0 var(--bleu)}
+  .conception-note{font-size:22px;right:8px}
+  .defi-corps{padding-left:14px}
+  .dessin{font-size:12.5px;padding:12px 14px}
+  .marge{max-width:none}
+  .postit{transform:rotate(calc(var(--a,1.5deg) / 2))}
+  .heros{padding:72px 16px 80px}
+  .sur-titre{font-size:32px}
+  .cadre-heros{padding:12px 20px}
+  .promesse{margin-top:30px}
+  .sommaire{padding:60px 16px 80px}
+  .cadre-fin h2{font-size:30px}
+  .cartes{gap:20px}
+  .carte{flex-basis:100%}
+}
+@media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+@media print{.barre,.regle,.colonne,.pied{display:none}.grille{background:none}.page{display:block;padding:0}}

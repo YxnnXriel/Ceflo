@@ -1,0 +1,6 @@
+func presente(nom, age){
+    println(format("${nom} a ${age + 1} ans l'an prochain"))
+}
+presente("Ada", 36)
+var modele = "${nom}"
+println(format(modele))

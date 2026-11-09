@@ -1,0 +1,44 @@
+// Un tour de CeFlo : des notes, une moyenne, un bulletin.
+enum Mention { PASSABLE, BIEN, TRES_BIEN }
+
+struct Eleve {
+    var Nom
+    var Notes::list
+
+    func __init__(nom, notes) {
+        Nom = nom
+        Notes = notes
+    }
+
+    func moyenne() {
+        var total = 0
+        for var note in Notes {
+            total += note
+        }
+        return total / Notes.lenght()
+    }
+}
+
+func mention(moyenne) {
+    if moyenne >= 16 { return Mention.TRES_BIEN }
+    if moyenne >= 14 { return Mention.BIEN }
+    return Mention.PASSABLE
+}
+
+var classe = [
+    new Eleve("Awa", [15, 17, 18]),
+    new Eleve("Koffi", [12, 14, 13])
+]
+
+var compte = {}
+for var eleve in classe {
+    var m = mention(eleve.moyenne())
+    println(format("${eleve.Nom} : ${eleve.moyenne()} de moyenne, ${m.name}"))
+    compte[m] = compte.get(m, 0) + 1
+}
+
+match mention(classe[0].moyenne()) {
+    case Mention.TRES_BIEN { println("Awa passe en tête") }
+    else { println("personne ne passe en tête") }
+}
+println(compte.lenght(), " mentions différentes")

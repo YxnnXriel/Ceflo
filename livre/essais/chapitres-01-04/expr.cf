@@ -1,0 +1,4 @@
+a.b[0](1, 2)
+x < 2 or !ok and y == 3
+n > 0 ? "positif" : "négatif"
+[1, 2] + {nom: "Awa", 3: true, age}

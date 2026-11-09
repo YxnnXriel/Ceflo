@@ -1,0 +1,4 @@
+println("a commence")
+from b import [nom_b]
+var nom_a = "A"
+println("a lit ", nom_b)

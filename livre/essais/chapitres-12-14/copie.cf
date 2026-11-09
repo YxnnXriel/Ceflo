@@ -1,0 +1,9 @@
+var fonctions = []
+for var i = 0; i < 3; i += 1 {
+    var k = i
+    fonctions.append(lfunc() { return k })
+}
+for var f in fonctions {
+    print(f(), " ")
+}
+println()

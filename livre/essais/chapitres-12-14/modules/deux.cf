@@ -1,0 +1,3 @@
+from outils import [double]
+from "./outils.cf" import [VERSION]
+println(VERSION)

@@ -1,0 +1,10 @@
+enum Feu { ROUGE, ORANGE = 5, VERT }
+struct Point {
+    var x::int = 0
+    func avance -> n : Point { x += n; return self }
+}
+var f = lfunc(a) { return a * 2 }
+match Feu.VERT {
+    case Feu.ROUGE, Feu.ORANGE { println("stop") }
+    else { println("roule") }
+}

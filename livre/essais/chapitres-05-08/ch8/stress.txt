@@ -1,0 +1,5 @@
+208 réussis, 0 échoués
+
+real	0m20,409s
+user	0m15,083s
+sys	0m5,544s

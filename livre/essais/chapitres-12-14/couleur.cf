@@ -1,0 +1,11 @@
+enum Couleur { ROUGE, VERT, BLEU }
+
+func decris(c::Couleur) {
+    match c {
+        case Couleur.ROUGE { return "chaud" }
+        case Couleur.VERT, Couleur.BLEU { return "froid" }
+    }
+}
+
+println(decris(Couleur.VERT), " ", Couleur.BLEU.value, " ", @Couleur(0))
+println(decris(none))

@@ -1,0 +1,8 @@
+from @"./libmots.so" import [mots_applique]
+
+func triple(x) {
+    var total = 0
+    for var i = 0; i < 3; i += 1 { total += x }
+    return total
+}
+println(mots_applique([1, 2, 3], triple))

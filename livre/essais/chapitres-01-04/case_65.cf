@@ -1,0 +1,4 @@
+match 65 {
+    case 'A' { println("lettre") }
+    case 65 { println("nombre") }
+}

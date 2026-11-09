@@ -1,0 +1,8 @@
+println("chargement de outils/texte.cf")
+var compteur = 0
+func crie(mot) {
+    compteur += 1
+    return mot + "!"
+}
+func secret() { return 42 }
+export :: [crie, compteur]

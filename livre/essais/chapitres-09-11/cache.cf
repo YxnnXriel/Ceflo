@@ -1,0 +1,5 @@
+println("avant")
+func println(x){
+    print("[", x, "] ")
+}
+println("après")

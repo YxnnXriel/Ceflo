@@ -1,0 +1,8 @@
+func signe(n){
+    if n > 0 and n < 100 {
+        return "petit positif"
+    } else {
+        return "autre"
+    }
+}
+println(signe(5))

@@ -1,0 +1,11 @@
+var l = [10, 20, 30]
+l[1] += 5
+l.append(40)
+var profil = { nom: "Yann", age: 22 }
+profil.age += 1
+profil["ville"] = "Abidjan"
+var mot = "chat"
+mot[0] = 'p'
+println(l, " ", l.lenght())
+println(profil)
+println(mot, " ", mot[3])

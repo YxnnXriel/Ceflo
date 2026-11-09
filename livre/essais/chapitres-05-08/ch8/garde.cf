@@ -1,0 +1,6 @@
+// Garde tout ce qu'il fabrique
+var mots = []
+for var i = 0; i < 300000; i += 1 {
+    mots.append("mot " + i)
+}
+println(mots.lenght())
